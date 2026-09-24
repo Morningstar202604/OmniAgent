@@ -1,0 +1,18 @@
+# OmniAgent finance bundle patch: 通用全能底座 + 金融专业插件。
+# 用法: oa --profile finance "<问题>"（headless 模式）或 oa finance 进入交互。
+# 数据源默认 mock（内置示例）；接入真实数据: source: http + baseURL + apiKeyEnv。
+
+- id: finance-agent
+  name: '@deepseek-ai/dsh-finance-agent'
+  config:
+    source: mock
+    # 接入真实行情/财务数据服务时改为:
+    # source: http
+    # baseURL: https://your-finance-gateway.example/v1
+    # apiKeyEnv: FINANCE_API_KEY
+
+# 默认模型路由：OpenAI 协议（DeepSeek 兼容端点），与底座 llm-pi-ai 配合。
+- id: agent-default-model
+  config:
+    provider: deepseek-openai
+    model: deepseek-chat
