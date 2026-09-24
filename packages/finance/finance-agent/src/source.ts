@@ -127,12 +127,16 @@ const MOCK_QUOTES: Record<string, Omit<FinanceQuote, 'mock'>> = {
 const MOCK_FINANCIALS: Record<string, Omit<FinanceFinancials, 'mock'>> = {
   '600519': { symbol: '600519', name: '贵州茅台', market: 'cn', year: 2025, revenue: 1.74e11, netProfit: 8.62e10, grossMargin: 91.2, netMargin: 49.6, roe: 33.8, debtRatio: 19.5, eps: 68.6, updatedAt: '2026-04-01T00:00:00+08:00' },
   '000858': { symbol: '000858', name: '五粮液', market: 'cn', year: 2025, revenue: 8.91e10, netProfit: 3.01e10, grossMargin: 75.4, netMargin: 33.8, roe: 24.1, debtRatio: 22.8, eps: 7.76, updatedAt: '2026-04-01T00:00:00+08:00' },
+  '601318': { symbol: '601318', name: '中国平安', market: 'cn', year: 2025, revenue: 1.03e12, netProfit: 1.18e11, grossMargin: 12.6, netMargin: 11.4, roe: 13.5, debtRatio: 88.7, eps: 6.5, updatedAt: '2026-04-01T00:00:00+08:00' },
+  '0700': { symbol: '0700', name: '腾讯控股', market: 'hk', year: 2025, revenue: 7.52e11, netProfit: 1.62e11, grossMargin: 50.8, netMargin: 21.5, roe: 28.4, debtRatio: 41.2, eps: 17.4, updatedAt: '2026-04-01T00:00:00+08:00' },
   'AAPL': { symbol: 'AAPL', name: 'Apple Inc.', market: 'us', year: 2025, revenue: 4.16e11, netProfit: 1.03e11, grossMargin: 46.2, netMargin: 24.8, roe: 156.3, debtRatio: 82.4, eps: 6.68, updatedAt: '2025-10-30T00:00:00+00:00' },
 }
 
 const MOCK_METRICS: Record<string, Omit<FinanceMetrics, 'mock'>> = {
   '600519': { symbol: '600519', name: '贵州茅台', market: 'cn', pe: 24.6, pb: 8.3, ps: 12.2, dividendYield: 2.9, week52High: 1742.0, week52Low: 1285.0, marketCap: 2.12e12, updatedAt: '2026-09-24T15:00:00+08:00' },
   '000858': { symbol: '000858', name: '五粮液', market: 'cn', pe: 16.6, pb: 4.0, ps: 5.6, dividendYield: 3.4, week52High: 158.0, week52Low: 105.0, marketCap: 4.99e11, updatedAt: '2026-09-24T15:00:00+08:00' },
+  '601318': { symbol: '601318', name: '中国平安', market: 'cn', pe: 8.0, pb: 1.1, ps: 0.9, dividendYield: 4.8, week52High: 62.0, week52Low: 41.5, marketCap: 9.56e11, updatedAt: '2026-09-24T15:00:00+08:00' },
+  '0700': { symbol: '0700', name: '腾讯控股', market: 'hk', pe: 27.3, pb: 4.5, ps: 5.8, dividendYield: 0.8, week52High: 521.0, week52Low: 348.0, marketCap: 4.31e12, updatedAt: '2026-09-24T16:00:00+08:00' },
   'AAPL': { symbol: 'AAPL', name: 'Apple Inc.', market: 'us', pe: 34.8, pb: 54.0, ps: 8.5, dividendYield: 0.4, week52High: 241.2, week52Low: 164.0, marketCap: 3.54e12, updatedAt: '2026-09-23T20:00:00+00:00' },
 }
 
