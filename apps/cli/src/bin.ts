@@ -12,7 +12,7 @@ import { parseDshArgs } from './args.ts'
 import { reportStartupFailure } from './startup-diagnostics.ts'
 
 /**
- * Run the public dsh command-line interface.
+ * Run the public oa command-line interface.
  * @returns a promise that settles when the selected command mode finishes.
  */
 export async function runCli(): Promise<void> {

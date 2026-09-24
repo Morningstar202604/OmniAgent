@@ -2,7 +2,7 @@
 
 [English](github-review.md) | 中文
 
-此可选 overlay 会为 `dsh web` 增加一个签名 GitHub 端点。当已配置仓库中的 pull request 从 draft 变为 ready for review 时，规则会在该仓库的 Web Workspace 下创建带标题的根 Session，并启动只读评审提示词。
+此可选 overlay 会为 `oa web` 增加一个签名 GitHub 端点。当已配置仓库中的 pull request 从 draft 变为 ready for review 时，规则会在该仓库的 Web Workspace 下创建带标题的根 Session，并启动只读评审提示词。
 
 ## 前置条件
 
@@ -25,17 +25,17 @@ printf '%s\n' "$DSH_GITHUB_WEBHOOK_SECRET"
 在开发 checkout 中运行：
 
 ```sh
-export DSH_GITHUB_REVIEW_WORKSPACE=/path/to/deepseek-harness
-pnpm dsh web --patch apps/cli/config/examples/github-review/cordis.yml
+export DSH_GITHUB_REVIEW_WORKSPACE=/path/to/omniagent
+pnpm oa web --patch apps/cli/config/examples/github-review/cordis.yml
 ```
 
 安装版 DSH 通过绝对路径使用同一 overlay：
 
 ```sh
-dsh web --patch /absolute/path/to/github-review/cordis.yml
+oa web --patch /absolute/path/to/github-review/cordis.yml
 ```
 
-对于永久 profile，把 `github-ready-review-rule.mjs` 放在 `$DSH_HOME/profiles/web/cordis.patch.yml` 旁边，把 `cordis.yml` 中的行追加到该 patch，然后运行 `dsh web`。随附 CLI 已经包含两个 webhook 包；只需 overlay 即可激活它们。
+对于永久 profile，把 `github-ready-review-rule.mjs` 放在 `$DSH_HOME/profiles/web/cordis.patch.yml` 旁边，把 `cordis.yml` 中的行追加到该 patch，然后运行 `oa web`。随附 CLI 已经包含两个 webhook 包；只需 overlay 即可激活它们。
 
 ## 暴露专用端点
 
@@ -65,7 +65,7 @@ Active:       yes
 
 ## 规则行为
 
-规则只接受来源 `primary-github`、仓库 `deepseek-harness/deepseek-harness`、事件 `pull_request` 与动作 `ready_for_review`。它会把精确 head SHA 和选定 PR 字段传给评审提示词，把 JSON 标为不受信任的元数据，并禁止修改文件、分支、PR 或 GitHub 状态。
+规则只接受来源 `primary-github`、仓库 `omniagent/omniagent`、事件 `pull_request` 与动作 `ready_for_review`。它会把精确 head SHA 和选定 PR 字段传给评审提示词，把 JSON 标为不受信任的元数据，并禁止修改文件、分支、PR 或 GitHub 状态。
 
 Session 请求选择 `standard` agent preset 与 `read-only` permission preset。`workspacePath` 通过 `WorkspaceRegistry.create()` 规范化，因此第一次匹配交付会在 Workspace 不存在时创建它，后续交付会复用它。
 
@@ -89,8 +89,8 @@ if (!response.ok || (await response.json()).automaticReview !== true) return nul
 
 ```js
 const workspacePath = {
-  'deepseek-harness/deepseek-harness': '/path/to/deepseek-harness',
-  'deepseek-harness/dsh-sdk': '/path/to/dsh-sdk',
+  'omniagent/omniagent': '/path/to/omniagent',
+  'omniagent/dsh-sdk': '/path/to/dsh-sdk',
 }[payload.repository.full_name]
 if (workspacePath === undefined) return null
 ```

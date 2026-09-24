@@ -29,7 +29,7 @@ Load this plugin in any composition that mounts a model shell tool (`dsh-tool-ba
 
 ### What every shell call receives
 
-Every call receives `DSH_HOME` (the absolute Harness home), `DSH_SHELL=1`, and, for agent calls, `DSH_SESSION_ID` (the calling session's id). When the launcher provided a profile context, every call also receives `DSH_PROFILE` (the profile name) and `DSH_PROFILE_DIR` (its absolute directory; its `node_modules` holds only profile-installed packages, while the harness's own bundles resolve from the dsh installation); compositions booted without a profile omit both.
+Every call receives `DSH_HOME` (the absolute Harness home), `DSH_SHELL=1`, and, for agent calls, `DSH_SESSION_ID` (the calling session's id). When the launcher provided a profile context, every call also receives `DSH_PROFILE` (the profile name) and `DSH_PROFILE_DIR` (its absolute directory; its `node_modules` holds only profile-installed packages, while the harness's own bundles resolve from the oa installation); compositions booted without a profile omit both.
 
 ### Adding your own environment facts
 

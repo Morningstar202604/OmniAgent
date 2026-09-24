@@ -1,4 +1,4 @@
-# ACP snapshot-record patch over the shipped `acp` profile. The dsh
+# ACP snapshot-record patch over the shipped `acp` profile. The oa
 # launcher owns environment loading, plugin resolution, and process shutdown;
 # stdout remains reserved for ACP JSON-RPC.
 

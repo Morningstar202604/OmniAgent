@@ -5,7 +5,7 @@ packages:
   # its native build and publication scripts under native/system.
   - native/system
   - native/system/packages/*
-  # Product assemblies over the package tier; apps/cli owns the `dsh` bin.
+  # Product assemblies over the package tier; apps/cli owns the `oa` bin.
   - apps/*
   # Private package owning repository-level benchmark dependencies.
   - benchmarks
@@ -18,6 +18,33 @@ overrides:
   'extract-zip>yauzl': '3.4.0'
   '@deepseek-ai/cosmokit': 'link:vendor/cosmokit'
   '@deepseek-ai/schemastery': 'link:vendor/schemastery'
+  # --- A准安全加固：依赖漏洞修复（2026-09-24 pnpm audit 36 项归零） ---
+  # fast-uri SSRF/主机混淆（3.x 漏洞版 → 3.1.6）
+  'fast-uri@<3.1.6': '3.1.6'
+  # undici HTTP 客户端信息泄露（仅 7.x 漏洞版 → 7.29.0；6.x/8.x 保持不动）
+  'undici@>=7.0.0 <7.29.0': '7.29.0'
+  # js-yaml 配置解析 DoS（merge-key/!!omap 二次方 CPU，→ 4.3.2）
+  'js-yaml@<4.3.2': '4.3.2'
+  # hono / @hono/node-server（MCP SDK 引入的 HTTP 服务器，ReDoS/路径遍历）
+  'hono@<4.13.5': '4.13.5'
+  '@hono/node-server@<1.19.15': '1.19.15'
+  # sharp libheif 图片解码
+  'sharp@<0.35.4': '0.35.4'
+  # ip-address 解析绕过/访问控制
+  'ip-address@<10.3.1': '10.3.1'
+  # nanoid 生成器死循环
+  'nanoid@<3.3.18': '3.3.18'
+  # qs 查询解析 DoS
+  'qs@<6.16.0': '6.16.0'
+  # postcss 路径遍历/sourcemap
+  'postcss@<8.5.23': '8.5.23'
+  # protobufjs 无限循环 DoS（MCP）
+  'protobufjs@<7.6.5': '7.6.5'
+  # fflate 解压无限循环
+  'fflate@<0.8.3': '0.8.3'
+  # vitest 构建/测试期路径遍历
+  'vitest@<4.1.11': '4.1.11'
+  '@vitest/mocker@<4.1.11': '4.1.11'
 
 peerDependencyRules:
   allowedVersions:

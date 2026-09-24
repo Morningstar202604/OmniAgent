@@ -32,9 +32,9 @@ Mount this provider when a delegation should run as a real Codex session in the 
 Install the package into the target Profile, then restart that Profile. The installation brings the official wrapper and one compatible native platform payload into the Profile; the declared patch layer registers only the dormant provider and starts no Codex process.
 
 ```sh
-dsh plugin --profile <name> add @deepseek-ai/dsh-subagent-codex
-dsh plugin --profile <name> remove @deepseek-ai/dsh-subagent-codex
-dsh --profile <name>
+oa plugin --profile <name> add @deepseek-ai/dsh-subagent-codex
+oa plugin --profile <name> remove @deepseek-ai/dsh-subagent-codex
+oa --profile <name>
 ```
 
 Removing the package withdraws the provider and its private runtime closure on the next Profile start. Installation controls Host availability, not model permission: the model can only reach the provider through a delegation tool row you compose.

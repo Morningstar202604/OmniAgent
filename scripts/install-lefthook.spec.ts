@@ -609,7 +609,7 @@ describe('worktree-local Lefthook installer', { timeout: 90_000 }, () => {
       join(externalHooks, '.dsh-lefthook-owned'),
       `${JSON.stringify({
         version: 1,
-        owner: 'deepseek-harness worktree-local lefthook hooks',
+        owner: 'omniagent worktree-local lefthook hooks',
         hooksPath: externalHooks,
       })}\n`,
       0o600,

@@ -1,6 +1,6 @@
 {
-  "name": "DeepSeek Harness",
-  "short_name": "DSH",
+  "name": "OmniAgent",
+  "short_name": "OmniAgent",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
