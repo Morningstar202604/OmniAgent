@@ -4,6 +4,7 @@
  * 运行: node packages/finance/finance-agent/smoke.mjs
  */
 import { createSource, parseMarket } from './lib/types/source.js'
+import { compoundFutureValue, loanPayment, annualizedReturn, dividendDiscountValue } from './lib/types/calc.js'
 
 const source = createSource({ source: 'mock' })
 
@@ -60,6 +61,32 @@ try {
 } catch (e) {
   check('http 缺 baseURL 拒绝', /baseURL/.test(String(e.message)), String(e.message))
 }
+
+// 9. 汇率（新增）
+const fx = await source.fx('USD/CNY')
+check('fx USD/CNY', fx.base === 'USD' && fx.quote === 'CNY' && fx.rate === 7.12 && fx.mock === true, JSON.stringify(fx))
+try {
+  await source.fx('XXX/YYY')
+  check('fx 未知货币对拒绝', false, '未拒绝')
+} catch (e) {
+  check('fx 未知货币对拒绝', /未收录/.test(String(e.message)), String(e.message))
+}
+
+// 10. 利率（新增）
+const lpr = await source.rates('lpr')
+check('rates lpr', Array.isArray(lpr) && lpr.some(r => r.name.includes('LPR') && r.rate > 0), JSON.stringify(lpr))
+const bond = await source.rates('bond')
+check('rates bond', Array.isArray(bond) && bond.some(r => r.name.includes('国债')), JSON.stringify(bond))
+
+// 11. 金融计算（纯函数）
+const fv = compoundFutureValue(1_000_000, 3, 5)
+check('calc 复利终值 100万×1.03^5', Math.abs(fv - 1_159_274.07) < 0.01, String(fv))
+const pmt = loanPayment(1_000_000, 3.6, 360)
+check('calc 房贷月供 100万/3.6%/30年', Math.abs(pmt - 4546.5) < 1, String(pmt))
+const ret = annualizedReturn(100, 200, 5)
+check('calc 年化收益 (2)^(1/5)-1', Math.abs(ret - 14.869) < 0.01, String(ret))
+const ddm = dividendDiscountValue(2, 8, 3)
+check('calc DDM 2/(8%-3%)', Math.abs(ddm - 40) < 0.01, String(ddm))
 
 console.log(`\n结果: ${pass} 通过 / ${fail} 失败`)
 process.exit(fail === 0 ? 0 : 1)

@@ -86,12 +86,40 @@ export interface ScreenerRow {
   marketCap: number
 }
 
+/** 汇率。pair 形如 USD/CNY（base 兑 quote，rate=1 base 兑多少 quote）。 */
+export interface FinanceFxRate {
+  pair: string
+  base: string
+  quote: string
+  rate: number
+  /** 反向汇率（1 quote 兑多少 base）。 */
+  inverse: number
+  updatedAt: string
+  mock?: boolean
+}
+
+/** 利率类别：deposit=存款利率，lpr=贷款市场报价利率，bond=国债收益率。 */
+export type FinanceRateCategory = 'deposit' | 'lpr' | 'bond'
+
+/** 利率报价。 */
+export interface FinanceRateQuote {
+  category: FinanceRateCategory
+  /** 期限/品种名，如 活期、一年、5Y-LPR、10Y 国债。 */
+  name: string
+  /** 年化利率（百分数数值，如 0.35、3.45）。 */
+  rate: number
+  updatedAt: string
+  mock?: boolean
+}
+
 /** 数据源统一接口：工具层只依赖本契约。 */
 export interface FinanceDataSource {
   quote(symbol: string, market: FinanceMarket): Promise<FinanceQuote>
   financials(symbol: string, market: FinanceMarket, year?: number): Promise<FinanceFinancials>
   metrics(symbol: string, market: FinanceMarket): Promise<FinanceMetrics>
   screener(filter: ScreenerFilter): Promise<ScreenerRow[]>
+  fx(pair: string): Promise<FinanceFxRate>
+  rates(category: FinanceRateCategory): Promise<FinanceRateQuote[]>
 }
 
 /** 校验市场参数合法性（工具层统一入口）。 */
@@ -140,6 +168,36 @@ const MOCK_METRICS: Record<string, Omit<FinanceMetrics, 'mock'>> = {
   'AAPL': { symbol: 'AAPL', name: 'Apple Inc.', market: 'us', pe: 34.8, pb: 54.0, ps: 8.5, dividendYield: 0.4, week52High: 241.2, week52Low: 164.0, marketCap: 3.54e12, updatedAt: '2026-09-23T20:00:00+00:00' },
 }
 
+/** 主要货币对示例汇率（1 base 兑多少 quote）。 */
+const MOCK_FX: Record<string, Omit<FinanceFxRate, 'mock'>> = {
+  'USD/CNY': { pair: 'USD/CNY', base: 'USD', quote: 'CNY', rate: 7.12, inverse: 0.1404, updatedAt: '2026-09-24T16:00:00+08:00' },
+  'EUR/CNY': { pair: 'EUR/CNY', base: 'EUR', quote: 'CNY', rate: 7.93, inverse: 0.1261, updatedAt: '2026-09-24T16:00:00+08:00' },
+  'HKD/CNY': { pair: 'HKD/CNY', base: 'HKD', quote: 'CNY', rate: 0.91, inverse: 1.0989, updatedAt: '2026-09-24T16:00:00+08:00' },
+  'JPY/CNY': { pair: 'JPY/CNY', base: 'JPY', quote: 'CNY', rate: 0.0486, inverse: 20.5761, updatedAt: '2026-09-24T16:00:00+08:00' },
+  'GBP/CNY': { pair: 'GBP/CNY', base: 'GBP', quote: 'CNY', rate: 9.46, inverse: 0.1057, updatedAt: '2026-09-24T16:00:00+08:00' },
+  'CNY/USD': { pair: 'CNY/USD', base: 'CNY', quote: 'USD', rate: 0.1404, inverse: 7.12, updatedAt: '2026-09-24T16:00:00+08:00' },
+}
+
+/** 人民币利率示例（%）：存款 / LPR / 国债收益率。 */
+const MOCK_RATES: Record<FinanceRateCategory, Omit<FinanceRateQuote, 'mock'>[]> = {
+  deposit: [
+    { category: 'deposit', name: '活期存款', rate: 0.2, updatedAt: '2026-09-01T00:00:00+08:00' },
+    { category: 'deposit', name: '三个月整存整取', rate: 1.15, updatedAt: '2026-09-01T00:00:00+08:00' },
+    { category: 'deposit', name: '一年整存整取', rate: 1.45, updatedAt: '2026-09-01T00:00:00+08:00' },
+    { category: 'deposit', name: '三年整存整取', rate: 1.95, updatedAt: '2026-09-01T00:00:00+08:00' },
+    { category: 'deposit', name: '五年整存整取', rate: 2.0, updatedAt: '2026-09-01T00:00:00+08:00' },
+  ],
+  lpr: [
+    { category: 'lpr', name: '1年期 LPR', rate: 3.1, updatedAt: '2026-09-21T00:00:00+08:00' },
+    { category: 'lpr', name: '5年期以上 LPR', rate: 3.6, updatedAt: '2026-09-21T00:00:00+08:00' },
+  ],
+  bond: [
+    { category: 'bond', name: '1年期国债', rate: 1.42, updatedAt: '2026-09-23T00:00:00+08:00' },
+    { category: 'bond', name: '10年期国债', rate: 2.08, updatedAt: '2026-09-23T00:00:00+08:00' },
+    { category: 'bond', name: '30年期国债', rate: 2.35, updatedAt: '2026-09-23T00:00:00+08:00' },
+  ],
+}
+
 /** 内置示例数据源：开箱即用，所有数据带 mock 标记。 */
 export class MockFinanceSource implements FinanceDataSource {
   async quote(symbol: string, market: FinanceMarket): Promise<FinanceQuote> {
@@ -167,6 +225,22 @@ export class MockFinanceSource implements FinanceDataSource {
       throw new Error(`mock 数据源未收录 ${market}:${symbol} 的估值数据`)
     }
     return { ...row, mock: true }
+  }
+
+  async fx(pair: string): Promise<FinanceFxRate> {
+    const row = MOCK_FX[pair.toUpperCase()]
+    if (row === undefined) {
+      throw new Error(`mock 数据源未收录汇率 ${pair}（内置示例：${Object.keys(MOCK_FX).join('/')}）`)
+    }
+    return { ...row, mock: true }
+  }
+
+  async rates(category: FinanceRateCategory): Promise<FinanceRateQuote[]> {
+    const rows = MOCK_RATES[category]
+    if (rows === undefined) {
+      throw new Error(`mock 数据源未收录利率类别 ${category}（可选 deposit/lpr/bond）`)
+    }
+    return rows.map((row) => ({ ...row, mock: true }))
   }
 
   async screener(filter: ScreenerFilter): Promise<ScreenerRow[]> {
@@ -231,6 +305,14 @@ export class HttpFinanceSource implements FinanceDataSource {
 
   async metrics(symbol: string, market: FinanceMarket): Promise<FinanceMetrics> {
     return this.get<FinanceMetrics>('metrics', { symbol, market })
+  }
+
+  async fx(pair: string): Promise<FinanceFxRate> {
+    return this.get<FinanceFxRate>('fx', { pair })
+  }
+
+  async rates(category: FinanceRateCategory): Promise<FinanceRateQuote[]> {
+    return this.get<FinanceRateQuote[]>('rates', { category })
   }
 
   async screener(filter: ScreenerFilter): Promise<ScreenerRow[]> {
