@@ -28,7 +28,7 @@ function num(value: number | null | undefined): number | undefined {
   return value === null || value === undefined ? undefined : value
 }
 
-/** 构建十四个金融工具定义。 */
+/** 构建十五个金融工具定义。 */
 export function buildFinanceTools(source: FinanceDataSource): ToolDefinition[] {
   const quote: ToolDefinition = defineTool({
     name: 'finance_quote',
@@ -768,5 +768,75 @@ export function buildFinanceTools(source: FinanceDataSource): ToolDefinition[] {
     },
   })
 
-  return [quote, financials, metrics, screener, calc, technical, fx, rates, kline, moneyflow, announcements, news, macro, sector]
+  const risk: ToolDefinition = defineTool({
+    name: 'finance_risk',
+    description: '计算个股风险指标：Beta（相对基准指数）、年化夏普比率、最大回撤、年化波动率、VaR(95%/99% 历史模拟法)。基于收盘价序列本地纯计算，返回公式与中间值，可复核。',
+    parameters: {
+      symbol: { type: 'string', required: true, description: '证券代码，如 600519、AAPL' },
+      market: { type: 'string', enum: ['cn', 'hk', 'us'], description: '市场，默认 cn' },
+      benchmark: { type: 'string', description: '基准指数代码，默认 000300（沪深300）；其他常用：000001 上证指数、399001 深证成指、HSI 恒生指数、SPX 标普500、IXIC 纳斯达克' },
+      riskFreeRate: { type: 'number', description: '年化无风险利率（%），默认 2.0' },
+      period: { type: 'number', description: '回溯交易日天数，默认 60，范围 20-250' },
+    },
+    output: {
+      schema: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          symbol: { type: 'string', required: true },
+          name: { type: 'string', required: true },
+          market: { type: 'string', required: true },
+          benchmark: { type: 'string', required: true },
+          benchmarkName: { type: 'string', required: true },
+          beta: { type: 'number', required: true },
+          sharpe: { type: 'number', required: true },
+          maxDrawdown: { type: 'number', required: true },
+          annualVolatility: { type: 'number', required: true },
+          var95: { type: 'number', required: true },
+          var99: { type: 'number', required: true },
+          formula: { type: 'string', required: true },
+          details: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              avgDailyReturn: { type: 'number', required: true },
+              dailyVolatility: { type: 'number', required: true },
+              covStockBench: { type: 'number', required: true },
+              varBench: { type: 'number', required: true },
+              peakPrice: { type: 'number', required: true },
+              troughPrice: { type: 'number', required: true },
+              returnCount: { type: 'number', required: true },
+            },
+            required: true,
+          },
+          updatedAt: { type: 'string', required: true },
+          mock: { oneOf: [{ type: 'boolean' }, { type: 'null' }], required: true },
+        },
+      },
+      render: (_args, value) => [{
+        type: 'text',
+        text: [
+          `${value.symbol} ${value.name} 风险指标（基准：${value.benchmarkName}，回溯${_args?.period ?? 60}日）`,
+          `Beta ${value.beta}，夏普 ${value.sharpe}，最大回撤 ${value.maxDrawdown}%`,
+          `年化波动率 ${value.annualVolatility}%，VaR(95%) ${value.var95}%，VaR(99%) ${value.var99}%`,
+          `公式：${value.formula}`,
+          `更新时间 ${value.updatedAt}${value.mock === true ? '（示例数据）' : ''}`,
+        ].join('\n'),
+      }],
+    },
+    async execute(args: { symbol: string; market?: string; benchmark?: string; riskFreeRate?: number; period?: number }) {
+      try {
+        const market = parseMarket(args.market)
+        const benchmark = args.benchmark ?? '000300'
+        const riskFreeRate = num(args.riskFreeRate) ?? 2.0
+        const period = num(args.period) ?? 60
+        const r = await source.risk(args.symbol, market, benchmark, riskFreeRate, period)
+        return { ...r, mock: r.mock === true ? true : null }
+      } catch (error) {
+        throw dataSourceError(error)
+      }
+    },
+  })
+
+  return [quote, financials, metrics, screener, calc, technical, fx, rates, kline, moneyflow, announcements, news, macro, sector, risk]
 }

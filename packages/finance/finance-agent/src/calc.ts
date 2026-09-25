@@ -144,3 +144,93 @@ export function computeIndicator(indicator: 'sma' | 'ema' | 'rsi' | 'macd' | 'bo
     }
   }
 }
+
+// ─────────── 风险指标（基于收盘价序列本地纯计算，全部可复核） ───────────
+
+/** 校验收益率序列长度（>=20 个日收益率，对应至少 21 个收盘价）。 */
+function ensureReturns(returns: number[]): void {
+  if (returns.length < 20) throw new Error(`收益率序列长度必须 >= 20，当前 ${returns.length}（需至少 21 个收盘价）`)
+}
+
+/** 日收益率序列: returns[i] = (prices[i+1] - prices[i]) / prices[i] */
+export function dailyReturns(prices: number[]): number[] {
+  if (!Array.isArray(prices) || prices.length < 2) return []
+  const out: number[] = []
+  for (let i = 0; i < prices.length - 1; i++) {
+    const curr = prices[i + 1] as number
+    const prev = prices[i] as number
+    if (prev === 0) throw new Error('收盘价序列中出现 0，无法计算日收益率')
+    out.push((curr - prev) / prev)
+  }
+  return out
+}
+
+/** Beta = Cov(stockReturns, benchReturns) / Var(benchReturns)
+ *  Cov 与 Var 均按样本估计（除以 n-1），比值中 n-1 约掉。 */
+export function betaCoefficient(stockReturns: number[], benchReturns: number[]): number {
+  ensureReturns(stockReturns)
+  const n = stockReturns.length
+  if (benchReturns.length !== n) throw new Error(`个股与基准收益率序列长度必须一致（个股 ${n}，基准 ${benchReturns.length}）`)
+  const meanS = stockReturns.reduce((a, b) => a + b, 0) / n
+  const meanB = benchReturns.reduce((a, b) => a + b, 0) / n
+  let cov = 0
+  let varB = 0
+  for (let i = 0; i < n; i++) {
+    const ds = (stockReturns[i] as number) - meanS
+    const db = (benchReturns[i] as number) - meanB
+    cov += ds * db
+    varB += db * db
+  }
+  if (varB === 0) throw new Error('基准收益率方差为 0，无法计算 Beta')
+  return cov / varB
+}
+
+/** 年化夏普比率 = (年化收益率 - 无风险利率) / 年化波动率
+ *  年化收益率 = mean(dailyReturns) * 252（小数）
+ *  年化波动率 = std(dailyReturns) * sqrt(252)（样本标准差）
+ *  riskFreeRatePct 为百分数（如 2.0 表示 2%）。 */
+export function sharpeRatio(returns: number[], riskFreeRatePct: number): number {
+  ensureReturns(returns)
+  const n = returns.length
+  const mean = returns.reduce((a, b) => a + b, 0) / n
+  const variance = returns.reduce((a, b) => a + (b - mean) ** 2, 0) / (n - 1)
+  const dailyVol = Math.sqrt(variance)
+  const annualReturn = mean * 252
+  const annualVol = dailyVol * Math.sqrt(252)
+  if (annualVol === 0) throw new Error('年化波动率为 0，无法计算夏普比率')
+  return (annualReturn - riskFreeRatePct / 100) / annualVol
+}
+
+/** 最大回撤 = max((peak - trough) / peak) * 100, 返回负数百分比
+ *  遍历价格序列，记录历史峰值 peak，取相对 peak 最差回撤。 */
+export function maxDrawdown(prices: number[]): number {
+  if (!Array.isArray(prices) || prices.length < 2) throw new Error('价格序列至少需要 2 个数据点')
+  let peak = prices[0] as number
+  let worst = 0
+  for (const p of prices) {
+    if (p > peak) peak = p
+    const dd = (p - peak) / peak // <= 0
+    if (dd < worst) worst = dd
+  }
+  return worst * 100
+}
+
+/** 年化波动率 = std(dailyReturns) * sqrt(252) * 100（样本标准差）。 */
+export function annualVolatility(returns: number[]): number {
+  ensureReturns(returns)
+  const n = returns.length
+  const mean = returns.reduce((a, b) => a + b, 0) / n
+  const variance = returns.reduce((a, b) => a + (b - mean) ** 2, 0) / (n - 1)
+  return Math.sqrt(variance) * Math.sqrt(252) * 100
+}
+
+/** 历史模拟法 VaR: 将日收益率升序排序, 取 (1-confidence) 分位数 * 100
+ *  confidence=0.95 → 取第 5% 分位数; confidence=0.99 → 取第 1% 分位数
+ *  返回负数百分比（最坏损失）。 */
+export function historicalVaR(returns: number[], confidence: number): number {
+  ensureReturns(returns)
+  const sorted = returns.slice().sort((a, b) => a - b)
+  const n = sorted.length
+  const idx = Math.max(0, Math.min(n - 1, Math.floor((1 - confidence) * n)))
+  return (sorted[idx] as number) * 100
+}

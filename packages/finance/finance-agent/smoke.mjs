@@ -139,5 +139,23 @@ const secTop = await source.sector('cn', 'industry', 5)
 check('sector limit=5', secTop.items.length === 5, `len=${secTop.items.length}`)
 check('sector 字段完整', sec.items.every(i => typeof i.changePct === 'number' && typeof i.leadingStock === 'string' && i.upCount >= 0), JSON.stringify(sec.items[0]))
 
+// 18. 风险指标（新增）
+const rk = await source.risk('600519', 'cn', '000300', 2.0, 60)
+check('risk 默认参数字段为数字',
+  typeof rk.beta === 'number' && typeof rk.sharpe === 'number' && typeof rk.maxDrawdown === 'number' &&
+  typeof rk.annualVolatility === 'number' && typeof rk.var95 === 'number' && typeof rk.var99 === 'number' &&
+  rk.mock === true && rk.benchmarkName === '沪深300',
+  JSON.stringify(rk))
+check('risk beta 合理区间 0.5-2.0', rk.beta > 0.5 && rk.beta < 2.0, `beta=${rk.beta}`)
+check('risk 最大回撤为负数', rk.maxDrawdown < 0, `mdd=${rk.maxDrawdown}`)
+check('risk var95 > var99（99%更极端）', rk.var95 > rk.var99, `v95=${rk.var95} v99=${rk.var99}`)
+try {
+  await source.risk('999999', 'cn', '000300', 2.0, 60)
+  check('risk 未知标的拒绝', false, '未报错')
+} catch (e) {
+  check('risk 未知标的拒绝', /未收录/.test(String(e.message)), String(e.message))
+}
+check('risk formula 非空含 Beta', typeof rk.formula === 'string' && rk.formula.includes('Beta'), rk.formula)
+
 console.log(`\n结果: ${pass} 通过 / ${fail} 失败`)
 process.exit(fail === 0 ? 0 : 1)

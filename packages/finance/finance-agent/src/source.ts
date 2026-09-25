@@ -8,6 +8,8 @@
  * @module @deepseek-ai/dsh-finance-agent/src/source
  */
 
+import { dailyReturns, betaCoefficient, sharpeRatio, maxDrawdown, annualVolatility, historicalVaR } from './calc.ts'
+
 /** 市场代码：cn=中国大陆 A 股，hk=香港，us=美股。 */
 export type FinanceMarket = 'cn' | 'hk' | 'us'
 
@@ -271,6 +273,53 @@ export interface FinanceSectorResult {
   mock?: boolean
 }
 
+/** 个股风险指标中间计算值。 */
+export interface FinanceRiskDetails {
+  /** 平均日收益率（小数）。 */
+  avgDailyReturn: number
+  /** 日收益率波动率（样本标准差，小数）。 */
+  dailyVolatility: number
+  /** 个股与基准日收益率样本协方差。 */
+  covStockBench: number
+  /** 基准日收益率样本方差。 */
+  varBench: number
+  /** 回溯区间内最高收盘价。 */
+  peakPrice: number
+  /** 回溯区间内最低收盘价。 */
+  troughPrice: number
+  /** 参与计算的日收益率个数。 */
+  returnCount: number
+}
+
+/** 个股风险指标结果（Beta/夏普/最大回撤/年化波动率/VaR）。 */
+export interface FinanceRiskResult {
+  symbol: string
+  name: string
+  market: FinanceMarket
+  /** 基准指数代码。 */
+  benchmark: string
+  /** 基准指数名称，如 沪深300。 */
+  benchmarkName: string
+  /** Beta 系数（相对基准）。 */
+  beta: number
+  /** 年化夏普比率。 */
+  sharpe: number
+  /** 最大回撤（负数百分比，如 -15.23）。 */
+  maxDrawdown: number
+  /** 年化波动率（%）。 */
+  annualVolatility: number
+  /** 95% 置信度单日 VaR（历史模拟法，负数百分比）。 */
+  var95: number
+  /** 99% 置信度单日 VaR（历史模拟法，负数百分比）。 */
+  var99: number
+  /** 各指标公式汇总（分号分隔）。 */
+  formula: string
+  /** 中间计算值。 */
+  details: FinanceRiskDetails
+  updatedAt: string
+  mock?: boolean
+}
+
 /** 数据源统一接口：工具层只依赖本契约。 */
 export interface FinanceDataSource {
   quote(symbol: string, market: FinanceMarket): Promise<FinanceQuote>
@@ -285,6 +334,7 @@ export interface FinanceDataSource {
   news(category: FinanceNewsCategory | undefined, limit: number, symbol?: string): Promise<FinanceNewsResult>
   macro(indicator: FinanceMacroIndicator, period?: string): Promise<FinanceMacro>
   sector(market: FinanceMarket, category: FinanceSectorCategory, limit: number): Promise<FinanceSectorResult>
+  risk(symbol: string, market: FinanceMarket, benchmark: string, riskFreeRate: number, period: number): Promise<FinanceRiskResult>
 }
 
 /** 校验市场参数合法性（工具层统一入口）。 */
@@ -419,6 +469,31 @@ function mulberry32(seed: number): () => number {
 /** 保留两位小数。 */
 function r2(n: number): number {
   return Math.round(n * 100) / 100
+}
+
+/** 保留四位小数。 */
+function r4(n: number): number {
+  return Math.round(n * 10000) / 10000
+}
+
+/** 保留六位小数（中间统计量）。 */
+function r6(n: number): number {
+  return Math.round(n * 1e6) / 1e6
+}
+
+/** 基准指数代码 → 中文名映射。 */
+const BENCHMARK_NAMES: Record<string, string> = {
+  '000300': '沪深300',
+  '000001': '上证指数',
+  '399001': '深证成指',
+  HSI: '恒生指数',
+  SPX: '标普500',
+  IXIC: '纳斯达克',
+}
+
+/** 取基准指数中文名（未收录时回退为代码本身）。 */
+function benchmarkNameOf(benchmark: string): string {
+  return BENCHMARK_NAMES[benchmark] ?? benchmark
 }
 
 /** 个股资金流向示例（金额：元）。主力≈超大单+大单，中单+小单反向对冲。 */
@@ -659,6 +734,72 @@ export class MockFinanceSource implements FinanceDataSource {
     const items = MOCK_SECTORS.slice(0, Math.max(1, Math.min(limit, MOCK_SECTORS.length)))
     return { market: 'cn', category, total: MOCK_SECTORS.length, items, updatedAt: '2026-09-24T15:00:00+08:00', mock: true }
   }
+
+  async risk(symbol: string, market: FinanceMarket, benchmark: string, riskFreeRate: number, period: number): Promise<FinanceRiskResult> {
+    const quote = MOCK_QUOTES[symbol]
+    if (quote === undefined || quote.market !== market) {
+      throw new Error(`mock 数据源未收录 ${market}:${symbol} 的风险指标（内置示例：600519/000858/601318/AAPL/0700）`)
+    }
+    // 收盘价点数：period 回溯交易日，至少 21 个点以保证日收益率 >= 20 个
+    const count = Math.max(21, Math.min(Math.round(period), 250))
+    // 基准指数日收益序列（确定性 PRNG，波动锚定 ~3800 点）
+    const benchRand = mulberry32(hashSeed('risk:bench:' + benchmark))
+    const benchRets: number[] = []
+    for (let i = 0; i < count - 1; i++) benchRets.push((benchRand() - 0.5) * 0.012)
+    // 个股日收益：与基准相关（β≈1.15）+ 特质噪声，保证 Beta 落在合理区间
+    const stockRand = mulberry32(hashSeed('risk:stock:' + symbol + ':' + market))
+    const stockRets = benchRets.map((br) => 1.15 * br + (stockRand() - 0.5) * 0.014)
+    // 收盘价序列：末根锚定个股现价，末根基准锚定 3800，向前递推
+    // stockRets[k] 为第 k-1→k 日的收益，故 prices[k-1] = prices[k] / (1 + stockRets[k-1])
+    const stockCloses = new Array<number>(count)
+    stockCloses[count - 1] = quote.price
+    for (let i = count - 1; i >= 1; i--) stockCloses[i - 1] = (stockCloses[i] as number) / (1 + (stockRets[i - 1] as number))
+    const benchCloses = new Array<number>(count)
+    benchCloses[count - 1] = 3800
+    for (let i = count - 1; i >= 1; i--) benchCloses[i - 1] = (benchCloses[i] as number) / (1 + (benchRets[i - 1] as number))
+
+    const sRets = dailyReturns(stockCloses)
+    const bRets = dailyReturns(benchCloses)
+    const n = sRets.length
+    const meanS = sRets.reduce((a, b) => a + b, 0) / n
+    const meanB = bRets.reduce((a, b) => a + b, 0) / n
+    let cov = 0
+    let varB = 0
+    for (let i = 0; i < n; i++) {
+      const ds = (sRets[i] as number) - meanS
+      const db = (bRets[i] as number) - meanB
+      cov += ds * db
+      varB += db * db
+    }
+    cov /= n - 1
+    varB /= n - 1
+
+    return {
+      symbol,
+      name: quote.name,
+      market,
+      benchmark,
+      benchmarkName: benchmarkNameOf(benchmark),
+      beta: r4(betaCoefficient(sRets, bRets)),
+      sharpe: r4(sharpeRatio(sRets, riskFreeRate)),
+      maxDrawdown: r2(maxDrawdown(stockCloses)),
+      annualVolatility: r2(annualVolatility(sRets)),
+      var95: r2(historicalVaR(sRets, 0.95)),
+      var99: r2(historicalVaR(sRets, 0.99)),
+      formula: 'Beta=Cov(Ri,Rm)/Var(Rm)；Sharpe=(年化收益-无风险)/年化波动；MDD=max((峰-谷)/峰)；Vol=σ日×√252；VaR=历史收益率分位数',
+      details: {
+        avgDailyReturn: r6(meanS),
+        dailyVolatility: r6(Math.sqrt(sRets.reduce((a, b) => a + (b - meanS) ** 2, 0) / (n - 1))),
+        covStockBench: r6(cov),
+        varBench: r6(varB),
+        peakPrice: r2(Math.max(...stockCloses)),
+        troughPrice: r2(Math.min(...stockCloses)),
+        returnCount: n,
+      },
+      updatedAt: quote.updatedAt,
+      mock: true,
+    }
+  }
 }
 
 // ───────────────────────────── HTTP 实现 ─────────────────────────────
@@ -744,6 +885,10 @@ export class HttpFinanceSource implements FinanceDataSource {
 
   async sector(market: FinanceMarket, category: FinanceSectorCategory, limit: number): Promise<FinanceSectorResult> {
     return this.get<FinanceSectorResult>('sector', { market, category, limit })
+  }
+
+  async risk(symbol: string, market: FinanceMarket, benchmark: string, riskFreeRate: number, period: number): Promise<FinanceRiskResult> {
+    return this.get<FinanceRiskResult>('risk', { symbol, market, benchmark, riskFreeRate, period })
   }
 }
 

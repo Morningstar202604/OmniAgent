@@ -1,6 +1,6 @@
 # @deepseek-ai/dsh-finance-agent — OmniAgent 金融专业插件
 
-OmniAgent 通用全能底座之上的**首发专业插件**：挂载后向底座注入金融领域工具集与系统提示词，让同一个 agent 立即具备金融专业能力（行情、财务、估值、选股、K线、资金流、公告、资讯、宏观、板块、金融计算、技术分析、汇率、利率），同时**不削弱任何通用能力**（文件、执行、搜索、推理等照常可用）。
+OmniAgent 通用全能底座之上的**首发专业插件**：挂载后向底座注入金融领域工具集与系统提示词，让同一个 agent 立即具备金融专业能力（行情、财务、估值、选股、K线、资金流、公告、资讯、宏观、板块、风险指标、金融计算、技术分析、汇率、利率），同时**不削弱任何通用能力**（文件、执行、搜索、推理等照常可用）。
 
 ## 设计原则
 
@@ -37,9 +37,10 @@ oa --profile finance "贵州茅台最近有什么公告"
 oa --profile finance "今天有什么重要财经新闻"
 oa --profile finance "中国最新的CPI和PMI是多少"
 oa --profile finance "今天哪些行业板块涨幅靠前"
+oa --profile finance "分析贵州茅台的风险指标（Beta/夏普/最大回撤/VaR）"
 ```
 
-## 工具清单（14 个）
+## 工具清单（15 个）
 
 ### 数据查询（4）
 | 工具 | 说明 | 关键参数 |
@@ -66,6 +67,11 @@ oa --profile finance "今天哪些行业板块涨幅靠前"
 |---|---|---|
 | `finance_macro` | 宏观经济指标（GDP/CPI/PPI/PMI/M2/社融/进出口/失业率，含同比环比） | indicator, period |
 | `finance_sector` | 行业/概念板块行情（涨跌幅/领涨股/成交额/涨跌家数） | market, category(industry/concept), limit |
+
+### 风险指标（1，纯计算可复核）
+| 工具 | 说明 | 关键参数 |
+|---|---|---|
+| `finance_risk` | 个股风险指标（Beta/夏普比率/最大回撤/年化波动率/VaR95/VaR99），基于K线收盘价本地计算，输出公式与中间值 | symbol, market, benchmark, riskFreeRate, period |
 
 ### 金融计算（1，纯函数可复核）
 | 工具 | 说明 | 模式 |
@@ -103,6 +109,7 @@ oa --profile finance "今天哪些行业板块涨幅靠前"
 | `GET {baseURL}/news` | category, limit, symbol | FinanceNewsResult |
 | `GET {baseURL}/macro` | indicator, period | FinanceMacro |
 | `GET {baseURL}/sector` | market, category, limit | FinanceSectorResult |
+| `GET {baseURL}/risk` | symbol, market, benchmark, riskFreeRate, period | FinanceRiskResult |
 | `GET {baseURL}/fx` | pair | FinanceFxRate |
 | `GET {baseURL}/rates` | category | FinanceRateQuote[] |
 
@@ -120,5 +127,5 @@ oa --profile finance "今天哪些行业板块涨幅靠前"
 ## 开发验证
 
 - 类型检查：`pnpm --filter @deepseek-ai/dsh-finance-agent exec tsc --noEmit -p tsconfig.json`
-- 数据契约冒烟：`node packages/finance/finance-agent/smoke.mjs`（37 项全通过）
+- 数据契约冒烟：`node packages/finance/finance-agent/smoke.mjs`（43 项全通过）
 - 端到端：`oa --profile finance "..."`（真实模型 + 工具调用）
