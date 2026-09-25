@@ -88,5 +88,56 @@ check('calc 年化收益 (2)^(1/5)-1', Math.abs(ret - 14.869) < 0.01, String(ret
 const ddm = dividendDiscountValue(2, 8, 3)
 check('calc DDM 2/(8%-3%)', Math.abs(ddm - 40) < 0.01, String(ddm))
 
+// 12. K线（新增）
+const kl = await source.kline('600519', 'cn', 'day', 30)
+check('kline 600519 30根', kl.bars.length === 30 && kl.mock === true, `bars=${kl.bars.length}`)
+check('kline 末根收盘锚定现价', kl.bars[kl.bars.length - 1].close === 1688.0, String(kl.bars[kl.bars.length - 1].close))
+const klAgain = await source.kline('600519', 'cn', 'day', 30)
+check('kline 确定性可复现', JSON.stringify(kl.bars) === JSON.stringify(klAgain.bars), '两次结果不一致')
+const klUs = await source.kline('AAPL', 'us', 'week', 10)
+check('kline AAPL 周K', klUs.market === 'us' && klUs.period === 'week' && klUs.bars.length === 10, JSON.stringify(klUs.bars.length))
+try {
+  await source.kline('999999', 'cn', 'day', 30)
+  check('kline 未知标的拒绝', false, '未报错')
+} catch (e) {
+  check('kline 未知标的拒绝', /未收录/.test(String(e.message)), String(e.message))
+}
+
+// 13. 资金流向（新增）
+const mf = await source.moneyflow('600519', 'cn')
+check('moneyflow 600519 主力净流入', mf.mainNetInflow === 3.24e8 && mf.mock === true, JSON.stringify(mf))
+check('moneyflow 主力≈超大+大单', Math.abs(mf.mainNetInflow - (mf.superLargeNet + mf.largeNet)) < 1e3, String(mf.mainNetInflow))
+const mf2 = await source.moneyflow('000858', 'cn')
+check('moneyflow 000858 主力为负', mf2.mainNetInflow < 0, String(mf2.mainNetInflow))
+
+// 14. 公司公告（新增）
+const ann = await source.announcements('600519', 'cn', undefined, 10)
+check('announcements 600519', ann.items.length >= 5 && ann.total >= 5 && ann.mock === true, `total=${ann.total} items=${ann.items.length}`)
+const annDiv = await source.announcements('600519', 'cn', 'dividend', 10)
+check('announcements 分红过滤', annDiv.total >= 1 && annDiv.items.every(i => i.category === 'dividend'), JSON.stringify(annDiv.items.map(i => i.category)))
+
+// 15. 财经资讯（新增）
+const allNews = await source.news(undefined, 20)
+check('news 默认全部', allNews.total === 15 && allNews.items.length === 15 && allNews.mock === true, `total=${allNews.total}`)
+const macroNews = await source.news('macro', 20)
+check('news 宏观过滤', macroNews.category === 'macro' && macroNews.total === 4, `total=${macroNews.total}`)
+const relatedNews = await source.news(undefined, 20, '600519')
+check('news 关联个股 600519', relatedNews.items.some(i => i.title.includes('贵州茅台')), JSON.stringify(relatedNews.items.map(i => i.title)))
+
+// 16. 宏观经济指标（新增）
+const cpi = await source.macro('cpi')
+check('macro CPI', cpi.value === 0.5 && cpi.unit.includes('%') && cpi.mock === true, JSON.stringify(cpi))
+const pmi = await source.macro('pmi_manufacturing')
+check('macro 制造业PMI', pmi.value === 49.5 && pmi.name.includes('PMI'), JSON.stringify(pmi))
+const gdp = await source.macro('gdp', '2026Q2')
+check('macro GDP 自定义期', gdp.indicator === 'gdp' && gdp.period === '2026Q2' && gdp.yoy === 5.0, JSON.stringify(gdp))
+
+// 17. 行业板块（新增）
+const sec = await source.sector('cn', 'industry', 20)
+check('sector 行业板块', sec.total === 15 && sec.items.length === 15 && sec.mock === true, `total=${sec.total}`)
+const secTop = await source.sector('cn', 'industry', 5)
+check('sector limit=5', secTop.items.length === 5, `len=${secTop.items.length}`)
+check('sector 字段完整', sec.items.every(i => typeof i.changePct === 'number' && typeof i.leadingStock === 'string' && i.upCount >= 0), JSON.stringify(sec.items[0]))
+
 console.log(`\n结果: ${pass} 通过 / ${fail} 失败`)
 process.exit(fail === 0 ? 0 : 1)

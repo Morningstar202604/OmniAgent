@@ -5,7 +5,15 @@
  */
 
 import { defineTool, type ToolDefinition } from '@deepseek-ai/dsh-tools'
-import type { FinanceDataSource, FinanceMarket } from './source.ts'
+import type {
+  FinanceDataSource,
+  FinanceMarket,
+  FinanceKlinePeriod,
+  FinanceAnnouncementCategory,
+  FinanceNewsCategory,
+  FinanceMacroIndicator,
+  FinanceSectorCategory,
+} from './source.ts'
 import { parseMarket } from './source.ts'
 import { compoundFutureValue, compoundPresentValue, loanPayment, annualizedReturn, dividendDiscountValue, computeIndicator } from './calc.ts'
 
@@ -20,7 +28,7 @@ function num(value: number | null | undefined): number | undefined {
   return value === null || value === undefined ? undefined : value
 }
 
-/** 构建八个金融工具定义。 */
+/** 构建十四个金融工具定义。 */
 export function buildFinanceTools(source: FinanceDataSource): ToolDefinition[] {
   const quote: ToolDefinition = defineTool({
     name: 'finance_quote',
@@ -423,5 +431,342 @@ export function buildFinanceTools(source: FinanceDataSource): ToolDefinition[] {
     },
   })
 
-  return [quote, financials, metrics, screener, calc, technical, fx, rates]
+  const kline: ToolDefinition = defineTool({
+    name: 'finance_kline',
+    description: '查询股票/指数的历史K线（日K/周K/月K）。返回开高低收量额序列，可取出 close 数组配合 finance_technical 做技术分析。',
+    parameters: {
+      symbol: { type: 'string', required: true, description: '证券代码，如 600519、AAPL' },
+      market: { type: 'string', enum: ['cn', 'hk', 'us'], description: '市场，默认 cn' },
+      period: { type: 'string', enum: ['day', 'week', 'month'], description: 'K线周期，默认 day' },
+      limit: { type: 'number', description: '返回条数，默认 30，最大 120' },
+    },
+    output: {
+      schema: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          symbol: { type: 'string', required: true },
+          name: { type: 'string', required: true },
+          market: { type: 'string', required: true },
+          period: { type: 'string', required: true },
+          bars: {
+            type: 'array',
+            items: {
+              type: 'object',
+              additionalProperties: false,
+              properties: {
+                date: { type: 'string', required: true },
+                open: { type: 'number', required: true },
+                high: { type: 'number', required: true },
+                low: { type: 'number', required: true },
+                close: { type: 'number', required: true },
+                volume: { type: 'number', required: true },
+                turnover: { type: 'number', required: true },
+              },
+            },
+            required: true,
+          },
+          updatedAt: { type: 'string', required: true },
+          mock: { oneOf: [{ type: 'boolean' }, { type: 'null' }], required: true },
+        },
+      },
+      render: (_args, value) => [{
+        type: 'text',
+        text: [
+          `${value.symbol} ${value.name} ${value.period === 'day' ? '日K' : value.period === 'week' ? '周K' : '月K'}（共 ${value.bars.length} 根）`,
+          ...value.bars.slice(-5).map((bar: { date: string; open: number; high: number; low: number; close: number; volume: number }) =>
+            `- ${bar.date} 开${bar.open} 高${bar.high} 低${bar.low} 收${bar.close} 量${bar.volume}`),
+          `更新时间 ${value.updatedAt}${value.mock === true ? '（示例数据）' : ''}`,
+        ].join('\n'),
+      }],
+    },
+    async execute(args: { symbol: string; market?: string; period?: string; limit?: number }) {
+      try {
+        const market = parseMarket(args.market)
+        const period: FinanceKlinePeriod = args.period === 'week' || args.period === 'month' ? args.period : 'day'
+        const limit = num(args.limit) ?? 30
+        const r = await source.kline(args.symbol, market, period, limit)
+        return { ...r, mock: r.mock === true ? true : null }
+      } catch (error) {
+        throw dataSourceError(error)
+      }
+    },
+  })
+
+  const moneyflow: ToolDefinition = defineTool({
+    name: 'finance_moneyflow',
+    description: '查询个股资金流向：主力净流入、超大单/大单/中单/小单净额及主力净占比。',
+    parameters: {
+      symbol: { type: 'string', required: true, description: '证券代码，如 600519、AAPL' },
+      market: { type: 'string', enum: ['cn', 'hk', 'us'], description: '市场，默认 cn' },
+    },
+    output: {
+      schema: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          symbol: { type: 'string', required: true },
+          name: { type: 'string', required: true },
+          market: { type: 'string', required: true },
+          mainNetInflow: { type: 'number', required: true },
+          superLargeNet: { type: 'number', required: true },
+          largeNet: { type: 'number', required: true },
+          mediumNet: { type: 'number', required: true },
+          smallNet: { type: 'number', required: true },
+          mainNetInflowPct: { type: 'number', required: true },
+          updatedAt: { type: 'string', required: true },
+          mock: { oneOf: [{ type: 'boolean' }, { type: 'null' }], required: true },
+        },
+      },
+      render: (_args, value) => [{
+        type: 'text',
+        text: [
+          `${value.symbol} ${value.name} 资金流向`,
+          `主力净流入 ${value.mainNetInflow} 元（占比 ${value.mainNetInflowPct}%），`,
+          `超大单 ${value.superLargeNet}，大单 ${value.largeNet}，中单 ${value.mediumNet}，小单 ${value.smallNet}`,
+          `更新时间 ${value.updatedAt}${value.mock === true ? '（示例数据）' : ''}`,
+        ].join('\n'),
+      }],
+    },
+    async execute(args: { symbol: string; market?: string }) {
+      try {
+        const market = parseMarket(args.market)
+        const r = await source.moneyflow(args.symbol, market)
+        return { ...r, mock: r.mock === true ? true : null }
+      } catch (error) {
+        throw dataSourceError(error)
+      }
+    },
+  })
+
+  const announcements: ToolDefinition = defineTool({
+    name: 'finance_announcements',
+    description: '查询上市公司近期公告列表（年报/季报/分红/重大事项等）。',
+    parameters: {
+      symbol: { type: 'string', required: true, description: '证券代码，如 600519、000858' },
+      market: { type: 'string', enum: ['cn', 'hk', 'us'], description: '市场，默认 cn' },
+      category: { type: 'string', enum: ['annual_report', 'quarterly_report', 'dividend', 'ma_equity_change', 'other'], description: '公告类别，默认全部' },
+      limit: { type: 'number', description: '返回条数，默认 10' },
+    },
+    output: {
+      schema: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          symbol: { type: 'string', required: true },
+          name: { type: 'string', required: true },
+          market: { type: 'string', required: true },
+          total: { type: 'number', required: true },
+          items: {
+            type: 'array',
+            items: {
+              type: 'object',
+              additionalProperties: false,
+              properties: {
+                id: { type: 'string', required: true },
+                title: { type: 'string', required: true },
+                category: { type: 'string', required: true },
+                publishDate: { type: 'string', required: true },
+                url: { type: 'string', required: true },
+                summary: { type: 'string', required: true },
+              },
+            },
+            required: true,
+          },
+          updatedAt: { type: 'string', required: true },
+          mock: { oneOf: [{ type: 'boolean' }, { type: 'null' }], required: true },
+        },
+      },
+      render: (_args, value) => [{
+        type: 'text',
+        text: value.items.length === 0
+          ? `${value.symbol} ${value.name} 暂无符合条件的公告`
+          : `${value.symbol} ${value.name} 近期公告（共 ${value.total} 条，列出 ${value.items.length} 条）：\n` +
+            value.items.map((item: { publishDate: string; title: string; summary: string }) => `- [${item.publishDate}] ${item.title}：${item.summary}`).join('\n') +
+            `\n更新时间 ${value.updatedAt}${value.mock === true ? '（示例数据）' : ''}`,
+      }],
+    },
+    async execute(args: { symbol: string; market?: string; category?: string; limit?: number }) {
+      try {
+        const market = parseMarket(args.market)
+        const category: FinanceAnnouncementCategory | undefined =
+          args.category === 'annual_report' || args.category === 'quarterly_report' || args.category === 'dividend' || args.category === 'ma_equity_change' || args.category === 'other'
+            ? args.category
+            : undefined
+        const limit = num(args.limit) ?? 10
+        const r = await source.announcements(args.symbol, market, category, limit)
+        return { ...r, mock: r.mock === true ? true : null }
+      } catch (error) {
+        throw dataSourceError(error)
+      }
+    },
+  })
+
+  const news: ToolDefinition = defineTool({
+    name: 'finance_news',
+    description: '查询财经新闻/市场快讯（市场、宏观、公司、行业、政策），可按类别或关联个股过滤。',
+    parameters: {
+      category: { type: 'string', enum: ['market', 'macro', 'company', 'industry', 'policy'], description: '资讯类别，默认 market' },
+      limit: { type: 'number', description: '返回条数，默认 10' },
+      symbol: { type: 'string', description: '关联个股代码，仅返回提及该个股的资讯' },
+    },
+    output: {
+      schema: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          category: { type: 'string', required: true },
+          total: { type: 'number', required: true },
+          items: {
+            type: 'array',
+            items: {
+              type: 'object',
+              additionalProperties: false,
+              properties: {
+                id: { type: 'string', required: true },
+                title: { type: 'string', required: true },
+                source: { type: 'string', required: true },
+                publishTime: { type: 'string', required: true },
+                summary: { type: 'string', required: true },
+                url: { type: 'string', required: true },
+                tags: { type: 'array', items: { type: 'string' }, required: true },
+              },
+            },
+            required: true,
+          },
+          updatedAt: { type: 'string', required: true },
+          mock: { oneOf: [{ type: 'boolean' }, { type: 'null' }], required: true },
+        },
+      },
+      render: (_args, value) => [{
+        type: 'text',
+        text: value.items.length === 0
+          ? '未查询到相关财经资讯'
+          : `财经资讯【${value.category}】（共 ${value.total} 条，列出 ${value.items.length} 条）：\n` +
+            value.items.map((item: { publishTime: string; source: string; title: string; summary: string }) => `- [${item.publishTime} ${item.source}] ${item.title}：${item.summary}`).join('\n') +
+            `\n更新时间 ${value.updatedAt}${value.mock === true ? '（示例数据）' : ''}`,
+      }],
+    },
+    async execute(args: { category?: string; limit?: number; symbol?: string }) {
+      try {
+        const category: FinanceNewsCategory | undefined =
+          args.category === 'market' || args.category === 'macro' || args.category === 'company' || args.category === 'industry' || args.category === 'policy'
+            ? args.category
+            : undefined
+        const limit = num(args.limit) ?? 10
+        const r = await source.news(category, limit, args.symbol)
+        return { ...r, mock: r.mock === true ? true : null }
+      } catch (error) {
+        throw dataSourceError(error)
+      }
+    },
+  })
+
+  const macro: ToolDefinition = defineTool({
+    name: 'finance_macro',
+    description: '查询宏观经济指标最新值：GDP/CPI/PPI/制造业与非制造业PMI/M2/社融/进出口/失业率。',
+    parameters: {
+      indicator: { type: 'string', enum: ['gdp', 'cpi', 'ppi', 'pmi_manufacturing', 'pmi_non_manufacturing', 'm2', 'social_financing', 'trade_balance', 'unemployment'], required: true, description: '宏观指标' },
+      period: { type: 'string', description: '报告期，如 2026-08 或 2026Q2，默认最新一期' },
+    },
+    output: {
+      schema: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          indicator: { type: 'string', required: true },
+          name: { type: 'string', required: true },
+          period: { type: 'string', required: true },
+          value: { type: 'number', required: true },
+          unit: { type: 'string', required: true },
+          yoy: { type: 'number', required: true },
+          mom: { type: 'number', required: true },
+          previousValue: { type: 'number', required: true },
+          updatedAt: { type: 'string', required: true },
+          mock: { oneOf: [{ type: 'boolean' }, { type: 'null' }], required: true },
+        },
+      },
+      render: (_args, value) => [{
+        type: 'text',
+        text: [
+          `${value.name}（${value.indicator}）`,
+          `${value.period}：${value.value} ${value.unit}，同比 ${value.yoy}%，环比 ${value.mom}%，上期 ${value.previousValue}`,
+          `更新时间 ${value.updatedAt}${value.mock === true ? '（示例数据）' : ''}`,
+        ].join('\n'),
+      }],
+    },
+    async execute(args: { indicator: string; period?: string }) {
+      try {
+        const valid: FinanceMacroIndicator[] = ['gdp', 'cpi', 'ppi', 'pmi_manufacturing', 'pmi_non_manufacturing', 'm2', 'social_financing', 'trade_balance', 'unemployment']
+        if (!valid.includes(args.indicator as FinanceMacroIndicator)) {
+          throw new Error(`finance_macro: 未知指标 ${args.indicator}`)
+        }
+        const r = await source.macro(args.indicator as FinanceMacroIndicator, args.period)
+        return { ...r, mock: r.mock === true ? true : null }
+      } catch (error) {
+        throw dataSourceError(error)
+      }
+    },
+  })
+
+  const sector: ToolDefinition = defineTool({
+    name: 'finance_sector',
+    description: '查询行业板块/概念板块行情：涨跌幅、领涨股、成交额、PE、涨跌家数。',
+    parameters: {
+      market: { type: 'string', enum: ['cn', 'hk', 'us'], description: '市场，默认 cn' },
+      category: { type: 'string', enum: ['industry', 'concept'], description: '板块类别，默认 industry' },
+      limit: { type: 'number', description: '返回条数，默认 20' },
+    },
+    output: {
+      schema: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          market: { type: 'string', required: true },
+          category: { type: 'string', required: true },
+          total: { type: 'number', required: true },
+          items: {
+            type: 'array',
+            items: {
+              type: 'object',
+              additionalProperties: false,
+              properties: {
+                name: { type: 'string', required: true },
+                changePct: { type: 'number', required: true },
+                leadingStock: { type: 'string', required: true },
+                leadingStockChangePct: { type: 'number', required: true },
+                turnover: { type: 'number', required: true },
+                pe: { type: 'number', required: true },
+                upCount: { type: 'number', required: true },
+                downCount: { type: 'number', required: true },
+              },
+            },
+            required: true,
+          },
+          updatedAt: { type: 'string', required: true },
+          mock: { oneOf: [{ type: 'boolean' }, { type: 'null' }], required: true },
+        },
+      },
+      render: (_args, value) => [{
+        type: 'text',
+        text: `【${value.category === 'industry' ? '行业板块' : '概念板块'}】共 ${value.total} 个，列出 ${value.items.length} 个：\n` +
+          value.items.map((row: { name: string; changePct: number; leadingStock: string; leadingStockChangePct: number; upCount: number; downCount: number }) =>
+            `- ${row.name} ${row.changePct}%（领涨 ${row.leadingStock} ${row.leadingStockChangePct}%，涨${row.upCount}/跌${row.downCount}）`).join('\n') +
+          `\n更新时间 ${value.updatedAt}${value.mock === true ? '（示例数据）' : ''}`,
+      }],
+    },
+    async execute(args: { market?: string; category?: string; limit?: number }) {
+      try {
+        const market = parseMarket(args.market)
+        const category: FinanceSectorCategory = args.category === 'concept' ? 'concept' : 'industry'
+        const limit = num(args.limit) ?? 20
+        const r = await source.sector(market, category, limit)
+        return { ...r, mock: r.mock === true ? true : null }
+      } catch (error) {
+        throw dataSourceError(error)
+      }
+    },
+  })
+
+  return [quote, financials, metrics, screener, calc, technical, fx, rates, kline, moneyflow, announcements, news, macro, sector]
 }
