@@ -392,6 +392,39 @@ export interface FinanceFundResult {
   mock?: boolean
 }
 
+/** 券商研报评级。 */
+export type FinanceResearchRating = '买入' | '增持' | '持有' | '卖出'
+
+/** 单条券商研报摘要（版权敏感：仅摘要级，不提供全文）。 */
+export interface FinanceResearchItem {
+  /** 研报ID，如 R600519001。 */
+  id: string
+  title: string
+  /** 券商机构名。 */
+  institution: string
+  analyst: string
+  rating: FinanceResearchRating
+  /** 目标价。 */
+  targetPrice: number
+  /** 报告日期 YYYY-MM-DD。 */
+  reportDate: string
+  /** 核心观点摘要（2-3 句）。 */
+  summary: string
+  /** 研报链接（无则空串）。 */
+  url: string
+}
+
+/** 券商研报列表结果（摘要级）。 */
+export interface FinanceResearchResult {
+  symbol: string
+  name: string
+  market: FinanceMarket
+  total: number
+  items: FinanceResearchItem[]
+  updatedAt: string
+  mock?: boolean
+}
+
 /** 数据源统一接口：工具层只依赖本契约。 */
 export interface FinanceDataSource {
   quote(symbol: string, market: FinanceMarket): Promise<FinanceQuote>
@@ -408,6 +441,7 @@ export interface FinanceDataSource {
   sector(market: FinanceMarket, category: FinanceSectorCategory, limit: number): Promise<FinanceSectorResult>
   risk(symbol: string, market: FinanceMarket, benchmark: string, riskFreeRate: number, period: number): Promise<FinanceRiskResult>
   fund(category: FinanceFundCategory, symbol?: string, limit?: number): Promise<FinanceFundResult>
+  research(symbol: string, market: FinanceMarket, limit: number): Promise<FinanceResearchResult>
 }
 
 /** 校验市场参数合法性（工具层统一入口）。 */
@@ -438,6 +472,15 @@ const MOCK_QUOTES: Record<string, Omit<FinanceQuote, 'mock'>> = {
   '601318': { symbol: '601318', name: '中国平安', market: 'cn', price: 52.3, change: 0.6, changePct: 1.16, open: 51.7, high: 52.6, low: 51.5, volume: 89200, turnover: 4.66e8, marketCap: 9.56e11, currency: 'CNY', updatedAt: '2026-09-24T15:00:00+08:00' },
   'AAPL': { symbol: 'AAPL', name: 'Apple Inc.', market: 'us', price: 232.5, change: 1.2, changePct: 0.52, open: 231.0, high: 233.8, low: 230.4, volume: 45210000, turnover: 1.05e10, marketCap: 3.54e12, currency: 'USD', updatedAt: '2026-09-23T20:00:00+00:00' },
   '0700': { symbol: '0700', name: '腾讯控股', market: 'hk', price: 468.2, change: -3.8, changePct: -0.81, open: 472.0, high: 473.5, low: 466.0, volume: 12100000, turnover: 5.67e9, marketCap: 4.31e12, currency: 'HKD', updatedAt: '2026-09-24T16:00:00+08:00' },
+  // —— 市场指数（price=点位，volume=亿手/亿股，turnover=亿元，marketCap=万亿元）——
+  '000001': { symbol: '000001', name: '上证指数', market: 'cn', price: 3125.60, change: 15.20, changePct: 0.49, open: 3110.00, high: 3132.50, low: 3105.20, volume: 4.5, turnover: 4500, marketCap: 48.5, currency: 'CNY', updatedAt: '2026-09-24T15:00:00+08:00' },
+  '399001': { symbol: '399001', name: '深证成指', market: 'cn', price: 9856.30, change: 45.60, changePct: 0.46, open: 9810.00, high: 9880.50, low: 9795.20, volume: 5.8, turnover: 5800, marketCap: 35.2, currency: 'CNY', updatedAt: '2026-09-24T15:00:00+08:00' },
+  '000300': { symbol: '000300', name: '沪深300', market: 'cn', price: 3680.50, change: 18.30, changePct: 0.50, open: 3662.00, high: 3695.80, low: 3658.20, volume: 3.2, turnover: 3200, marketCap: 42.8, currency: 'CNY', updatedAt: '2026-09-24T15:00:00+08:00' },
+  '399006': { symbol: '399006', name: '创业板指', market: 'cn', price: 1985.20, change: -12.50, changePct: -0.63, open: 1998.00, high: 2005.50, low: 1978.30, volume: 2.1, turnover: 2100, marketCap: 12.6, currency: 'CNY', updatedAt: '2026-09-24T15:00:00+08:00' },
+  'HSI': { symbol: 'HSI', name: '恒生指数', market: 'hk', price: 17856.30, change: 125.60, changePct: 0.71, open: 17730.00, high: 17920.50, low: 17700.20, volume: 1.28, turnover: 1280, marketCap: 28.5, currency: 'HKD', updatedAt: '2026-09-24T15:00:00+08:00' },
+  'IXIC': { symbol: 'IXIC', name: '纳斯达克', market: 'us', price: 16850.20, change: 185.30, changePct: 1.11, open: 16665.00, high: 16890.50, low: 16650.20, volume: 5.2, turnover: 5200, marketCap: 45.8, currency: 'USD', updatedAt: '2026-09-23T20:00:00+00:00' },
+  'SPX': { symbol: 'SPX', name: '标普500', market: 'us', price: 5420.80, change: 28.50, changePct: 0.53, open: 5392.00, high: 5435.50, low: 5385.20, volume: 3.8, turnover: 3800, marketCap: 52.3, currency: 'USD', updatedAt: '2026-09-23T20:00:00+00:00' },
+  'DJI': { symbol: 'DJI', name: '道琼斯', market: 'us', price: 39850.60, change: 156.20, changePct: 0.39, open: 39694.00, high: 39920.50, low: 39650.20, volume: 2.8, turnover: 2800, marketCap: 48.6, currency: 'USD', updatedAt: '2026-09-23T20:00:00+00:00' },
 }
 
 const MOCK_FINANCIALS: Record<string, Omit<FinanceFinancials, 'mock'>> = {
@@ -697,6 +740,32 @@ const MOCK_CONVERTIBLES: Array<Omit<FinanceFundItem, 'category' | 'updatedAt'>> 
   { code: '128028', name: '赣锋转债', type: '可转债', underlyingStock: '002460', underlyingStockName: '赣锋锂业', conversionPrice: 35.50, conversionValue: 112.68, premiumRate: -11.3, outstandingBalance: 8.5, maturityDate: '2026-08-26' },
 ]
 
+/** 券商研报示例（按 symbol 索引，摘要级；目标价与 mock 现价逻辑自洽）。 */
+const MOCK_RESEARCH: Record<string, FinanceResearchItem[]> = {
+  '600519': [
+    { id: 'R600519001', title: '贵州茅台2026年中报点评：量价齐升，龙头稳健', institution: '中金公司', analyst: '邢庭志', rating: '买入', targetPrice: 2000, reportDate: '2026-08-28', summary: '公司2026H1营收同比+15.2%，净利润+16.8%，直销占比持续提升。茅台酒批价企稳回升，系列酒高速增长。维持买入评级。', url: '' },
+    { id: 'R600519002', title: '贵州茅台深度报告：护城河加深，长期价值凸显', institution: '中信证券', analyst: '薛缘', rating: '买入', targetPrice: 1950, reportDate: '2026-09-10', summary: '茅台品牌力与渠道掌控力行业第一，i茅台数字化转型成效显著。预计2026-2028年EPS分别为72.5/82.3/93.1元，对应PE 23/20/18倍。', url: '' },
+    { id: 'R600519003', title: '贵州茅台跟踪报告：中秋国庆旺季前瞻', institution: '华泰证券', analyst: '龚源月', rating: '增持', targetPrice: 1880, reportDate: '2026-09-15', summary: '中秋国庆双节临近，茅台动销加速，批价有望回升至2700元以上。渠道库存处于健康水平，全年业绩确定性强。', url: '' },
+  ],
+  '000858': [
+    { id: 'R000858001', title: '五粮液2026中报点评：改革深化，增长提速', institution: '国泰君安', analyst: '訾猛', rating: '买入', targetPrice: 160, reportDate: '2026-08-30', summary: '公司2026H1营收+12.5%，净利润+14.2%，八代五粮液量价稳健。渠道改革持续推进，经销商利润改善。维持买入评级。', url: '' },
+    { id: 'R000858002', title: '五粮液行业报告：白酒板块估值修复进行时', institution: '招商证券', analyst: '于佳琦', rating: '增持', targetPrice: 150, reportDate: '2026-09-05', summary: '白酒板块当前估值处于历史低位，五粮液作为浓香龙头受益于消费复苏。公司分红率提升至60%，股息率吸引力增强。', url: '' },
+  ],
+  '601318': [
+    { id: 'R601318001', title: '中国平安2026中报点评：寿险改革成效显现', institution: '中金公司', analyst: '姚泽宇', rating: '买入', targetPrice: 65, reportDate: '2026-08-27', summary: '公司2026H1归母净利润+18.5%，寿险NBV同比+22.3%，代理人产能持续提升。产险综合成本率优化至96.2%。维持买入评级。', url: '' },
+    { id: 'R601318002', title: '中国平安跟踪报告：综合金融协同加速', institution: '中信证券', analyst: '邵子钦', rating: '增持', targetPrice: 60, reportDate: '2026-09-08', summary: '平安银行与寿险交叉销售成效显著，信用卡新发卡量同比+15%。陆金所控股扭亏为盈，金融科技板块估值有望重估。', url: '' },
+    { id: 'R601318003', title: '中国平安：股息率超5%，配置价值凸显', institution: '华泰证券', analyst: '沈娟', rating: '持有', targetPrice: 58, reportDate: '2026-09-12', summary: '公司当前PEV仅0.55倍，处于历史底部。2025年分红率提升至35%，股息率超5%。但寿险新单增长仍面临压力，维持持有评级。', url: '' },
+  ],
+  'AAPL': [
+    { id: 'RAAPL001', title: 'Apple iPhone 18 系列前瞻：AI 驱动换机周期', institution: '摩根士丹利', analyst: 'Erik Woodring', rating: '买入', targetPrice: 260, reportDate: '2026-09-10', summary: 'iPhone 18 系列将搭载 Apple Intelligence 2.0，AI 功能有望驱动换机周期。预计2026财年iPhone销量同比+8%，服务收入+12%。', url: '' },
+    { id: 'RAAPL002', title: 'Apple 服务业务深度分析：高增长引擎', institution: '高盛', analyst: 'Michael Ng', rating: '买入', targetPrice: 250, reportDate: '2026-09-05', summary: 'Apple 服务业务毛利率超70%，App Store/Apple Music/iCloud 持续高增长。服务收入占比已达28%，估值体系有望从硬件向服务切换。', url: '' },
+  ],
+  '0700': [
+    { id: 'R0700001', title: '腾讯控股2026Q2点评：游戏复苏+广告高增', institution: '中金公司', analyst: '白洋', rating: '买入', targetPrice: 520, reportDate: '2026-08-18', summary: '公司2026Q2营收+12%，净利润+18%。本土游戏收入+15%（DNF手游+王者贡献），广告收入+22%（视频号商业化加速）。维持买入评级。', url: '' },
+    { id: 'R0700002', title: '腾讯控股：视频号电商闭环加速', institution: '华泰证券', analyst: '朱珺', rating: '增持', targetPrice: 500, reportDate: '2026-09-02', summary: '视频号GMV同比+80%，直播电商闭环逐步完善。微信小店与小程序生态打通，腾讯电商货币化空间广阔。', url: '' },
+  ],
+}
+
 /** 内置示例数据源：开箱即用，所有数据带 mock 标记。 */
 export class MockFinanceSource implements FinanceDataSource {
   async quote(symbol: string, market: FinanceMarket): Promise<FinanceQuote> {
@@ -922,6 +991,14 @@ export class MockFinanceSource implements FinanceDataSource {
     const cap = Math.max(1, Math.min(limit ?? 10, 50))
     return { category, total, items: items.slice(0, cap), updatedAt: FUND_UPDATED_AT, mock: true }
   }
+
+  async research(symbol: string, market: FinanceMarket, limit: number): Promise<FinanceResearchResult> {
+    const rows = MOCK_RESEARCH[symbol] ?? []
+    const name = MOCK_QUOTES[symbol]?.name ?? symbol
+    const total = rows.length
+    const items = rows.slice(0, Math.max(1, Math.min(limit, 20)))
+    return { symbol, name, market, total, items, updatedAt: '2026-09-24T16:00:00+08:00', mock: true }
+  }
 }
 
 // ───────────────────────────── HTTP 实现 ─────────────────────────────
@@ -1015,6 +1092,10 @@ export class HttpFinanceSource implements FinanceDataSource {
 
   async fund(category: FinanceFundCategory, symbol?: string, limit?: number): Promise<FinanceFundResult> {
     return this.get<FinanceFundResult>('fund', { category, symbol, limit })
+  }
+
+  async research(symbol: string, market: FinanceMarket, limit: number): Promise<FinanceResearchResult> {
+    return this.get<FinanceResearchResult>('research', { symbol, market, limit })
   }
 }
 

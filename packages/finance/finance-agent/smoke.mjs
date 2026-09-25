@@ -177,5 +177,23 @@ try {
   check('fund 非法 category 拒绝', /固收资产类别/.test(String(e.message)), String(e.message))
 }
 
+// 20. 市场指数扩展（finance_quote 直接查指数行情）
+const idxSh = await source.quote('000001', 'cn')
+check('quote 上证指数', idxSh.name === '上证指数' && idxSh.price === 3125.6 && idxSh.market === 'cn' && idxSh.mock === true, JSON.stringify(idxSh))
+const idxSp = await source.quote('SPX', 'us')
+check('quote 标普500', idxSp.name.includes('标普') && idxSp.market === 'us' && idxSp.currency === 'USD', JSON.stringify(idxSp))
+const idxHsi = await source.quote('HSI', 'hk')
+check('quote 恒生指数', idxHsi.market === 'hk' && idxHsi.currency === 'HKD', JSON.stringify(idxHsi))
+
+// 21. 券商研报 finance_research
+const rp = await source.research('600519', 'cn', 5)
+check('research 600519', rp.total >= 2 && rp.items[0].institution.length > 0 && rp.mock === true, JSON.stringify(rp))
+check('research 评级合法', rp.items.every(i => ['买入', '增持', '持有', '卖出'].includes(i.rating)), JSON.stringify(rp.items.map(i => i.rating)))
+check('research 目标价自洽(>1600)', rp.items.every(i => i.targetPrice > 1600), JSON.stringify(rp.items.map(i => i.targetPrice)))
+const rpNone = await source.research('999999', 'cn', 5)
+check('research 未知标的返回空', rpNone.total === 0 && rpNone.items.length === 0, `total=${rpNone.total}`)
+const rpOne = await source.research('600519', 'cn', 1)
+check('research limit 截断', rpOne.total <= 1 || rpOne.items.length <= 1, `total=${rpOne.total} items=${rpOne.items.length}`)
+
 console.log(`\n结果: ${pass} 通过 / ${fail} 失败`)
 process.exit(fail === 0 ? 0 : 1)

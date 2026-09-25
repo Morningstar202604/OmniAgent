@@ -29,7 +29,7 @@ function num(value: number | null | undefined): number | undefined {
   return value === null || value === undefined ? undefined : value
 }
 
-/** 构建十六个金融工具定义。 */
+/** 构建十七个金融工具定义。 */
 export function buildFinanceTools(source: FinanceDataSource): ToolDefinition[] {
   const quote: ToolDefinition = defineTool({
     name: 'finance_quote',
@@ -931,5 +931,67 @@ export function buildFinanceTools(source: FinanceDataSource): ToolDefinition[] {
     },
   })
 
-  return [quote, financials, metrics, screener, calc, technical, fx, rates, kline, moneyflow, announcements, news, macro, sector, risk, fund]
+  const research: ToolDefinition = defineTool({
+    name: 'finance_research',
+    description: '查询个股券商研报摘要（标题、机构、分析师、评级、目标价、报告日期、核心观点）。摘要级输出，不提供全文，仅供参考、不构成投资建议。',
+    parameters: {
+      symbol: { type: 'string', required: true, description: '证券代码，如 600519、000858、AAPL、0700' },
+      market: { type: 'string', enum: ['cn', 'hk', 'us'], description: '市场，默认 cn' },
+      limit: { type: 'number', description: '返回条数，默认 5，最大 20' },
+    },
+    output: {
+      schema: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          symbol: { type: 'string', required: true },
+          name: { type: 'string', required: true },
+          market: { type: 'string', required: true },
+          total: { type: 'number', required: true },
+          items: {
+            type: 'array',
+            items: {
+              type: 'object',
+              additionalProperties: false,
+              properties: {
+                id: { type: 'string', required: true },
+                title: { type: 'string', required: true },
+                institution: { type: 'string', required: true },
+                analyst: { type: 'string', required: true },
+                rating: { type: 'string', required: true },
+                targetPrice: { type: 'number', required: true },
+                reportDate: { type: 'string', required: true },
+                summary: { type: 'string', required: true },
+                url: { type: 'string', required: true },
+              },
+            },
+            required: true,
+          },
+          updatedAt: { type: 'string', required: true },
+          mock: { oneOf: [{ type: 'boolean' }, { type: 'null' }], required: true },
+        },
+      },
+      render: (_args, value) => [{
+        type: 'text',
+        text: value.items.length === 0
+          ? `${value.symbol} ${value.name} 暂无券商研报摘要`
+          : `${value.symbol} ${value.name} 券商研报（共 ${value.total} 条）\n` +
+            value.items.map((item: { rating: string; title: string; institution: string; analyst: string; reportDate: string; targetPrice: number; summary: string }) =>
+              `- [${item.rating}] ${item.title}（${item.institution}，${item.analyst}，${item.reportDate}）目标价 ${item.targetPrice}\n  摘要：${item.summary}`).join('\n') +
+            `\n更新时间 ${value.updatedAt}${value.mock === true ? '（示例数据，摘要仅供参考，不构成投资建议）' : ''}`,
+      }],
+    },
+    async execute(args: { symbol: string; market?: string; limit?: number }) {
+      try {
+        const market = parseMarket(args.market)
+        const limit = Math.min(num(args.limit) ?? 5, 20)
+        const r = await source.research(args.symbol, market, limit)
+        return { ...r, mock: r.mock === true ? true : null }
+      } catch (error) {
+        throw dataSourceError(error)
+      }
+    },
+  })
+
+  return [quote, financials, metrics, screener, calc, technical, fx, rates, kline, moneyflow, announcements, news, macro, sector, risk, fund, research]
 }

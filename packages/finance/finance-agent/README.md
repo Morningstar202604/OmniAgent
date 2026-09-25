@@ -39,14 +39,16 @@ oa --profile finance "中国最新的CPI和PMI是多少"
 oa --profile finance "今天哪些行业板块涨幅靠前"
 oa --profile finance "分析贵州茅台的风险指标（Beta/夏普/最大回撤/VaR）"
 oa --profile finance "对比几只基金的近一年收益，再查10年期国债收益率和某可转债溢价率"
+oa --profile finance "查一下贵州茅台最近的券商研报和目标价"
+oa --profile finance "上证指数现在多少点？标普500和恒生指数呢？"
 ```
 
-## 工具清单（16 个）
+## 工具清单（17 个）
 
 ### 数据查询（4）
 | 工具 | 说明 | 关键参数 |
 |---|---|---|
-| `finance_quote` | 实时行情（最新价/涨跌/量/市值） | symbol, market(cn/hk/us) |
+| `finance_quote` | 实时行情（最新价/涨跌/量/市值），支持股票+指数（上证/深证/沪深300/创业板/恒生/纳指/标普/道指） | symbol, market(cn/hk/us) |
 | `finance_financials` | 核心财务（营收/净利/毛利率/ROE/负债率/EPS） | symbol, market, year |
 | `finance_metrics` | 估值技术面（PE/PB/PS/股息率/52周区间） | symbol, market |
 | `finance_screener` | 条件选股（市场/行业/市值/PE/涨幅） | market, industry, minMarketCap, maxPe… |
@@ -80,6 +82,11 @@ oa --profile finance "对比几只基金的近一年收益，再查10年期国�
 | `finance_fund` | 基金/债券/可转债三类资产数据：基金净值涨跌规模经理、国债收益率曲线+信用债YTM久期评级、可转债转股价/转股价值/溢价率/余额 | category(fund/bond/convertible), symbol, limit |
 
 > **与 finance_rates 的边界**：`finance_rates` 是"利率快查"（存款/LPR/国债三档收益率的简洁列表）；`finance_fund` 侧重"资产/券种明细"（基金全字段、国债收益率曲线1Y/5Y/10Y/30Y+企业债/城投债明细、可转债条款），两者互补不冲突。
+
+### 券商研报（1，摘要级轻量版）
+| 工具 | 说明 | 关键参数 |
+|---|---|---|
+| `finance_research` | 券商研报摘要（标题/机构/分析师/评级/目标价/日期/核心观点），不提供全文，版权敏感做摘要级+免责 | symbol, market, limit |
 
 ### 金融计算（1，纯函数可复核）
 | 工具 | 说明 | 模式 |
@@ -119,6 +126,7 @@ oa --profile finance "对比几只基金的近一年收益，再查10年期国�
 | `GET {baseURL}/sector` | market, category, limit | FinanceSectorResult |
 | `GET {baseURL}/risk` | symbol, market, benchmark, riskFreeRate, period | FinanceRiskResult |
 | `GET {baseURL}/fund` | category, symbol, limit | FinanceFundResult |
+| `GET {baseURL}/research` | symbol, market, limit | FinanceResearchResult |
 | `GET {baseURL}/fx` | pair | FinanceFxRate |
 | `GET {baseURL}/rates` | category | FinanceRateQuote[] |
 
@@ -136,5 +144,5 @@ oa --profile finance "对比几只基金的近一年收益，再查10年期国�
 ## 开发验证
 
 - 类型检查：`pnpm --filter @deepseek-ai/dsh-finance-agent exec tsc --noEmit -p tsconfig.json`
-- 数据契约冒烟：`node packages/finance/finance-agent/smoke.mjs`（51 项全通过）
+- 数据契约冒烟：`node packages/finance/finance-agent/smoke.mjs`（59 项全通过）
 - 端到端：`oa --profile finance "..."`（真实模型 + 工具调用）
