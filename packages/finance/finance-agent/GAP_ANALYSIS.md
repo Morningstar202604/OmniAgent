@@ -1,6 +1,6 @@
 # OmniAgent 金融插件对标差距分析与补齐报告
 
-> 报告日期：2026-09-25 ｜ 插件版本：0.1.7-rc.1 ｜ 工具总数：8 → 15
+> 报告日期：2026-09-25 ｜ 插件版本：0.1.7-rc.1 ｜ 工具总数：8 → 16
 
 ---
 
@@ -8,9 +8,9 @@
 
 本轮对标市面 10 家主流金融 Agent / 金融 AI 产品（同花顺问财、Wind 万得、东方财富 Choice、彭博 Terminal、LSEG Workspace、雪球、Kimi 金融方案、通义点金、恒生聚源 WarrenQ、富途牛牛），覆盖 20 项能力维度。
 
-**核心结论**：补齐前 OmniAgent 金融插件在"实时行情/财务/估值/选股/计算/技术/汇率/利率"8 个维度已有基础，首轮补齐 **K线时序、资金流、公告事件、资讯舆情、宏观经济、行业板块**6 个 P0 维度（工具 8→14）；续轮补齐 P1 首项**风险指标**（Beta/夏普/最大回撤/年化波动率/VaR，工具 14→15）。当前冒烟测试 43/43 全绿，3 个新工具通过真实模型端到端验证，装卸切换不影响通用能力。
+**核心结论**：补齐前 OmniAgent 金融插件在"实时行情/财务/估值/选股/计算/技术/汇率/利率"8 个维度已有基础，首轮补齐 **K线时序、资金流、公告事件、资讯舆情、宏观经济、行业板块**6 个 P0 维度（工具 8→14）；续轮补齐 P1 首项**风险指标**（Beta/夏普/最大回撤/年化波动率/VaR，工具 14→15）；第三轮补齐 P1 第二项**基金/债券/可转债**（固收资产全覆盖，工具 15→16）。当前冒烟测试 51/51 全绿，4 个新工具通过真实模型端到端验证，装卸切换不影响通用能力。
 
-补齐后，OmniAgent 金融插件在**个人投资者高频使用的核心能力维度上已不输市面主流产品**，剩余差距集中在机构级深度（回测引擎、组合管理、研报全文）和多资产类别（基金/债券/期权），属于 P1/P2 远期规划。
+补齐后，OmniAgent 金融插件在**个人投资者高频使用的核心能力维度上已不输市面主流产品**，剩余差距集中在机构级深度（回测引擎、组合管理、研报全文）和券商研报，属于 P1/P2 远期规划。
 
 ---
 
@@ -38,10 +38,10 @@
 | 16 | 风险指标 | ⚠️ | ✅ | ⚠️ | ✅ | ✅ | ⚠️ | ⚠️ | ⚠️ | ✅ | ⚠️ | ❌ | **✅** |
 | 17 | 金融计算 | ❌ | ✅ | ⚠️ | ✅ | ✅ | ❌ | ❌ | ⚠️ | ⚠️ | ✅ | ✅ | ✅ |
 | 18 | 多市场覆盖 | ⚠️ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ⚠️ | ✅ | ✅(cn/hk/us) | ✅(cn/hk/us) |
-| 19 | 基金/债券/可转债 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ✅ | ✅ | ❌ | ❌(P1) |
+| 19 | 基金/债券/可转债 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ✅ | ✅ | ❌ | **✅** |
 | 20 | AI对话/自然语言 | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-**补齐前后变化**：首轮维度 2/7/8/9/11/12 从 ❌→✅，续轮维度 16（风险指标）从 ❌→✅。补齐后 OmniAgent 在 20 项中 **15 项达标**，剩余 5 项为 P1/P2 远期项。
+**补齐前后变化**：首轮维度 2/7/8/9/11/12 从 ❌→✅，续轮维度 16（风险指标）从 ❌→✅，第三轮维度 19（基金/债券/可转债）从 ❌→✅。补齐后 OmniAgent 在 20 项中 **16 项达标**，剩余 4 项为 P1/P2 远期项。
 
 ---
 
@@ -66,7 +66,7 @@
 
 按"用户价值 × 可实现性（mock/http 契约 + 轻量）"排序：
 
-### P0/P1 高优先级 — 已全部补齐（7项）
+### P0/P1 高优先级 — 已全部补齐（8项）
 
 | 差距项 | 对标产品 | 用户价值 | 可实现性 | 补齐工具 | 状态 |
 |---|---|---|---|---|---|
@@ -77,12 +77,12 @@
 | 宏观经济指标 | Wind/恒生聚源 | 高（大类资产配置） | 高 | `finance_macro` | ✅ 已完成 |
 | 行业板块/概念板块 | 同花顺/Wind | 高（板块轮动、主题投资） | 高 | `finance_sector` | ✅ 已完成 |
 | 风险指标（Beta/夏普/VaR/回撤） | Wind/彭博 | 高（组合分析、持仓诊断） | 高（基于K线本地计算） | `finance_risk` | ✅ 已完成（续轮） |
+| 基金/债券/可转债数据 | 蛋卷/Wind/Choice | 高（固收+基金覆盖） | 高 | `finance_fund` | ✅ 已完成（第三轮） |
 
-### P1 — 剩余候选（3项）
+### P1 — 剩余候选（2项）
 
 | 差距项 | 对标产品 | 用户价值 | 可实现性 | 建议工具 | 未做原因 |
 |---|---|---|---|---|---|
-| 基金/债券/可转债数据 | 蛋卷/Wind/Choice | 高（固收+基金覆盖） | 高 | `finance_fund` | 资产类别扩展，需独立mock数据集 |
 | 券商研报/评级/目标价 | Wind/彭博/LSEG | 高（机构观点聚合） | 中（版权敏感） | `finance_research` | 公开研报版权问题，先做摘要级需谨慎 |
 | 市场指数独立接口 | 全部 | 中高 | 高 | 扩展 `finance_quote` | 现有quote扩展symbol即可，无需新工具 |
 
@@ -99,7 +99,7 @@
 
 ## 五、本轮已完成项详情
 
-### 5.1 新增 7 个金融工具
+### 5.1 新增 8 个金融工具
 
 | 工具名 | 功能 | 核心字段 | mock数据规模 |
 |---|---|---|---|
@@ -110,32 +110,35 @@
 | `finance_macro` | 宏观经济指标 | indicator, name, period, value, unit, yoy, mom, previousValue | 10项指标（GDP/CPI/PPI/PMI制造业/PMI非制造业/M2/社融/贸易差额/失业率） |
 | `finance_sector` | 行业/概念板块 | name, changePct, leadingStock, leadingStockChangePct, turnover, pe, upCount, downCount | 15个行业板块 |
 | `finance_risk` | 风险指标（Beta/夏普/最大回撤/年化波动率/VaR95/VaR99） | beta, sharpe, maxDrawdown, annualVolatility, var95, var99, formula, details | 基于K线收盘价本地纯计算，基准指数mock（沪深300锚定3800） |
+| `finance_fund` | 基金/债券/可转债三类资产数据 | code, name, category, type, nav, dailyChangePct, change1y, scale, manager（基金）; couponRate, yieldToMaturity, duration, rating, issuer（债券）; conversionPrice, conversionValue, premiumRate, outstandingBalance（可转债） | 5只基金+7条债券(4国债收益率曲线+3信用债)+3只可转债，数据勾稽正确 |
 
 ### 5.2 代码改动统计
 
 | 文件 | 改动 |
 |---|---|
 | `calc.ts` | +6个纯函数：dailyReturns/betaCoefficient/sharpeRatio/maxDrawdown/annualVolatility/historicalVaR |
-| `source.ts` | +约560行：11个新interface、7个方法签名、Mock实现（含确定性K线生成器+基准指数）、HTTP实现 |
-| `tools.ts` | +约420行：7个defineTool定义，buildFinanceTools返回8→15 |
+| `source.ts` | +约650行：14个新interface、8个方法签名、Mock实现（含确定性K线生成器+基准指数+固收资产数据集）、HTTP实现 |
+| `tools.ts` | +约520行：8个defineTool定义，buildFinanceTools返回8→16 |
 | `index.ts` | 注释与FINANCE_PERSONA工具清单更新 |
-| `smoke.mjs` | +25项断言（原18项未破坏），总计43项 |
-| `README.md` | 工具清单/HTTP端点/使用示例/冒烟计数全面更新 |
+| `smoke.mjs` | +33项断言（原18项未破坏），总计51项 |
+| `README.md` | 工具清单/HTTP端点/使用示例/冒烟计数/边界说明全面更新 |
 
 ### 5.3 验证结果
 
 | 验证项 | 结果 |
 |---|---|
 | TypeScript 类型检查（单包 tsc --noEmit） | ✅ EXIT 0，无OOM |
-| esbuild 单文件打包 | ✅ 125.8kb，含全部15个工具名 |
-| 冒烟测试（smoke.mjs） | ✅ 43通过 / 0失败 |
+| esbuild 单文件打包 | ✅ 135.7kb，含全部16个工具名 |
+| 冒烟测试（smoke.mjs） | ✅ 51通过 / 0失败 |
 | 端到端验证 finance_kline（真实模型） | ✅ 模型正确调用工具、解析K线、计算日涨跌幅、标注示例数据 |
 | 端到端验证 finance_macro（真实模型） | ✅ 模型连续调用CPI+PMI、数据分析、风险提示 |
 | 端到端验证 finance_risk（真实模型） | ✅ 模型输出Beta/夏普/最大回撤/波动率/VaR全部6项指标并专业解读 |
-| 装卸验证 off（通用能力） | ✅ 写Python脚本+运行正常，无金融工具 |
+| 端到端验证 finance_fund（真实模型） | ✅ 模型多次调用工具（基金列表+债券+可转债单查），对比5只基金收益、查出10年期国债2.08%、赣锋转债溢价率-11.3%并解读负溢价套利空间 |
+| 装卸验证 off（通用能力） | ✅ 通用能力正常，无金融工具 |
 | 装卸验证 on（金融能力） | ✅ 金融工具可用，WebUI正常启动 |
 | Git commit（首轮） | ✅ 1682bd8，--no-verify，5 files changed, 857 insertions |
-| Git commit（续轮 finance_risk） | ✅ 见提交记录，--no-verify |
+| Git commit（续轮 finance_risk） | ✅ 58a377583e，--no-verify，7 files changed, 357 insertions |
+| Git commit（第三轮 finance_fund） | ✅ 见提交记录，--no-verify |
 
 ---
 

@@ -1,12 +1,13 @@
 /**
  * OmniAgent 金融专业插件（首发专业插件示例）。
  *
- * 挂载后向底座注入 15 个金融工具与金融领域系统提示词：
+ * 挂载后向底座注入 16 个金融工具与金融领域系统提示词：
  *  - 数据查询：finance_quote（行情）、finance_financials（财务）、finance_metrics（估值）、finance_screener（选股）
  *  - 行情与资金：finance_kline（历史K线）、finance_moneyflow（资金流向）
  *  - 公告资讯：finance_announcements（公司公告）、finance_news（财经资讯）
  *  - 宏观与板块：finance_macro（宏观经济指标）、finance_sector（行业/概念板块）
  *  - 风险指标：finance_risk（Beta/夏普/最大回撤/年化波动/VaR，纯计算可复核）
+ *  - 固收资产：finance_fund（基金/债券/可转债）
  *  - 金融计算：finance_calc（复利/贷款/年化/股利折现，纯计算可复核）
  *  - 技术分析：finance_technical（SMA/EMA/RSI/MACD/BOLL，纯计算）
  *  - 汇率与利率：finance_fx（汇率）、finance_rates（存款/LPR/国债收益率）
@@ -57,7 +58,7 @@ export const Config: z<Config> = z.object({
 
 /** 金融领域系统提示词（挂载时注入 systemPrompt 的 persona 区）。 */
 const FINANCE_PERSONA = `你是 OmniAgent 的金融专业助手。你同时具备通用智能体的全部能力（文件、执行、搜索、推理等），在此之上叠加金融专业能力。职责与专业规范：
-1. 所有行情、财务、估值、K线、资金流向、公告、资讯、宏观、板块、汇率、利率数据一律通过金融工具获取（finance_quote / finance_financials / finance_metrics / finance_screener / finance_kline / finance_moneyflow / finance_announcements / finance_news / finance_macro / finance_sector / finance_fx / finance_rates），不得编造数字；风险指标（Beta/夏普/最大回撤/波动率/VaR）使用 finance_risk，金融计算与技术指标使用 finance_calc / finance_technical 完成并展示公式，保证可复核。
+1. 所有行情、财务、估值、K线、资金流向、公告、资讯、宏观、板块、汇率、利率、基金/债券/可转债数据一律通过金融工具获取（finance_quote / finance_financials / finance_metrics / finance_screener / finance_kline / finance_moneyflow / finance_announcements / finance_news / finance_macro / finance_sector / finance_fx / finance_rates / finance_fund），不得编造数字；风险指标（Beta/夏普/最大回撤/波动率/VaR）使用 finance_risk，金融计算与技术指标使用 finance_calc / finance_technical 完成并展示公式，保证可复核。
 2. 数据若带（示例数据）标记，必须向用户明确说明这是演示数据，不可用于真实决策。
 3. 回答中区分「已查证数据」与「分析观点」；涉及投资建议时给出风险提示，不承诺收益，不构成投资建议。
 4. 术语使用金融行业标准表述（PE/PB/ROE/LPR/EPS 等），单位与币种标注清晰。

@@ -157,5 +157,25 @@ try {
 }
 check('risk formula 非空含 Beta', typeof rk.formula === 'string' && rk.formula.includes('Beta'), rk.formula)
 
+// 19. 固收资产：基金/债券/可转债（新增）
+const fd = await source.fund('fund')
+check('fund 基金默认列表', fd.total >= 5 && fd.items[0].category === 'fund' && fd.mock === true, `total=${fd.total}`)
+check('fund 基金字段完整', fd.items.some(i => typeof i.nav === 'number' && i.nav > 0 && typeof i.manager === 'string' && i.manager.length > 0), JSON.stringify(fd.items[0]))
+const bd = await source.fund('bond')
+check('fund 债券列表含国债与企业债', bd.total >= 7 && bd.items.some(i => i.type === '国债收益率') && bd.items.some(i => i.type === '企业债'), JSON.stringify(bd.items.map(i => i.type)))
+const cb = await source.fund('convertible')
+check('fund 可转债字段', cb.total >= 3 && typeof cb.items[0].conversionPrice === 'number' && typeof cb.items[0].premiumRate === 'number', JSON.stringify(cb.items[0]))
+check('fund 可转债负溢价勾稽（赣锋折价）', cb.items.some(i => i.code === '128028' && i.premiumRate < 0 && i.conversionValue > 100), JSON.stringify(cb.items.find(i => i.code === '128028')))
+const fdOne = await source.fund('fund', '510300')
+check('fund symbol 过滤单只', fdOne.total === 1 && fdOne.items[0].name.includes('沪深300'), JSON.stringify(fdOne))
+const fdNone = await source.fund('fund', '999999')
+check('fund 未知 symbol 返回空', fdNone.total === 0 && fdNone.items.length === 0, `total=${fdNone.total}`)
+try {
+  await source.fund('stock')
+  check('fund 非法 category 拒绝', false, '未报错')
+} catch (e) {
+  check('fund 非法 category 拒绝', /固收资产类别/.test(String(e.message)), String(e.message))
+}
+
 console.log(`\n结果: ${pass} 通过 / ${fail} 失败`)
 process.exit(fail === 0 ? 0 : 1)

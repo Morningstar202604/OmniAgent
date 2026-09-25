@@ -320,6 +320,78 @@ export interface FinanceRiskResult {
   mock?: boolean
 }
 
+/** 固收资产类别：fund=公募基金，bond=债券（国债收益率/信用债），convertible=可转债。 */
+export type FinanceFundCategory = 'fund' | 'bond' | 'convertible'
+
+/**
+ * 固收资产统一条目：按 category 填充不同字段。
+ * code/name/category/type/updatedAt 必填，其余字段随类别出现。
+ */
+export interface FinanceFundItem {
+  /** 资产代码（如 510300、110059、CNBOND10Y）。 */
+  code: string
+  /** 资产名称。 */
+  name: string
+  /** 所属类别，同外层 category。 */
+  category: FinanceFundCategory
+  /** 子类型：fund=股票型/债券型/混合型/货币型/指数型/ETF；bond=国债收益率/企业债/城投债；convertible=可转债。 */
+  type: string
+  // —— 基金字段（category=fund 时填充）——
+  /** 基金类型：股票型/债券型/混合型/货币型/指数型/ETF。 */
+  fundType?: string
+  /** 最新净值。 */
+  nav?: number
+  /** 累计净值。 */
+  navAccumulated?: number
+  /** 日涨跌（%）。 */
+  dailyChangePct?: number
+  /** 近1月涨跌（%）。 */
+  change1m?: number
+  /** 近1年涨跌（%）。 */
+  change1y?: number
+  /** 基金规模（亿元）。 */
+  scale?: number
+  /** 基金经理。 */
+  manager?: string
+  // —— 债券字段（category=bond/convertible 时填充）——
+  /** 票面利率（%）。 */
+  couponRate?: number
+  /** 到期收益率（%）。 */
+  yieldToMaturity?: number
+  /** 久期（年）。 */
+  duration?: number
+  /** 信用评级（如 AAA/AA+/AA）。 */
+  rating?: string
+  /** 到期日（YYYY-MM-DD）。 */
+  maturityDate?: string
+  /** 发行人。 */
+  issuer?: string
+  // —— 可转债字段（category=convertible 时填充）——
+  /** 正股代码。 */
+  underlyingStock?: string
+  /** 正股名称。 */
+  underlyingStockName?: string
+  /** 转股价。 */
+  conversionPrice?: number
+  /** 转股价值（=100/转股价×正股价）。 */
+  conversionValue?: number
+  /** 溢价率（%，=转债价/转股价值-1）。 */
+  premiumRate?: number
+  /** 余额（亿元）。 */
+  outstandingBalance?: number
+  /** 更新时间。 */
+  updatedAt: string
+}
+
+/** 固收资产列表查询结果（基金/债券/可转债统一结构）。 */
+export interface FinanceFundResult {
+  category: FinanceFundCategory
+  total: number
+  items: FinanceFundItem[]
+  updatedAt: string
+  mock?: boolean
+}
+
 /** 数据源统一接口：工具层只依赖本契约。 */
 export interface FinanceDataSource {
   quote(symbol: string, market: FinanceMarket): Promise<FinanceQuote>
@@ -335,6 +407,7 @@ export interface FinanceDataSource {
   macro(indicator: FinanceMacroIndicator, period?: string): Promise<FinanceMacro>
   sector(market: FinanceMarket, category: FinanceSectorCategory, limit: number): Promise<FinanceSectorResult>
   risk(symbol: string, market: FinanceMarket, benchmark: string, riskFreeRate: number, period: number): Promise<FinanceRiskResult>
+  fund(category: FinanceFundCategory, symbol?: string, limit?: number): Promise<FinanceFundResult>
 }
 
 /** 校验市场参数合法性（工具层统一入口）。 */
@@ -594,6 +667,36 @@ const MOCK_SECTORS: FinanceSectorItem[] = [
   { name: '消费电子', changePct: 2.76, leadingStock: '立讯精密', leadingStockChangePct: 3.88, turnover: 3.44e10, pe: 26.4, upCount: 61, downCount: 14 },
 ]
 
+/** 固收资产示例数据统一时间戳。 */
+const FUND_UPDATED_AT = '2026-09-24T15:00:00+08:00'
+
+/** 公募基金示例（5 只）。category/updatedAt 由 fund() 统一加盖。 */
+const MOCK_FUNDS: Array<Omit<FinanceFundItem, 'category' | 'updatedAt'>> = [
+  { code: '510300', name: '华泰柏瑞沪深300ETF', type: 'ETF', fundType: 'ETF', nav: 4.1256, navAccumulated: 1.8523, dailyChangePct: 0.85, change1m: 3.2, change1y: 12.5, scale: 1850.5, manager: '柳军' },
+  { code: '005827', name: '易方达蓝筹精选混合', type: '混合型', fundType: '混合型', nav: 2.3456, navAccumulated: 2.3456, dailyChangePct: -0.62, change1m: -2.1, change1y: -8.3, scale: 420.8, manager: '张坤' },
+  { code: '000198', name: '天弘余额宝货币', type: '货币型', fundType: '货币型', nav: 1.0000, navAccumulated: 1.0000, dailyChangePct: 0.001, change1m: 0.18, change1y: 2.15, scale: 7200.0, manager: '王登峰' },
+  { code: '110007', name: '易方达稳健收益债券A', type: '债券型', fundType: '债券型', nav: 1.5678, navAccumulated: 2.1034, dailyChangePct: 0.12, change1m: 0.85, change1y: 5.62, scale: 180.3, manager: '胡剑' },
+  { code: '000001', name: '华夏成长混合', type: '股票型', fundType: '股票型', nav: 1.2345, navAccumulated: 3.4567, dailyChangePct: 1.25, change1m: 4.5, change1y: 15.8, scale: 85.6, manager: '王亚伟' },
+]
+
+/** 债券示例（4 条国债收益率曲线 + 3 条信用债）。 */
+const MOCK_BONDS: Array<Omit<FinanceFundItem, 'category' | 'updatedAt'>> = [
+  { code: 'CNBOND1Y', name: '1年期国债', type: '国债收益率', yieldToMaturity: 1.42, duration: 1.0, rating: 'AAA', issuer: '财政部', maturityDate: '2027-09-24' },
+  { code: 'CNBOND5Y', name: '5年期国债', type: '国债收益率', yieldToMaturity: 1.85, duration: 5.0, rating: 'AAA', issuer: '财政部', maturityDate: '2031-09-24' },
+  { code: 'CNBOND10Y', name: '10年期国债', type: '国债收益率', yieldToMaturity: 2.08, duration: 10.0, rating: 'AAA', issuer: '财政部', maturityDate: '2036-09-24' },
+  { code: 'CNBOND30Y', name: '30年期国债', type: '国债收益率', yieldToMaturity: 2.35, duration: 30.0, rating: 'AAA', issuer: '财政部', maturityDate: '2056-09-24' },
+  { code: '220220', name: '22国电01', type: '企业债', couponRate: 3.25, yieldToMaturity: 2.98, duration: 4.5, rating: 'AAA', issuer: '国家能源集团', maturityDate: '2027-03-15' },
+  { code: '230001', name: '23沪城投01', type: '城投债', couponRate: 3.55, yieldToMaturity: 3.22, duration: 3.2, rating: 'AA+', issuer: '上海城投控股', maturityDate: '2026-12-20' },
+  { code: '2280123', name: '22万科02', type: '企业债', couponRate: 3.95, yieldToMaturity: 4.85, duration: 2.8, rating: 'AAA', issuer: '万科企业', maturityDate: '2027-06-30' },
+]
+
+/** 可转债示例（3 只）。转股价值=100/转股价×正股价，溢价率=转债价/转股价值-1。 */
+const MOCK_CONVERTIBLES: Array<Omit<FinanceFundItem, 'category' | 'updatedAt'>> = [
+  { code: '110059', name: '浦发转债', type: '可转债', underlyingStock: '600000', underlyingStockName: '浦发银行', conversionPrice: 14.20, conversionValue: 70.42, premiumRate: 42.0, outstandingBalance: 200.0, maturityDate: '2025-10-28' },
+  { code: '113021', name: '中信转债', type: '可转债', underlyingStock: '601998', underlyingStockName: '中信银行', conversionPrice: 7.28, conversionValue: 85.16, premiumRate: 17.4, outstandingBalance: 400.0, maturityDate: '2025-03-04' },
+  { code: '128028', name: '赣锋转债', type: '可转债', underlyingStock: '002460', underlyingStockName: '赣锋锂业', conversionPrice: 35.50, conversionValue: 112.68, premiumRate: -11.3, outstandingBalance: 8.5, maturityDate: '2026-08-26' },
+]
+
 /** 内置示例数据源：开箱即用，所有数据带 mock 标记。 */
 export class MockFinanceSource implements FinanceDataSource {
   async quote(symbol: string, market: FinanceMarket): Promise<FinanceQuote> {
@@ -800,6 +903,25 @@ export class MockFinanceSource implements FinanceDataSource {
       mock: true,
     }
   }
+
+  async fund(category: FinanceFundCategory, symbol?: string, limit?: number): Promise<FinanceFundResult> {
+    const table: Record<FinanceFundCategory, Array<Omit<FinanceFundItem, 'category' | 'updatedAt'>>> = {
+      fund: MOCK_FUNDS,
+      bond: MOCK_BONDS,
+      convertible: MOCK_CONVERTIBLES,
+    }
+    const rows = table[category]
+    if (rows === undefined) {
+      throw new Error(`mock 数据源未收录固收资产类别 ${category}（可选 fund/bond/convertible）`)
+    }
+    let items: FinanceFundItem[] = rows.map((row) => ({ ...row, category, updatedAt: FUND_UPDATED_AT }))
+    if (symbol !== undefined && symbol.length > 0) {
+      items = items.filter((item) => item.code === symbol)
+    }
+    const total = items.length
+    const cap = Math.max(1, Math.min(limit ?? 10, 50))
+    return { category, total, items: items.slice(0, cap), updatedAt: FUND_UPDATED_AT, mock: true }
+  }
 }
 
 // ───────────────────────────── HTTP 实现 ─────────────────────────────
@@ -889,6 +1011,10 @@ export class HttpFinanceSource implements FinanceDataSource {
 
   async risk(symbol: string, market: FinanceMarket, benchmark: string, riskFreeRate: number, period: number): Promise<FinanceRiskResult> {
     return this.get<FinanceRiskResult>('risk', { symbol, market, benchmark, riskFreeRate, period })
+  }
+
+  async fund(category: FinanceFundCategory, symbol?: string, limit?: number): Promise<FinanceFundResult> {
+    return this.get<FinanceFundResult>('fund', { category, symbol, limit })
   }
 }
 

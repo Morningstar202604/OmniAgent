@@ -13,6 +13,7 @@ import type {
   FinanceNewsCategory,
   FinanceMacroIndicator,
   FinanceSectorCategory,
+  FinanceFundCategory,
 } from './source.ts'
 import { parseMarket } from './source.ts'
 import { compoundFutureValue, compoundPresentValue, loanPayment, annualizedReturn, dividendDiscountValue, computeIndicator } from './calc.ts'
@@ -28,7 +29,7 @@ function num(value: number | null | undefined): number | undefined {
   return value === null || value === undefined ? undefined : value
 }
 
-/** 构建十五个金融工具定义。 */
+/** 构建十六个金融工具定义。 */
 export function buildFinanceTools(source: FinanceDataSource): ToolDefinition[] {
   const quote: ToolDefinition = defineTool({
     name: 'finance_quote',
@@ -838,5 +839,97 @@ export function buildFinanceTools(source: FinanceDataSource): ToolDefinition[] {
     },
   })
 
-  return [quote, financials, metrics, screener, calc, technical, fx, rates, kline, moneyflow, announcements, news, macro, sector, risk]
+  const fund: ToolDefinition = defineTool({
+    name: 'finance_fund',
+    description: '查询固收资产数据：公募基金（fund，净值/涨跌/规模/经理）、债券（bond，国债收益率曲线与企业债/城投债，票面利率/到期收益率/久期/评级）、可转债（convertible，正股/转股价/转股价值/溢价率/余额）。不填 symbol 返回该类别列表，填 symbol 返回单只资产。',
+    parameters: {
+      category: { type: 'string', enum: ['fund', 'bond', 'convertible'], required: true, description: '资产类别：fund=基金，bond=债券，convertible=可转债' },
+      symbol: { type: 'string', description: '具体资产代码，如 510300（基金）、CNBOND10Y（国债）、110059（可转债）；不填则返回该类别列表' },
+      limit: { type: 'number', description: '返回条数，默认 10，最大 50' },
+    },
+    output: {
+      schema: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          category: { type: 'string', required: true },
+          total: { type: 'number', required: true },
+          items: {
+            type: 'array',
+            items: {
+              type: 'object',
+              additionalProperties: false,
+              properties: {
+                code: { type: 'string', required: true },
+                name: { type: 'string', required: true },
+                category: { type: 'string', required: true },
+                type: { type: 'string', required: true },
+                fundType: { type: 'string' },
+                nav: { type: 'number' },
+                navAccumulated: { type: 'number' },
+                dailyChangePct: { type: 'number' },
+                change1m: { type: 'number' },
+                change1y: { type: 'number' },
+                scale: { type: 'number' },
+                manager: { type: 'string' },
+                couponRate: { type: 'number' },
+                yieldToMaturity: { type: 'number' },
+                duration: { type: 'number' },
+                rating: { type: 'string' },
+                maturityDate: { type: 'string' },
+                issuer: { type: 'string' },
+                underlyingStock: { type: 'string' },
+                underlyingStockName: { type: 'string' },
+                conversionPrice: { type: 'number' },
+                conversionValue: { type: 'number' },
+                premiumRate: { type: 'number' },
+                outstandingBalance: { type: 'number' },
+                updatedAt: { type: 'string', required: true },
+              },
+            },
+            required: true,
+          },
+          updatedAt: { type: 'string', required: true },
+          mock: { oneOf: [{ type: 'boolean' }, { type: 'null' }], required: true },
+        },
+      },
+      render: (_args, value) => [{
+        type: 'text',
+        text: [
+          `${value.category === 'fund' ? '公募基金' : value.category === 'bond' ? '债券' : '可转债'}数据（共 ${value.total} 条）`,
+          ...value.items.map((item: {
+            code: string; name: string; category: string; type: string
+            nav?: number; dailyChangePct?: number; change1m?: number; change1y?: number; scale?: number; manager?: string
+            couponRate?: number; yieldToMaturity?: number; duration?: number; rating?: string; issuer?: string; maturityDate?: string
+            underlyingStockName?: string; conversionPrice?: number; conversionValue?: number; premiumRate?: number; outstandingBalance?: number
+          }) => {
+            if (item.category === 'fund') {
+              return `- ${item.code} ${item.name}（${item.type}）净值 ${item.nav}，日涨跌 ${item.dailyChangePct}%，近1月 ${item.change1m}%，近1年 ${item.change1y}%，规模 ${item.scale}亿，经理 ${item.manager}`
+            }
+            if (item.category === 'convertible') {
+              return `- ${item.code} ${item.name}（${item.type}）正股 ${item.underlyingStockName}，转股价 ${item.conversionPrice}，转股价值 ${item.conversionValue}，溢价率 ${item.premiumRate}%，余额 ${item.outstandingBalance}亿`
+            }
+            const coupon = typeof item.couponRate === 'number' ? `票面 ${item.couponRate}%，` : ''
+            return `- ${item.code} ${item.name}（${item.type}）${coupon}YTM ${item.yieldToMaturity}%，久期 ${item.duration}年，评级 ${item.rating}，发行人 ${item.issuer}，到期 ${item.maturityDate}`
+          }),
+          `更新时间 ${value.updatedAt}${value.mock === true ? '（示例数据）' : ''}`,
+        ].join('\n'),
+      }],
+    },
+    async execute(args: { category: string; symbol?: string; limit?: number }) {
+      try {
+        if (args.category !== 'fund' && args.category !== 'bond' && args.category !== 'convertible') {
+          throw new Error(`finance_fund: category 必须是 fund/bond/convertible 之一，收到 "${args.category}"`)
+        }
+        const category = args.category as FinanceFundCategory
+        const limit = Math.min(num(args.limit) ?? 10, 50)
+        const r = await source.fund(category, args.symbol, limit)
+        return { ...r, mock: r.mock === true ? true : null }
+      } catch (error) {
+        throw dataSourceError(error)
+      }
+    },
+  })
+
+  return [quote, financials, metrics, screener, calc, technical, fx, rates, kline, moneyflow, announcements, news, macro, sector, risk, fund]
 }

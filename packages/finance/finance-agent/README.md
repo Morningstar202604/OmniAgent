@@ -1,6 +1,6 @@
 # @deepseek-ai/dsh-finance-agent — OmniAgent 金融专业插件
 
-OmniAgent 通用全能底座之上的**首发专业插件**：挂载后向底座注入金融领域工具集与系统提示词，让同一个 agent 立即具备金融专业能力（行情、财务、估值、选股、K线、资金流、公告、资讯、宏观、板块、风险指标、金融计算、技术分析、汇率、利率），同时**不削弱任何通用能力**（文件、执行、搜索、推理等照常可用）。
+OmniAgent 通用全能底座之上的**首发专业插件**：挂载后向底座注入金融领域工具集与系统提示词，让同一个 agent 立即具备金融专业能力（行情、财务、估值、选股、K线、资金流、公告、资讯、宏观、板块、风险指标、基金/债券/可转债、金融计算、技术分析、汇率、利率），同时**不削弱任何通用能力**（文件、执行、搜索、推理等照常可用）。
 
 ## 设计原则
 
@@ -38,9 +38,10 @@ oa --profile finance "今天有什么重要财经新闻"
 oa --profile finance "中国最新的CPI和PMI是多少"
 oa --profile finance "今天哪些行业板块涨幅靠前"
 oa --profile finance "分析贵州茅台的风险指标（Beta/夏普/最大回撤/VaR）"
+oa --profile finance "对比几只基金的近一年收益，再查10年期国债收益率和某可转债溢价率"
 ```
 
-## 工具清单（15 个）
+## 工具清单（16 个）
 
 ### 数据查询（4）
 | 工具 | 说明 | 关键参数 |
@@ -72,6 +73,13 @@ oa --profile finance "分析贵州茅台的风险指标（Beta/夏普/最大回�
 | 工具 | 说明 | 关键参数 |
 |---|---|---|
 | `finance_risk` | 个股风险指标（Beta/夏普比率/最大回撤/年化波动率/VaR95/VaR99），基于K线收盘价本地计算，输出公式与中间值 | symbol, market, benchmark, riskFreeRate, period |
+
+### 固收资产（1）
+| 工具 | 说明 | 关键参数 |
+|---|---|---|
+| `finance_fund` | 基金/债券/可转债三类资产数据：基金净值涨跌规模经理、国债收益率曲线+信用债YTM久期评级、可转债转股价/转股价值/溢价率/余额 | category(fund/bond/convertible), symbol, limit |
+
+> **与 finance_rates 的边界**：`finance_rates` 是"利率快查"（存款/LPR/国债三档收益率的简洁列表）；`finance_fund` 侧重"资产/券种明细"（基金全字段、国债收益率曲线1Y/5Y/10Y/30Y+企业债/城投债明细、可转债条款），两者互补不冲突。
 
 ### 金融计算（1，纯函数可复核）
 | 工具 | 说明 | 模式 |
@@ -110,6 +118,7 @@ oa --profile finance "分析贵州茅台的风险指标（Beta/夏普/最大回�
 | `GET {baseURL}/macro` | indicator, period | FinanceMacro |
 | `GET {baseURL}/sector` | market, category, limit | FinanceSectorResult |
 | `GET {baseURL}/risk` | symbol, market, benchmark, riskFreeRate, period | FinanceRiskResult |
+| `GET {baseURL}/fund` | category, symbol, limit | FinanceFundResult |
 | `GET {baseURL}/fx` | pair | FinanceFxRate |
 | `GET {baseURL}/rates` | category | FinanceRateQuote[] |
 
@@ -127,5 +136,5 @@ oa --profile finance "分析贵州茅台的风险指标（Beta/夏普/最大回�
 ## 开发验证
 
 - 类型检查：`pnpm --filter @deepseek-ai/dsh-finance-agent exec tsc --noEmit -p tsconfig.json`
-- 数据契约冒烟：`node packages/finance/finance-agent/smoke.mjs`（43 项全通过）
+- 数据契约冒烟：`node packages/finance/finance-agent/smoke.mjs`（51 项全通过）
 - 端到端：`oa --profile finance "..."`（真实模型 + 工具调用）
