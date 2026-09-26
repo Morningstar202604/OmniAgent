@@ -171,6 +171,14 @@ export const PROFILE_TEMPLATES: Record<string, ProfileTemplate> = {
   'sdk-minimal': {
     bundles: ['@deepseek-ai/dsh-sdk-minimal'],
   },
+  // 领域专业 profile：通用全能底座 + 官方领域插件（headless 一次性对话）。
+  // Web 交互场景在 web profile 中通过侧栏「插件」页启用同一组合包。
+  finance: {
+    bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-finance', '@deepseek-ai/dsh-headless'],
+  },
+  ecommerce: {
+    bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-ecommerce', '@deepseek-ai/dsh-headless'],
+  },
 }
 
 /** Installation-owned bundle tuples normalized to the shipped template. */
@@ -188,6 +196,9 @@ export const DEFAULT_PROFILE_BUNDLES: readonly string[] = ['@deepseek-ai/dsh-bas
  * manager ([rationale](../../../../.agents/notes/implemented/process/2026-09-15-shipped-optional-bundles.md)).
  */
 export const OPTIONAL_BUNDLES: readonly string[] = [
+  // 官方领域插件：随安装提供、默认关闭，在 Web 侧栏「插件」页一键启用。
+  '@deepseek-ai/dsh-finance',
+  '@deepseek-ai/dsh-ecommerce',
   '@deepseek-ai/dsh-experimental-voice-input-bundle',
   '@deepseek-ai/dsh-experimental-agent-team-profile',
 ]
