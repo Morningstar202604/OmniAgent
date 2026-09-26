@@ -171,13 +171,14 @@ export const PROFILE_TEMPLATES: Record<string, ProfileTemplate> = {
   'sdk-minimal': {
     bundles: ['@deepseek-ai/dsh-sdk-minimal'],
   },
-  // 领域专业 profile：通用全能底座 + 官方领域插件（headless 一次性对话）。
-  // Web 交互场景在 web profile 中通过侧栏「插件」页启用同一组合包。
+  // 领域专业 profile：通用全能 Web 底座 + 官方领域插件。加载即把通用对话界面
+  // 瞬变为该领域的专业应用（finance profile 下 ui-finance 面板自动选中）。
+  // web profile 不含领域组合包，故保持通用界面；领域插件也可在 Web 侧栏「插件」页启用。
   finance: {
-    bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-finance', '@deepseek-ai/dsh-headless'],
+    bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-general-full', '@deepseek-ai/dsh-finance', '@deepseek-ai/dsh-web-app'],
   },
   ecommerce: {
-    bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-ecommerce', '@deepseek-ai/dsh-headless'],
+    bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-ecommerce', '@deepseek-ai/dsh-web-app'],
   },
 }
 

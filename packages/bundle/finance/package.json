@@ -37,7 +37,11 @@
     "@deepseek-ai/cordis": "workspace:~",
     "@deepseek-ai/cordis-plugin-loader": "workspace:~",
     "@deepseek-ai/dsh-agent-default-model": "workspace:*",
+    "@deepseek-ai/dsh-agent-team": "workspace:*",
+    "@deepseek-ai/dsh-client-ui-finance": "workspace:*",
     "@deepseek-ai/dsh-finance-agent": "workspace:*",
-    "@deepseek-ai/dsh-llm": "workspace:*"
+    "@deepseek-ai/dsh-llm": "workspace:*",
+    "@deepseek-ai/dsh-report-export": "workspace:*",
+    "@deepseek-ai/dsh-tool-task": "workspace:*"
   }
 }
