@@ -837,7 +837,8 @@ export class MockFinanceSource implements FinanceDataSource {
     if (quote === undefined || quote.market !== market) {
       throw new Error(`mock 数据源未收录 ${market}:${symbol} 的K线数据（内置示例：600519/000858/601318/AAPL/0700）`)
     }
-    const count = Math.max(1, Math.min(limit, 120))
+    // 上限 300 根（约 1 年交易日），兼顾 finance_kline 常规查询与 finance_backtest 回测取数。
+    const count = Math.max(1, Math.min(limit, 300))
     const step = period === 'day' ? 1 : period === 'week' ? 7 : 30
     // 周K/月K 基于日K节奏放大步长，收盘仍锚定当前价
     const rand = mulberry32(hashSeed(symbol + ':' + period))

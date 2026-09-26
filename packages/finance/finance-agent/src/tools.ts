@@ -17,6 +17,8 @@ import type {
 } from './source.ts'
 import { parseMarket } from './source.ts'
 import { compoundFutureValue, compoundPresentValue, loanPayment, annualizedReturn, dividendDiscountValue, computeIndicator } from './calc.ts'
+import { runBacktest, type BacktestResult } from './backtest.ts'
+import { generateQuantCode } from './quant.ts'
 
 /** 稳定的错误提示（数据源未配置/失败时给模型可行动的指引）。 */
 function dataSourceError(error: unknown): Error {
@@ -993,5 +995,235 @@ export function buildFinanceTools(source: FinanceDataSource): ToolDefinition[] {
     },
   })
 
-  return [quote, financials, metrics, screener, calc, technical, fx, rates, kline, moneyflow, announcements, news, macro, sector, risk, fund, research]
+  // ─────────── 选股回测引擎 ───────────
+  const backtest: ToolDefinition = defineTool({
+    name: 'finance_backtest',
+    description: '对股票/指数历史日K线执行策略回测，输出累计收益、年化收益、最大回撤、夏普比率、胜率、交易明细与净值曲线。支持双均线交叉（dual_ma）与定投（dca）两种策略。计算为纯本地确定性计算，公式透明可复核。数据为示例/mock 时会标注。',
+    parameters: {
+      symbols: { type: 'array', required: true, items: { type: 'string' }, description: '标的代码列表，如 ["600519","000858"]；多标的时资金等额分配、独立回测后汇总' },
+      market: { type: 'string', enum: ['cn', 'hk', 'us'], description: '市场，默认 cn' },
+      strategy: { type: 'string', enum: ['dual_ma', 'dca'], description: '策略：dual_ma=双均线交叉，dca=定期定额定投，默认 dual_ma' },
+      shortWindow: { type: 'number', description: 'dual_ma 短期均线窗口（交易日），默认 5' },
+      longWindow: { type: 'number', description: 'dual_ma 长期均线窗口（交易日），默认 20；dca 下作为回看窗口' },
+      period: { type: 'number', description: '回测交易日数（约 250≈1年），默认 250，最大 280' },
+      initialCash: { type: 'number', description: '初始资金（元），默认 1000000' },
+      feeRatePct: { type: 'number', description: '单边手续费率（百分数，如 0.03=万三），默认 0.03，买卖双边各收一次' },
+      positionPct: { type: 'number', description: 'dual_ma 每次开仓使用现金比例（0~1），默认 1.0 满仓' },
+      dcaInterval: { type: 'number', description: 'dca 定投间隔（交易日），默认 20' },
+    },
+    output: {
+      schema: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          strategy: { type: 'string', required: true },
+          startDate: { type: 'string', required: true },
+          endDate: { type: 'string', required: true },
+          tradingDays: { type: 'number', required: true },
+          initialCash: { type: 'number', required: true },
+          finalEquity: { type: 'number', required: true },
+          totalReturnPct: { type: 'number', required: true },
+          annualizedReturnPct: { type: 'number', required: true },
+          maxDrawdownPct: { type: 'number', required: true },
+          sharpeRatio: { type: 'number', required: true },
+          winRatePct: { oneOf: [{ type: 'number' }, { type: 'null' }], required: true },
+          tradeCount: { type: 'number', required: true },
+          profitFactor: { oneOf: [{ type: 'number' }, { type: 'null' }], required: true },
+          perSymbol: {
+            type: 'array', required: true,
+            items: {
+              type: 'object', additionalProperties: false,
+              properties: {
+                symbol: { type: 'string', required: true },
+                name: { type: 'string', required: true },
+                totalReturnPct: { type: 'number', required: true },
+                finalEquity: { type: 'number', required: true },
+                tradeCount: { type: 'number', required: true },
+              },
+            },
+          },
+          recentTrades: { type: 'array', required: true, items: { type: 'object', additionalProperties: false, properties: {
+            symbol: { type: 'string', required: true }, date: { type: 'string', required: true }, action: { type: 'string', required: true },
+            price: { type: 'number', required: true }, shares: { type: 'number', required: true }, amount: { type: 'number', required: true }, fee: { type: 'number', required: true },
+          } } },
+          formulas: { type: 'array', required: true, items: { type: 'string' } },
+          mock: { oneOf: [{ type: 'boolean' }, { type: 'null' }], required: true },
+        },
+      },
+      render: (_args, value) => [{
+        type: 'text',
+        text: [
+          `回测结果（${value.strategy === 'dual_ma' ? '双均线交叉' : '定投'}）区间 ${value.startDate} ~ ${value.endDate}，共 ${value.tradingDays} 个交易日`,
+          `累计收益率 ${value.totalReturnPct}%，年化 ${value.annualizedReturnPct}%，最大回撤 ${value.maxDrawdownPct}%，夏普 ${value.sharpeRatio}`,
+          `胜率 ${value.winRatePct === null ? '—（无平仓回合）' : value.winRatePct + '%'}，交易次数 ${value.tradeCount}，盈亏比 ${value.profitFactor === null ? '—' : value.profitFactor}`,
+          `初始资金 ${value.initialCash} → 期末权益 ${value.finalEquity}`,
+          ...value.perSymbol.map((s: { symbol: string; name: string; totalReturnPct: number; finalEquity: number; tradeCount: number }) =>
+            `  ${s.symbol} ${s.name}：收益 ${s.totalReturnPct}%，期末 ${s.finalEquity}，交易 ${s.tradeCount} 笔`),
+          ...(value.recentTrades.length > 0 ? ['最近成交：', ...value.recentTrades.slice(-8).map((t: { symbol: string; date: string; action: string; price: number; shares: number }) =>
+            `  ${t.date} ${t.symbol} ${t.action === 'buy' ? '买入' : '卖出'} ${t.shares}股 @ ${t.price}`)] : []),
+          '公式：', ...value.formulas.map((f: string) => `  - ${f}`),
+          value.mock === true ? '（示例/mock 数据回测结果，不可用于真实投资决策）' : '',
+        ].filter((l: string) => l.length > 0).join('\n'),
+      }],
+    },
+    async execute(args: { symbols: string[]; market?: string; strategy?: string; shortWindow?: number; longWindow?: number; period?: number; initialCash?: number; feeRatePct?: number; positionPct?: number; dcaInterval?: number }) {
+      try {
+        const market = parseMarket(args.market)
+        const symbols = (args.symbols ?? []).map((s) => String(s).trim()).filter((s) => s.length > 0)
+        if (symbols.length === 0) throw new Error('finance_backtest: symbols 至少需要 1 个标的代码')
+        const strategy = args.strategy === 'dca' ? 'dca' as const : 'dual_ma' as const
+        const longWindow = Math.max(2, Math.round(num(args.longWindow) ?? 20))
+        const shortWindow = Math.max(1, Math.round(num(args.shortWindow) ?? 5))
+        if (shortWindow >= longWindow) throw new Error(`短期窗口(${shortWindow})必须小于长期窗口(${longWindow})`)
+        const period = Math.max(30, Math.min(Math.round(num(args.period) ?? 250), 280))
+        const initialCash = num(args.initialCash) ?? 1_000_000
+        const feeRate = (num(args.feeRatePct) ?? 0.03) / 100
+        const positionPct = Math.min(1, Math.max(0.01, num(args.positionPct) ?? 1))
+        const dcaInterval = Math.max(1, Math.round(num(args.dcaInterval) ?? 20))
+
+        // 取数：period 个回测日 + longWindow 个指标预热日。
+        const fetchLimit = period + longWindow + 10
+        const subCash = initialCash / symbols.length
+
+        const perSymbol: { symbol: string; name: string; totalReturnPct: number; finalEquity: number; tradeCount: number; result: BacktestResult }[] = []
+        const allTrades: { symbol: string; date: string; action: string; price: number; shares: number; amount: number; fee: number }[] = []
+        let anyMock = false
+        // 汇总净值曲线（按交易日对齐求和）。
+        const aggEquity: number[] = []
+        let startDate = ''
+        let endDate = ''
+
+        for (const symbol of symbols) {
+          const r = await source.kline(symbol, market, 'day', fetchLimit)
+          if (r.mock === true) anyMock = true
+          // 仅取最后 period 根作为回测窗口（前面为预热）。
+          const window = r.bars.slice(-period)
+          const result = runBacktest(window, {
+            strategy,
+            initialCash: subCash,
+            feeRate,
+            shortWindow,
+            longWindow,
+            positionPct,
+            dcaInterval,
+            dcaAmount: subCash / 12,
+          })
+          perSymbol.push({ symbol, name: r.name, totalReturnPct: result.totalReturnPct, finalEquity: result.finalEquity, tradeCount: result.tradeCount, result })
+          for (const t of result.trades) allTrades.push({ symbol, ...t })
+          // 汇总净值（按索引对齐）。
+          result.equityCurve.forEach((p, i) => {
+            aggEquity[i] = (aggEquity[i] ?? 0) + p.equity
+          })
+          if (startDate === '') startDate = result.startDate
+          endDate = result.endDate
+        }
+
+        // 汇总指标基于合并净值曲线。
+        const finalEquity = aggEquity[aggEquity.length - 1] as number
+        const totalReturnPct = (finalEquity - initialCash) / initialCash * 100
+        const tradingDays = aggEquity.length
+        const years = tradingDays / 252
+        const annualizedReturnPct = years > 0 ? (Math.pow(finalEquity / initialCash, 1 / years) - 1) * 100 : 0
+        let peak = aggEquity[0] as number
+        let mdd = 0
+        for (const v of aggEquity) { if (v > peak) peak = v; const dd = (v - peak) / peak; if (dd < mdd) mdd = dd }
+        // 夏普（基于合并净值日收益）。
+        let sharpe = 0
+        if (tradingDays >= 21) {
+          const rets: number[] = []
+          for (let i = 1; i < aggEquity.length; i++) {
+            const prev = aggEquity[i - 1] as number
+            const curr = aggEquity[i] as number
+            rets.push((curr - prev) / prev)
+          }
+          const n = rets.length
+          const mean = rets.reduce((a, b) => a + b, 0) / n
+          const variance = rets.reduce((a, b) => a + (b - mean) ** 2, 0) / (n - 1)
+          const vol = Math.sqrt(variance) * Math.sqrt(252)
+          sharpe = vol > 0 ? (mean * 252 - 0.02) / vol : 0
+        }
+
+        const firstResult = perSymbol[0]?.result
+        return {
+          strategy,
+          startDate,
+          endDate,
+          tradingDays,
+          initialCash,
+          finalEquity: Math.round(finalEquity * 100) / 100,
+          totalReturnPct: Math.round(totalReturnPct * 100) / 100,
+          annualizedReturnPct: Math.round(annualizedReturnPct * 100) / 100,
+          maxDrawdownPct: Math.round(mdd * 10000) / 100,
+          sharpeRatio: Math.round(sharpe * 100) / 100,
+          winRatePct: firstResult?.winRatePct ?? null,
+          tradeCount: allTrades.length,
+          profitFactor: firstResult?.profitFactor ?? null,
+          perSymbol: perSymbol.map(({ result: _r, ...rest }) => rest),
+          recentTrades: allTrades.slice(-50),
+          formulas: firstResult?.formulas ?? [],
+          mock: anyMock ? true : null,
+        }
+      } catch (error) {
+        throw dataSourceError(error)
+      }
+    },
+  })
+
+  // ─────────── 自然语言 → 量化策略代码 ───────────
+  const quantCode: ToolDefinition = defineTool({
+    name: 'finance_quant_code',
+    description: '将用户自然语言描述的策略转换为可执行的量化策略代码（Python，backtrader 风格）+ 参数说明 + 风险提示。支持均线交叉、RSI 超买超卖、布林带突破、动量、定投五种模板。生成代码与 finance_backtest 口径一致，可对照复核。',
+    parameters: {
+      template: { type: 'string', required: true, enum: ['ma_cross', 'rsi', 'boll', 'momentum', 'dca'], description: '策略模板：ma_cross=均线交叉，rsi=超买超卖，boll=布林带突破，momentum=动量，dca=定投' },
+      symbol: { type: 'string', description: '标的代码，用于代码注释，默认 600519' },
+      shortWindow: { type: 'number', description: '短期/快速窗口，默认 5' },
+      longWindow: { type: 'number', description: '长期/慢速窗口（RSI 周期/布林周期/动量回看），默认 20' },
+      rsiOverbought: { type: 'number', description: 'RSI 超买阈值，默认 70' },
+      rsiOversold: { type: 'number', description: 'RSI 超卖阈值，默认 30' },
+      positionPct: { type: 'number', description: '单次开仓仓位比例（0~1），默认 1.0' },
+    },
+    output: {
+      schema: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          template: { type: 'string', required: true },
+          templateName: { type: 'string', required: true },
+          code: { type: 'string', required: true },
+          params: { type: 'array', required: true, items: { type: 'object', additionalProperties: false, properties: {
+            name: { type: 'string', required: true }, value: { oneOf: [{ type: 'number' }, { type: 'string' }], required: true }, description: { type: 'string', required: true },
+          } } },
+          warnings: { type: 'array', required: true, items: { type: 'string' } },
+        },
+      },
+      render: (_args, value) => [{
+        type: 'text',
+        text: [
+          `策略代码生成：${value.templateName}（${value.template}）`,
+          '```python',
+          value.code,
+          '```',
+          '参数：', ...value.params.map((p: { name: string; value: number | string; description: string }) => `  - ${p.name} = ${p.value}（${p.description}）`),
+          '风险提示：', ...value.warnings.map((w: string) => `  - ${w}`),
+        ].join('\n'),
+      }],
+    },
+    async execute(args: { template: string; symbol?: string; shortWindow?: number; longWindow?: number; rsiOverbought?: number; rsiOversold?: number; positionPct?: number }) {
+      const allowed = ['ma_cross', 'rsi', 'boll', 'momentum', 'dca']
+      if (!allowed.includes(args.template)) {
+        throw new Error(`finance_quant_code: template 必须是 ${allowed.join('/')} 之一，收到 "${args.template}"`)
+      }
+      return generateQuantCode({
+        template: args.template as 'ma_cross' | 'rsi' | 'boll' | 'momentum' | 'dca',
+        symbol: args.symbol ?? '600519',
+        shortWindow: Math.max(1, Math.round(num(args.shortWindow) ?? 5)),
+        longWindow: Math.max(2, Math.round(num(args.longWindow) ?? 20)),
+        rsiOverbought: num(args.rsiOverbought) ?? 70,
+        rsiOversold: num(args.rsiOversold) ?? 30,
+        positionPct: Math.min(1, Math.max(0.01, num(args.positionPct) ?? 1)),
+      })
+    },
+  })
+
+  return [quote, financials, metrics, screener, calc, technical, fx, rates, kline, moneyflow, announcements, news, macro, sector, risk, fund, research, backtest, quantCode]
 }
