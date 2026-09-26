@@ -2,19 +2,19 @@
 
 [English](README.md) | 中文
 
-OmniAgent（`oa`）是由 [badhope](https://github.com/X33834) 维护的开源 agent harness（智能体框架），已在四个平台同步镜像：[GitHub · X33834](https://github.com/X33834/OmniAgent) · [GitHub · Morningstar202604](https://github.com/Morningstar202604/OmniAgent) · [GitCode · badhope](https://gitcode.com/badhope/OmniAgent) · [Gitee · badhope](https://gitee.com/badhope/OmniAgent)。
+OmniAgent（`oa`）是一个**全自动科研 AI Agent**。给定一个科研目标，它会自主完成选题、文献检索、数据分析到成稿的完整科研闭环，全程无需人工逐步驱动。
 
-它构建于**一切皆插件**的架构之上，由 [Cordis](https://github.com/cordiverse/cordis) 驱动。
+由 [badhope](https://github.com/X33834) 维护，已在四个平台同步镜像：[GitHub · X33834](https://github.com/X33834/OmniAgent) · [GitHub · Morningstar202604](https://github.com/Morningstar202604/OmniAgent) · [GitCode · badhope](https://gitcode.com/badhope/OmniAgent) · [Gitee · badhope](https://gitee.com/badhope/OmniAgent)。
 
-## 开发者预览
+## 一切皆插件
 
-OmniAgent 处于 _开发者预览_ 阶段，正在快速迭代。**未来将出现破坏兼容性的变更。**
+底座是一个通用全能 Agent：不挂任何插件时，文件、执行、搜索、推理、工具链与 Web UI 全部可用。领域插件在此基础上扩展——挂上插件即获得该领域的专业工具与 persona，通用能力不受影响；插件可随时装卸，零代码改动。
 
-<a id="run"></a>
+以金融插件为例，它带来 17 个工具：行情、财务、估值指标、选股、金融计算器、技术指标、汇率、利率、K线、资金流、公告、资讯、宏观、板块、风险、固收、券商研报。
+
+> 数据源默认内置示例数据（mock）。接入真实数据服务时把 `source` 改为 `http`，并配置 `baseURL` 与 `apiKeyEnv`。
 
 ## 运行
-
-克隆仓库后从源码运行：
 
 ```sh
 git clone https://github.com/X33834/OmniAgent.git
@@ -42,7 +42,7 @@ Web UI 默认在 `http://127.0.0.1:3080` 启动，本机启动时还会用默认
 
 ```bibtex
 @misc{omniagent2026,
-  title={OmniAgent: Everything is a Plugin},
+  title={OmniAgent: A Fully-Automated Research Agent},
   author={badhope},
   year={2026},
   publisher={GitHub},

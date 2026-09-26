@@ -2,17 +2,19 @@
 
 English | [中文](README.zh.md)
 
-OmniAgent (`oa`) is an open-source agent harness maintained by [badhope](https://github.com/X33834). It is mirrored across four platforms — [GitHub · X33834](https://github.com/X33834/OmniAgent) · [GitHub · Morningstar202604](https://github.com/Morningstar202604/OmniAgent) · [GitCode · badhope](https://gitcode.com/badhope/OmniAgent) · [Gitee · badhope](https://gitee.com/badhope/OmniAgent).
+OmniAgent (`oa`) is a **fully-automated research agent**. Given a research goal, it carries the work through topic selection, literature retrieval, data analysis, and writing the final draft — the whole research loop, end to end.
 
-It is built on an **everything-is-a-plugin** architecture and powered by [Cordis](https://github.com/cordiverse/cordis).
+It is maintained by [badhope](https://github.com/X33834) and mirrored across four platforms — [GitHub · X33834](https://github.com/X33834/OmniAgent) · [GitHub · Morningstar202604](https://github.com/Morningstar202604/OmniAgent) · [GitCode · badhope](https://gitcode.com/badhope/OmniAgent) · [Gitee · badhope](https://gitee.com/badhope/OmniAgent).
 
-## Developer preview
+## Everything is a plugin
 
-OmniAgent is in _developer preview_ and iterating rapidly. **THERE WILL BE COMPATIBILITY-BREAKING CHANGES.**
+The base is a general-purpose agent: files, execution, search, reasoning, toolchain and Web UI all work with no plugin attached. Domain plugins then extend it — attaching a plugin adds that field's professional tools and persona without weakening the general capabilities, and plugins can be attached or detached at any time with no code changes.
+
+The finance plugin, for example, adds 17 tools: quotes, financials, valuation metrics, screening, a financial calculator, technical indicators, FX, rates, K-line, money flow, announcements, news, macro, sector, risk, fixed income and broker research.
+
+> Data sources ship with built-in sample data by default. Switch to a real data service by setting `source: http` plus `baseURL` and `apiKeyEnv`.
 
 ## Run
-
-Clone the repository and run from source:
 
 ```sh
 git clone https://github.com/X33834/OmniAgent.git
@@ -40,7 +42,7 @@ The Web UI starts at `http://127.0.0.1:3080` by default and opens in the default
 
 ```bibtex
 @misc{omniagent2026,
-  title={OmniAgent: Everything is a Plugin},
+  title={OmniAgent: A Fully-Automated Research Agent},
   author={badhope},
   year={2026},
   publisher={GitHub},
