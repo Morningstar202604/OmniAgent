@@ -76,6 +76,27 @@
 | **B14 报告导出（PDF/HTML/Markdown）** | Kimi K2.5 端到端 Office 输出、豆包 AI PPT、iFinD 研报导出都是招牌。当前 present 只"打开文件"不生成报告。最小版：新增 `tool-export-report`，把对话/工具结果渲染为 Markdown → HTML（Puppeteer/playwright 已在 browser-use 里）→ PDF。 |
 | **B18 金融选股/回测** | 详见第三章金融对标——同花顺 i问财 NL 选股、聚宽回测是金融 AI 的核心招牌，当前 17 工具缺 screener/backtest。 |
 
+#### 本次 P0 补齐完成情况（2026-09-27）
+
+| P0 项 | 状态 | 实现包 / 工具 | 验证结果 |
+|---|---|---|---|
+| **F3 专业领域面板 UI** | ✅ 已完成 | `packages/client/ui-finance`（行情条+标的详情+SVG K线+研报/公告/资讯三标签+六大专业功能入口） | finance profile 启动自动选中金融终端，web profile 保持通用界面；红涨绿跌、标的切换交互正常 |
+| **F11 插件在线市场** | ✅ 已完成 | `packages/client/ui-plugin-market`（搜索+分类过滤+精选横幅+卡片网格+安装状态） | 浏览器实测市场页可访问，官方+社区插件目录展示正常 |
+| **B5 细粒度权限/审批规则** | ✅ 已完成 | `packages/guard/permission-rules`（四档 allow/auto/ask/deny + 通配符 + 预设 + permission_* 工具） | headless 实测：deny 规则真实拦截工具调用，permission_get/set/presets 正常 |
+| **B13 长期记忆/知识库** | ✅ 已完成 | `packages/memory/memory`（SQLite 持久化 + memory_*/knowledge_* 工具 + 系统提示词注入） | headless 实测：memory_add/search/list 落盘重开可读，数据库文件 ~/.omniagent/memory.db 持久化 |
+| **B14 报告导出** | ✅ 已完成 | `packages/report-export`（Markdown/HTML 双格式 + 三种专业模板 + report_export 工具） | Agnes 真实模型端到端：回测结果导出为 5.7KB HTML 报告，真实落盘 |
+| **B18 金融选股/回测** | ✅ 已完成 | `packages/finance/finance-agent/src/backtest.ts` + `quant.ts`（finance_backtest 双均线/定投 + finance_quant_code 五策略模板） | Agnes 真实模型端到端：茅台双均线回测 18 笔交易、累计 -7.79%、回撤 -15.65%，附公式可复核 |
+
+**额外补齐（本次一并实施）**：
+- 前端顶部状态栏（`ui-status-bar`）：模型/会话/token/连接状态/时钟/主题切换
+- 前端会话历史面板（`ui-session-history`）：按时间分组/搜索/切换/分支/归档
+- 后端任务队列增强（`packages/jobs/tool-task`）：task_run/status/list/cancel
+- 后端多智能体协作（`packages/subagent/agent-team`）：agent_team_run 角色并行编排
+
+**插件加载修复记录**：permission-rules 与 memory 初始报 `failed to import`，根因有二——(1) base/finance bundle 的 `dependencies` 未声明新插件，pnpm 未建立 bundle 级 node_modules 链接，运行时解析器找不到包；(2) cordis `inject` 声明错误（permission-rules 为空数组但访问 ctx.tools，memory 完全缺失 inject 但访问 ctx.tools+ctx.systemPrompt）。均已修复，web profile 启动无警告。
+
+**后续路线（未静默降级）**：PDF 真实渲染（当前为打印友好 HTML）、记忆语义/向量召回（当前为关键词 LIKE）、agent_team_run 角色间消息传递与 DAG 编排、移动端响应式适配。
+
 #### P1（近期做）
 
 | 项 | 说明 |
