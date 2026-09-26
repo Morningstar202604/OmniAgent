@@ -1,4 +1,4 @@
-/* NEW SESSION hero (figma Input_Bottom 75:8208): fish + title, workspace chip
+/* NEW SESSION hero (figma Input_Bottom 75:8208): mark + title, workspace chip
    above the shared InputBar card. The input itself is InputBar — only stack
    geometry and the chip live here. */
 
@@ -23,17 +23,17 @@
   overflow: visible;
 }
 
-/* figma 34:10411: fish + title, gap 10, centered; 26/32 wt500. The preview
+/* figma 34:10411: mark + title, gap 10, centered; 26/32 wt500. The preview
    badge is a product addition outside that source: a mono superscript pill
    riding the title's top-right. */
 .headline {
   display: flex;
-  /* Overflow-driven: the fish and the title group are two wrap units sharing
-     one centered line while they fit; squeezed, the fish takes its own line
+  /* Overflow-driven: the mark and the title group are two wrap units sharing
+     one centered line while they fit; squeezed, the mark takes its own line
      above the group. No breakpoint. */
   flex-wrap: wrap;
   column-gap: 10px;
-  /* Wrapped, the fish sits on its own line; more air than the 10px side gap
+  /* Wrapped, the mark sits on its own line; more air than the 10px side gap
      keeps it reading as a mark above the title, not a squeezed inline glyph. */
   row-gap: 12px;
   align-items: center;
@@ -76,7 +76,7 @@
 
 /* Keep hover detection on a stationary box while the mark moves within it;
    hover rules target the hitbox so a slot-occupant mark swims too. */
-.fishHitbox {
+.markHitbox {
   display: inline-flex;
   flex: none;
   align-items: center;
@@ -86,7 +86,7 @@
 /* The swim morph's curves poke slightly past the viewBox edges, so clipping
    would slice the tail mid-wag. The hero mark stays in the same primary ink
    as its headline. */
-.fish {
+.mark {
   display: block;
   overflow: visible;
   transform-origin: 50% 60%;
@@ -97,7 +97,7 @@
    (left) lifts as the whale rises, then settles back with a small
    counter-tilt, like treading water. Negative rotation = head up (the head
    is the left half; origin 50% 60%). */
-@keyframes hero-fish-swim {
+@keyframes hero-mark-swim {
   0%,
   100% {
     transform: none;
@@ -113,8 +113,8 @@
 }
 
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .fishHitbox:hover .fish {
-    animation: hero-fish-swim 1.6s ease-in-out infinite;
+  .markHitbox:hover .mark {
+    animation: hero-mark-swim 1.6s ease-in-out infinite;
   }
 }
 
