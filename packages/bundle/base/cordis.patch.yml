@@ -509,6 +509,22 @@
         thresholds: [3, 5, 8]
         argumentsPreviewChars: 500
 
+    # 细粒度工具权限规则：四档（allow/auto/ask/deny）+ 通配符 + 预设。
+    # 默认 preset=normal 不注册额外规则、兜底放行，保持现有工具行为不变。
+    # 可用 permission_set 运行时切换预设或自定义规则。
+    - id: permission-rules
+      name: '@deepseek-ai/dsh-permission-rules'
+      config:
+        preset: normal
+        rules: []
+
+    # 长期记忆 / 知识库：跨会话 SQLite 持久化 + memory_*/knowledge_* 工具 + 系统提示词注入。
+    - id: memory
+      name: '@deepseek-ai/dsh-memory'
+      config:
+        injectMaxEntries: 6
+        injectMaxChars: 1500
+
     # The shared base enables the stable model-facing web_search and web_fetch
     # tools. The Web app disables this host row and composes both tools per agent
     # preset; products with a stricter network policy override tool-web. DeepSeek
