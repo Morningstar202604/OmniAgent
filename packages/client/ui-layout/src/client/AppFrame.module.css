@@ -1,10 +1,23 @@
 .frame {
   position: relative; /* anchors the drag handles, which straddle column borders */
   display: grid;
-  grid-template-rows: 100%;
+  /* Row 1 is the optional status-bar track (auto: zero height while empty);
+     row 2 owns the three columns. Column tracks stay inline. */
+  grid-template-rows: auto minmax(0, 1fr);
   height: 100%;
   overflow: hidden;
   background: var(--dsw-alias-bg-base);
+}
+
+/* Top status-bar track: spans every column in row 1. The row collapses to its
+   entries' height (≈34px) or to zero while the shell.statusbar slot is empty,
+   so an unregistered status bar leaves the frame layout untouched. */
+.statusbarRow {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
 }
 
 /* Only a discrete collapse/expand toggle eases the tracks (the TSX holds
@@ -27,7 +40,7 @@
   --dsh-windows-content-radius: 16px;
   box-sizing: border-box;
   padding-top: var(--dsh-windows-titlebar-height);
-  grid-template-rows: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   background: var(--dsw-specific-sidebar-fill);
 }
 

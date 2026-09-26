@@ -27,7 +27,7 @@ import css from './AppFrame.module.css'
 /** Full composed props: runtime share + child-slot render share + store share. */
 export type AppFrameProps =
   & PropsRuntime<'root'>
-  & PropsRenderSlots<'sidebar' | 'main' | 'rightbar' | 'shell.overlay' | 'shell.leading'>
+  & PropsRenderSlots<'sidebar' | 'main' | 'rightbar' | 'shell.overlay' | 'shell.statusbar' | 'shell.leading'>
   & PropsStore<ReturnType<typeof createLayoutStore>>
   & PropsLocale<'common'>
 
@@ -265,6 +265,10 @@ export function AppFrame({
     <MainPanel usePanelInfo={usePanelInfo} renderSlot={renderSlot} />
   ), [usePanelInfo, renderSlot])
   const overlays = useMemo(() => renderSlot('shell.overlay', {}), [renderSlot])
+  // Top status-bar row: spans every column as the first grid track. Renders
+  // empty (zero height) while no status-bar entry registers, leaving the frame
+  // layout unchanged.
+  const statusbar = useMemo(() => renderSlot('shell.statusbar', {}), [renderSlot])
   // Window-chrome seat over the main panels' top-left corner: only a fully
   // hidden sidebar column on macOS desktop leaves window chrome without a
   // home — the Windows zero-width collapse keeps its controls in the caption
@@ -300,6 +304,11 @@ export function AppFrame({
         useSessions={useSessions}
         usePanelInfo={usePanelInfo}
       />
+      {/* Top status-bar track: explicitly placed in row 1 across all columns;
+          the three columns below auto-place into row 2. Empty while no entry. */}
+      <div className={css.statusbarRow} data-statusbar-row>
+        {statusbar}
+      </div>
       <div className={css.sidebarCol}>
         {sidebar}
       </div>

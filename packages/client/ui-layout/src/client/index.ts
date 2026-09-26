@@ -90,6 +90,13 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
      */
     'shell.overlay': { kind: 'list'; scope: 'root' }
     /**
+     * Top status-bar row spanning every column, laid out as a frame grid row
+     * (height ~32-36px). Entries render a compact strip: current model, session
+     * title/id, token usage, connection state. The row collapses to zero height
+     * while no entry registers, so an empty frame is unchanged.
+     */
+    'shell.statusbar': { kind: 'list'; scope: 'root' }
+    /**
      * Window-chrome seat at the frame's top-left, over every main panel.
      * Mounted only while the sidebar column is fully hidden (macOS desktop
      * collapse; other platforms keep the rail), so the occupant can assume the
@@ -166,6 +173,7 @@ export function apply(ctx: ClientContext): void {
         'main': { kind: 'keyed', scope: 'root' },
         'rightbar': { kind: 'single', scope: 'root' },
         'shell.overlay': { kind: 'list', scope: 'root' },
+        'shell.statusbar': { kind: 'list', scope: 'root' },
         'shell.leading': { kind: 'single', scope: 'root' },
       },
       store,
