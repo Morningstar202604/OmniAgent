@@ -121,6 +121,15 @@ function Showcase({ t }: { t: HeroTranslate }) {
           </div>
         ))}
       </div>
+      {/* 快速命令入口：打开全局命令面板（Ctrl/⌘+K 同效）。 */}
+      <button
+        type="button"
+        className={css.paletteButton}
+        onClick={() => { window.dispatchEvent(new Event('omnagent:command-palette:toggle')) }}
+      >
+        <span className={css.paletteButtonLabel}>{t('hero.openPalette')}</span>
+        <span className={css.paletteKbd}>{t('hero.openPaletteHint')}</span>
+      </button>
     </div>
   )
 }
@@ -152,7 +161,7 @@ export function HeroShell({ t, renderSlot, children }: HeroShellProps) {
           </span>
           <span className={css.titleGroup}>
             {/* Own element: keeps the headline text addressable apart from the badge. */}
-            <span>{t('hero.headline')}</span>
+            <span className={css.gradientTitle}>{t('hero.headline')}</span>
             <span className={css.previewBadge}>{t('hero.preview')}</span>
           </span>
         </div>

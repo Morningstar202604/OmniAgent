@@ -3,12 +3,30 @@
    geometry and the chip live here. */
 
 .root {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   height: 100%;
   min-width: 0;
   padding: 0 24px;
+}
+
+/* OmniAgent 品牌光晕：标题区背后一缕品牌色渐变辉光，浅/深色主题自适应。 */
+.root::before {
+  content: '';
+  position: absolute;
+  top: 12%;
+  left: 50%;
+  width: min(560px, 80%);
+  height: 240px;
+  transform: translateX(-50%);
+  background:
+    radial-gradient(60% 60% at 50% 40%, color-mix(in srgb, var(--dsw-alias-label-primary-bluish, #4f6ef7) 14%, transparent) 0%, transparent 70%),
+    radial-gradient(45% 55% at 30% 60%, color-mix(in srgb, var(--dsw-alias-state-business-tertiary, #eef2ff) 60%, transparent) 0%, transparent 75%);
+  filter: blur(2px);
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* Cap matches the InputBar card. Glow may paint past the sides. */
@@ -48,6 +66,19 @@
    the badge stranded beside a fragment. When the badge no longer fits beside
    the title it wraps to its own centered line below; while both fit, the group
    is content-sized and centering is a no-op, keeping the superscript snug. */
+.gradientTitle {
+  background: linear-gradient(92deg, var(--dsw-alias-label-primary) 35%, var(--dsw-alias-label-primary-bluish) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@supports not (background-clip: text) {
+  .gradientTitle {
+    color: var(--dsw-alias-label-primary);
+  }
+}
+
 .titleGroup {
   display: flex;
   flex-wrap: wrap;
@@ -151,6 +182,13 @@
   border-radius: 14px;
   background: var(--dsw-alias-state-business-tertiary);
   min-width: 0;
+  transition: transform 0.2s cubic-bezier(0.45, 0, 0.55, 1), border-color 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--dsw-alias-label-primary-bluish, #4f6ef7) 45%, transparent);
+  box-shadow: var(--dsw-shadow-lv2, 0 4px 12px 0 rgba(0, 0, 0, 0.04));
 }
 
 .cardTag {
@@ -177,6 +215,41 @@
   font-size: 12px;
   line-height: 18px;
   color: var(--dsw-alias-label-caption);
+}
+
+/* 快速命令入口按钮：胶囊形态，hover 提亮。 */
+.paletteButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 auto;
+  padding: 6px 14px 6px 16px;
+  border: 0.5px solid var(--dsw-alias-border-l4);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.paletteButton:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  border-color: color-mix(in srgb, var(--dsw-alias-label-primary-bluish, #4f6ef7) 40%, transparent);
+}
+
+.paletteKbd {
+  padding: 0 6px;
+  border: 0.5px solid var(--dsw-alias-border-l4);
+  border-radius: 6px;
+  background: var(--dsw-alias-state-business-tertiary);
+  color: var(--dsw-alias-label-caption);
+  font-family: var(--ds-font-family-code);
+  font-size: 11px;
+  line-height: 18px;
+  white-space: nowrap;
 }
 
 /* Workspace row sits 12px above the input card (figma y80 → y112). */
