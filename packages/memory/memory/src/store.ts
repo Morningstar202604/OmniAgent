@@ -7,9 +7,11 @@
  * 表结构：
  * - `memories`：长期记忆条目（用户偏好 / 项目知识 / 历史决策）
  * - `knowledge`：知识库文档分块（导入的 txt/md 按段落切分）
+ * - `memory_terms` / `knowledge_terms`：BM25 倒排索引的持久化词项表
+ *   （doc_id, term, tf），启动时加载进内存，CRUD 时同步维护。
  *
- * 检索为最小可用版：内容/标签的 LIKE 关键词匹配 + 重要度与最近使用排序。
- * 后续路线：接入 embedding 向量检索（见包 README）。
+ * 检索：BM25 打分排序（中文 bigram + 英文单词分词），
+ * BM25 无命中时退化为 LIKE 关键词匹配，保证旧有精确检索体验不丢。
  *
  * @module @deepseek-ai/dsh-memory/store
  */
@@ -17,6 +19,8 @@
 import { DatabaseSync } from 'node:sqlite'
 import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
+import { tokenize } from './tokenizer.ts'
+import { Bm25Index } from './bm25.ts'
 
 /** 一条长期记忆。 */
 export interface MemoryEntry {
@@ -97,6 +101,23 @@ export function openMemoryDatabase(path: string): DatabaseSync {
       created_at  INTEGER NOT NULL
     ) STRICT
   `)
+  // BM25 倒排索引词项表：(文档 id, 词项) 联合主键，tf 为该词在文档中的词频。
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS memory_terms (
+      memory_id TEXT NOT NULL,
+      term      TEXT NOT NULL,
+      tf        INTEGER NOT NULL,
+      PRIMARY KEY (memory_id, term)
+    ) STRICT
+  `)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS knowledge_terms (
+      knowledge_id TEXT NOT NULL,
+      term         TEXT NOT NULL,
+      tf           INTEGER NOT NULL,
+      PRIMARY KEY (knowledge_id, term)
+    ) STRICT
+  `)
   return db
 }
 
@@ -104,9 +125,15 @@ export function openMemoryDatabase(path: string): DatabaseSync {
 export class MemoryStore {
   private readonly db: DatabaseSync
   private closed = false
+  /** 记忆的 BM25 内存索引。 */
+  private readonly memIndex = new Bm25Index()
+  /** 知识库的 BM25 内存索引。 */
+  private readonly knowIndex = new Bm25Index()
 
   constructor(db: DatabaseSync) {
     this.db = db
+    // 启动时从 SQLite 词项表恢复内存索引；与主表不一致时（老库升级/异常退出）重建。
+    this.loadIndexes()
   }
 
   /** 用文件路径直接打开一个存储实例（便捷工厂）。 */
@@ -119,6 +146,120 @@ export class MemoryStore {
     if (this.closed) return
     this.closed = true
     this.db.close()
+  }
+
+  // ---- 索引维护 -----------------------------------------------------------
+
+  /**
+   * 把一篇文档的词项写入 SQLite 词项表，并加入内存 BM25 索引。
+   * @param id - 记忆 id。
+   * @param content - 记忆正文。
+   * @param tags - 标签列表（一并参与索引，保留原 LIKE 标签匹配能力）。
+   */
+  private indexMemoryDoc(id: string, content: string, tags: string[]): void {
+    const tokens = tokenize([content, ...tags].join(' '))
+    // 先清掉旧词项（更新场景），再写入新词项。
+    this.db.prepare('DELETE FROM memory_terms WHERE memory_id = ?').run(id)
+    const insert = this.db.prepare(
+      'INSERT INTO memory_terms (memory_id, term, tf) VALUES (?, ?, ?)',
+    )
+    const tf = new Map<string, number>()
+    for (const t of tokens) tf.set(t, (tf.get(t) ?? 0) + 1)
+    for (const [term, freq] of tf) insert.run(id, term, freq)
+    this.memIndex.addDoc(id, tokens)
+  }
+
+  /** 从内存索引与 SQLite 词项表中移除一篇记忆。 */
+  private unindexMemoryDoc(id: string): void {
+    this.db.prepare('DELETE FROM memory_terms WHERE memory_id = ?').run(id)
+    this.memIndex.removeDoc(id)
+  }
+
+  /**
+   * 把一个知识分块的词项写入 SQLite 词项表，并加入内存 BM25 索引。
+   * @param id - 知识分块 id。
+   * @param content - 分块正文。
+   */
+  private indexKnowledgeDoc(id: string, content: string): void {
+    const tokens = tokenize(content)
+    this.db.prepare('DELETE FROM knowledge_terms WHERE knowledge_id = ?').run(id)
+    const insert = this.db.prepare(
+      'INSERT INTO knowledge_terms (knowledge_id, term, tf) VALUES (?, ?, ?)',
+    )
+    const tf = new Map<string, number>()
+    for (const t of tokens) tf.set(t, (tf.get(t) ?? 0) + 1)
+    for (const [term, freq] of tf) insert.run(id, term, freq)
+    this.knowIndex.addDoc(id, tokens)
+  }
+
+  /** 启动时从 SQLite 词项表重建内存索引；与主表数量不一致时全量重建。 */
+  private loadIndexes(): void {
+    // ---- 记忆索引 ----
+    const memRows = this.db.prepare(
+      'SELECT memory_id AS id, term, tf FROM memory_terms',
+    ).all() as Array<{ id: string; term: string; tf: number }>
+    const memDocTerms = new Map<string, Map<string, number>>()
+    for (const row of memRows) {
+      let m = memDocTerms.get(row.id)
+      if (m === undefined) {
+        m = new Map<string, number>()
+        memDocTerms.set(row.id, m)
+      }
+      m.set(row.term, row.tf)
+    }
+    for (const [id, tf] of memDocTerms) this.memIndex.restoreDoc(id, tf)
+    const memTotal = (this.db.prepare('SELECT COUNT(*) AS c FROM memories').get() as { c: number }).c
+    if (memTotal !== this.memIndex.size) this.rebuildMemoryIndex()
+
+    // ---- 知识库索引 ----
+    const knowRows = this.db.prepare(
+      'SELECT knowledge_id AS id, term, tf FROM knowledge_terms',
+    ).all() as Array<{ id: string; term: string; tf: number }>
+    const knowDocTerms = new Map<string, Map<string, number>>()
+    for (const row of knowRows) {
+      let m = knowDocTerms.get(row.id)
+      if (m === undefined) {
+        m = new Map<string, number>()
+        knowDocTerms.set(row.id, m)
+      }
+      m.set(row.term, row.tf)
+    }
+    for (const [id, tf] of knowDocTerms) this.knowIndex.restoreDoc(id, tf)
+    const knowTotal = (this.db.prepare('SELECT COUNT(*) AS c FROM knowledge').get() as { c: number }).c
+    if (knowTotal !== this.knowIndex.size) this.rebuildKnowledgeIndex()
+  }
+
+  /** 全量重建记忆 BM25 索引（老库升级 / 词项表与主表不一致时使用）。 */
+  private rebuildMemoryIndex(): void {
+    this.db.exec('BEGIN')
+    try {
+      this.db.prepare('DELETE FROM memory_terms').run()
+      for (const id of this.memIndex.docIds()) this.memIndex.removeDoc(id)
+      const rows = this.db.prepare('SELECT id, content, tags FROM memories').all() as Array<{ id: string; content: string; tags: string }>
+      for (const row of rows) {
+        const tags = JSON.parse(row.tags) as string[]
+        this.indexMemoryDoc(row.id, row.content, tags)
+      }
+      this.db.exec('COMMIT')
+    } catch (err) {
+      this.db.exec('ROLLBACK')
+      throw err
+    }
+  }
+
+  /** 全量重建知识库 BM25 索引。 */
+  private rebuildKnowledgeIndex(): void {
+    this.db.exec('BEGIN')
+    try {
+      this.db.prepare('DELETE FROM knowledge_terms').run()
+      for (const id of this.knowIndex.docIds()) this.knowIndex.removeDoc(id)
+      const rows = this.db.prepare('SELECT id, content FROM knowledge').all() as Array<{ id: string; content: string }>
+      for (const row of rows) this.indexKnowledgeDoc(row.id, row.content)
+      this.db.exec('COMMIT')
+    } catch (err) {
+      this.db.exec('ROLLBACK')
+      throw err
+    }
   }
 
   // ---- 记忆 CRUD ---------------------------------------------------------
@@ -141,41 +282,69 @@ export class MemoryStore {
     this.db.prepare(
       'INSERT INTO memories (id, content, tags, source, importance, access_count, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
     ).run(entry.id, entry.content, JSON.stringify(entry.tags), entry.source, entry.importance, 0, now, now)
+    // 写入 BM25 索引。
+    this.indexMemoryDoc(entry.id, entry.content, entry.tags)
     return entry
   }
 
   /**
-   * 关键词搜索记忆。LIKE 匹配 content 与 tags；
-   * 排序：相关关键词命中 + 重要度 + 最近更新/使用。命中后 access_count+1。
+   * 搜索记忆：优先 BM25 打分排序（支持语义召回）；
+   * BM25 无命中时退化为 LIKE 关键词匹配，保留旧有精确检索行为。
+   * 命中后 access_count+1。
    */
   searchMemory(query: string, options: { tags?: string; limit?: number } = {}): MemoryEntry[] {
     const limit = Math.max(1, Math.min(50, options.limit ?? 10))
-    const like = `%${query.trim()}%`
-    // 关键词命中 content 或 tags 即视为匹配；空 query 等价于列出（按重要度/新近）。
-    const hasQuery = query.trim().length > 0
-    const rows = hasQuery
-      ? this.db.prepare(
-          `SELECT * FROM memories
-           WHERE content LIKE ? OR tags LIKE ?
-           ORDER BY importance DESC, updated_at DESC
-           LIMIT ?`,
-        ).all(like, like, limit)
-      : this.db.prepare(
-          `SELECT * FROM memories
-           ORDER BY importance DESC, updated_at DESC
-           LIMIT ?`,
-        ).all(limit)
-    const entries = (rows as unknown[]).map(rowToMemory)
+    const trimmed = query.trim()
+    // 空 query：等价于列出（按重要度/新近）。
+    if (trimmed.length === 0) {
+      const rows = this.db.prepare(
+        `SELECT * FROM memories ORDER BY importance DESC, updated_at DESC LIMIT ?`,
+      ).all(limit)
+      return this.finalizeMemory((rows as unknown[]).map(rowToMemory), options, limit)
+    }
+
+    // 1) 先尝试 BM25 语义打分。
+    const tokens = tokenize(trimmed)
+    const hits = this.memIndex.score(tokens)
+    let entries: MemoryEntry[]
+    if (hits.length > 0) {
+      const stmt = this.db.prepare('SELECT * FROM memories WHERE id = ?')
+      entries = []
+      for (const hit of hits.slice(0, limit)) {
+        const row = stmt.get(hit.id)
+        if (row !== undefined) entries.push(rowToMemory(row))
+      }
+    } else {
+      // 2) fallback：LIKE 关键词匹配（BM25 未命中任何词项时）。
+      const like = `%${trimmed}%`
+      const rows = this.db.prepare(
+        `SELECT * FROM memories
+         WHERE content LIKE ? OR tags LIKE ?
+         ORDER BY importance DESC, updated_at DESC
+         LIMIT ?`,
+      ).all(like, like, limit)
+      entries = (rows as unknown[]).map(rowToMemory)
+    }
+    return this.finalizeMemory(entries, options, limit)
+  }
+
+  /**
+   * 对检索结果做后处理：标签过滤 + 访问次数累加。
+   * 抽出为私有方法，保证 BM25 路径与 LIKE fallback 路径行为一致。
+   */
+  private finalizeMemory(entries: MemoryEntry[], options: { tags?: string }, limit: number): MemoryEntry[] {
+    let out = entries
     if (options.tags) {
       const wanted = options.tags
-      return entries.filter(e => e.tags.some(t => t === wanted)).slice(0, limit)
+      out = out.filter(e => e.tags.some(t => t === wanted))
     }
+    out = out.slice(0, limit)
     // 命中后累加访问次数（用于"最近使用"排序的近似）。
-    for (const e of entries) {
+    for (const e of out) {
       this.db.prepare('UPDATE memories SET access_count = access_count + 1, updated_at = ? WHERE id = ?')
         .run(Date.now(), e.id)
     }
-    return entries
+    return out
   }
 
   /** 列出记忆（按重要度/新近）。 */
@@ -183,7 +352,7 @@ export class MemoryStore {
     return this.searchMemory('', { ...options })
   }
 
-  /** 更新记忆（content/tags/importance 可选）。 */
+  /** 更新记忆（content/tags/importance 可选）；内容或标签变化时同步重建 BM25 索引。 */
   updateMemory(id: string, patch: { content?: string; tags?: string[]; importance?: number }): MemoryEntry {
     const existing = this.getMemory(id)
     if (existing === undefined) throw new Error(`memory_update: 记忆 "${id}" 不存在`)
@@ -195,12 +364,15 @@ export class MemoryStore {
     const now = Date.now()
     this.db.prepare('UPDATE memories SET content = ?, tags = ?, importance = ?, updated_at = ? WHERE id = ?')
       .run(content, JSON.stringify(tags), importance, now, id)
+    // 内容/标签变了就重建该文档的倒排词项。
+    this.indexMemoryDoc(id, content, tags)
     return this.getMemory(id)!
   }
 
-  /** 删除记忆。 */
+  /** 删除记忆（同时清理 BM25 索引词项）。 */
   deleteMemory(id: string): boolean {
     const res = this.db.prepare('DELETE FROM memories WHERE id = ?').run(id)
+    if (res.changes > 0) this.unindexMemoryDoc(id)
     return res.changes > 0
   }
 
@@ -225,7 +397,7 @@ export class MemoryStore {
 
   // ---- 知识库 ------------------------------------------------------------
 
-  /** 导入一个文档的若干分块，返回写入的分块数。 */
+  /** 导入一个文档的若干分块，返回写入的分块数；每个分块同时建立 BM25 索引。 */
   importKnowledge(source: string, chunks: string[]): number {
     const now = Date.now()
     const insert = this.db.prepare(
@@ -235,18 +407,42 @@ export class MemoryStore {
     for (let i = 0; i < chunks.length; i += 1) {
       const text = chunks[i]!.trim()
       if (text.length === 0) continue
-      insert.run(makeId('know'), source, i, text, now)
+      const id = makeId('know')
+      insert.run(id, source, i, text, now)
+      this.indexKnowledgeDoc(id, text)
       n += 1
     }
     return n
   }
 
-  /** 关键词搜索知识库分块。 */
+  /**
+   * 搜索知识库分块：BM25 打分排序优先；无命中时退化为 LIKE 匹配。
+   */
   searchKnowledge(query: string, limit = 10): KnowledgeChunk[] {
-    const like = `%${query.trim()}%`
+    const lim = Math.max(1, Math.min(50, limit))
+    const trimmed = query.trim()
+    if (trimmed.length === 0) {
+      const rows = this.db.prepare(
+        'SELECT * FROM knowledge ORDER BY created_at DESC LIMIT ?',
+      ).all(lim)
+      return (rows as unknown[]).map(rowToKnowledge)
+    }
+    const tokens = tokenize(trimmed)
+    const hits = this.knowIndex.score(tokens)
+    if (hits.length > 0) {
+      const stmt = this.db.prepare('SELECT * FROM knowledge WHERE id = ?')
+      const out: KnowledgeChunk[] = []
+      for (const hit of hits.slice(0, lim)) {
+        const row = stmt.get(hit.id)
+        if (row !== undefined) out.push(rowToKnowledge(row))
+      }
+      return out
+    }
+    // fallback：LIKE 关键词匹配。
+    const like = `%${trimmed}%`
     const rows = this.db.prepare(
-      `SELECT * FROM knowledge WHERE content LIKE ? ORDER BY created_at DESC LIMIT ?`,
-    ).all(like, Math.max(1, Math.min(50, limit)))
+      'SELECT * FROM knowledge WHERE content LIKE ? ORDER BY created_at DESC LIMIT ?',
+    ).all(like, lim)
     return (rows as unknown[]).map(rowToKnowledge)
   }
 }
