@@ -1,0 +1,53 @@
+# OmniAgent general-full bundle patch: 2026 通用 Agent 能力拉满。
+# 底座 base 已默认含：文件/执行/搜索/子代理/目标/计划/上下文压缩/技能/沙箱/
+# 审批/凭据/会话持久化/任务/产物图床/多模型路由等（100 行）。
+# 本包补齐通用 Agent 基础设施与高级功能，默认挂载、开箱即用；无外部依赖时
+# 保持惰性，配置后自动激活。
+#
+# MCP 客户端为「每服务器一个实例」：在 Web 设置页配置 MCP 服务器后自动生成
+# 实例行；headless/无 UI 场景可在此追加真实服务器配置，例如：
+#   - id: mcp-my-server
+#     name: '@deepseek-ai/dsh-mcp-client'
+#     config:
+#       transport: streamable-http
+#       serverName: my-server
+#       url: https://mcp.example.com/sse
+#       headers: { Authorization: { $env: MCP_TOKEN } }
+#
+# 启用桌面/浏览器自动化真实驱动（需本机环境）示例：
+#   - id: experimental-computer-use-cua-driver-native
+#     name: '@deepseek-ai/dsh-experimental-computer-use-cua-driver-native'
+#   - id: experimental-browser-use-chrome-devtools-mcp
+#     name: '@deepseek-ai/dsh-experimental-browser-use-chrome-devtools-mcp'
+
+- insert:
+    # LSP 服务缝：语言服务器提供方注册表（lsp-stdio/tool-lsp 依赖此服务）。
+    - id: lsp
+      name: '@deepseek-ai/dsh-lsp'
+    # 语言服务器（stdio）：接入真实 LSP 服务器后提供 IDE 级能力。lsp-stdio 必须
+    # 至少配置一个服务器（不支持空配置），示例：
+    #   - id: lsp-stdio
+    #     name: '@deepseek-ai/dsh-lsp-stdio'
+    #     config:
+    #       servers:
+    #         typescript:
+    #           command: typescript-language-server
+    #           args: ['--stdio']
+    #           extensions: ['.ts', '.tsx', '.js', '.jsx']
+    - id: tool-lsp
+      name: '@deepseek-ai/dsh-tool-lsp'
+    # 定时任务调度：后台任务、周期提醒、定时执行。
+    - id: schedule
+      name: '@deepseek-ai/dsh-schedule'
+    # 产物交付：把生成的报告/表格/图片等呈现给用户。
+    - id: tool-present
+      name: '@deepseek-ai/dsh-tool-present'
+    # 工作区变更跟踪：记录会话对工作区的全部修改，可回看/回滚。
+    - id: workspace-changes
+      name: '@deepseek-ai/dsh-workspace-changes'
+    # 桌面自动化注册表（无驱动时惰性，装驱动后具备 GUI 操作能力）。
+    - id: computer-use
+      name: '@deepseek-ai/dsh-computer-use'
+    # 浏览器自动化注册表（无驱动时惰性，装驱动后具备网页操作能力）。
+    - id: browser-use
+      name: '@deepseek-ai/dsh-browser-use'

@@ -401,6 +401,7 @@
     { "path": "./packages/ecommerce/ecommerce-agent" },
     { "path": "./packages/bundle/ecommerce" },
     { "path": "./packages/bundle/finance" },
+    { "path": "./packages/bundle/general-full" },
     { "path": "./packages/finance/finance-agent" },
     { "path": "./packages/experimental/webworker-packer" },
     { "path": "./packages/experimental/inspector/tsconfig.host.json" },

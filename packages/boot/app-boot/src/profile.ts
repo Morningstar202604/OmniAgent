@@ -160,10 +160,10 @@ export const PROFILE_TEMPLATES: Record<string, ProfileTemplate> = {
     bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-acp-app'],
   },
   web: {
-    bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app'],
+    bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-general-full', '@deepseek-ai/dsh-web-app'],
   },
   headless: {
-    bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-headless'],
+    bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-general-full', '@deepseek-ai/dsh-headless'],
   },
   sdk: {
     bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-sdk-app'],
@@ -199,6 +199,8 @@ export const OPTIONAL_BUNDLES: readonly string[] = [
   // 官方领域插件：随安装提供、默认关闭，在 Web 侧栏「插件」页一键启用。
   '@deepseek-ai/dsh-finance',
   '@deepseek-ai/dsh-ecommerce',
+  // 通用增强包：默认已随 web/headless profile 挂载，可在插件页停用。
+  '@deepseek-ai/dsh-general-full',
   '@deepseek-ai/dsh-experimental-voice-input-bundle',
   '@deepseek-ai/dsh-experimental-agent-team-profile',
 ]
