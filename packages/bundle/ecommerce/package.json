@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-ecommerce",
-  "description": "OmniAgent 电商运营专业 profile：通用全能底座 + 电商运营专业插件（关键词/标题/选品/评论/价格带/脚本/活动）",
+  "description": "OmniAgent 电商运营专业插件包：关键词/标题/选品/评论/价格带/脚本/活动，启用即变电商运营应用，通用底座不变",
   "version": "0.1.7-rc.1",
   "publishConfig": {
     "access": "public"

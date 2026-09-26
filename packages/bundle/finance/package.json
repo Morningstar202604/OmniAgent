@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-finance",
-  "description": "OmniAgent 金融专业 profile：通用全能底座 + 金融专业插件（行情/财务/估值/选股）",
+  "description": "OmniAgent 金融专业插件包：行情/财务/估值/选股/研报/风险/DDM 测算，启用即变金融专业应用，通用底座不变",
   "version": "0.1.7-rc.1",
   "publishConfig": {
     "access": "public"

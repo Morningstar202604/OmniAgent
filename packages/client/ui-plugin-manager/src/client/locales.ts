@@ -15,7 +15,7 @@ export const zh = {
   restartNotice: '更改将在下次启动生效',
   overriddenNotice: '{name} 已保存，但被更高优先级的配置覆盖，当前未生效',
   bundlesTitle: '已安装',
-  officialTitle: '官方',
+  officialTitle: '官方特色专区',
   statusProblem: '异常',
   statusBeta: '实验性',
   reasonLabel: '原因',

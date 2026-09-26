@@ -100,6 +100,32 @@ function HeroFish({ hovering }: { hovering: boolean }) {
 }
 
 /**
+ * OmniAgent 特色区域：万物皆可插件的三张能力卡（可被 conversation.hero.showcase
+ * 槽位覆盖）。静态展示，保持与品牌定位一致的引导文案。
+ */
+function Showcase({ t }: { t: HeroTranslate }) {
+  const cards = [
+    { tag: t('hero.card1.tag'), title: t('hero.card1.title'), desc: t('hero.card1.desc') },
+    { tag: t('hero.card2.tag'), title: t('hero.card2.title'), desc: t('hero.card2.desc') },
+    { tag: t('hero.card3.tag'), title: t('hero.card3.title'), desc: t('hero.card3.desc') },
+  ]
+  return (
+    <div className={css.showcase}>
+      <p className={css.tagline}>{t('hero.tagline')}</p>
+      <div className={css.cardGrid}>
+        {cards.map(card => (
+          <div key={card.tag} className={css.card}>
+            <span className={css.cardTag}>{card.tag}</span>
+            <span className={css.cardTitle}>{card.title}</span>
+            <span className={css.cardDesc}>{card.desc}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/**
  * Render the hero chrome (headline only; no composer, no workspace row).
  * @param props - see {@link HeroShellProps}.
  * @returns the centered hero element tree.
@@ -131,6 +157,8 @@ export function HeroShell({ t, renderSlot, children }: HeroShellProps) {
           </span>
         </div>
         <div className={css.body}>
+          {/* OmniAgent 特色区域：品牌 tagline + 能力卡（可被槽位覆盖）。 */}
+          {renderSlot('conversation.hero.showcase', {}, { fallback: <Showcase t={t} /> })}
           {/* The composer remains mounted outside this component. */}
         </div>
       </div>

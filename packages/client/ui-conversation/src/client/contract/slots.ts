@@ -189,6 +189,8 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
     'conversation.hero.workspace': { kind: 'single'; scope: 'root'; owner: EmptyWorkspaceOwnerProps }
     /** Brand mark shown before the blank-session headline. */
     'conversation.hero.brand.mark': { kind: 'single'; scope: 'root'; owner: HeroBrandMarkOwnerProps }
+    /** OmniAgent 特色区域（tagline + 能力卡），空白会话首页展示。 */
+    'conversation.hero.showcase': { kind: 'single'; scope: 'root'; owner: HeroShowcaseOwnerProps }
     /** Agent-preset control staged for a New Session. */
     'conversation.hero.agentPreset': { kind: 'single'; scope: 'session-maybe'; owner: HeroAgentPresetOwnerProps }
     /** Full-width entries above the composer card. */
@@ -234,6 +236,7 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
         'conversation.composer.bar': { kind: 'single'; scope: 'session-maybe' }
         'conversation.input.dock': { kind: 'list'; scope: 'session' }
         'conversation.hero.brand.mark': { kind: 'single'; scope: 'root' }
+        'conversation.hero.showcase': { kind: 'single'; scope: 'root' }
         'conversation.hero.workspace': { kind: 'single'; scope: 'root' }
         'conversation.hero.agentPreset': { kind: 'single'; scope: 'session-maybe' }
       }
@@ -446,6 +449,9 @@ export interface HeroBrandMarkOwnerProps {
   /** Host class preserving the surrounding mark geometry. */
   className?: string | undefined
 }
+
+/** Presentation props supplied to the blank-session OmniAgent 特色区域. */
+export interface HeroShowcaseOwnerProps {}
 
 /** Full props of the resident optional-Session Conversation shell. */
 export type ConversationSlotProps =
