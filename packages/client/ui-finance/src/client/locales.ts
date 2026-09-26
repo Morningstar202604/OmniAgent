@@ -1,0 +1,133 @@
+/** `finance` namespace dictionaries for the OmniAgent 金融专业面板。 */
+
+/** Dictionary namespace owned by this plugin. */
+export const NS = 'finance'
+
+/** Simplified Chinese dictionary (the key-set source of truth). */
+export const zh = {
+  panelTitle: '金融终端',
+  subtitle: '行情 · 标的 · 研报 · 资讯',
+  demoBadge: '演示数据',
+  backToChat: '返回对话',
+  refresh: '刷新行情',
+
+  // A. 行情报价区
+  quoteBarTitle: '自选 / 指数',
+  quotePrice: '最新价',
+  quoteChange: '涨跌幅',
+  quoteChangeAmt: '涨跌额',
+
+  // B. 标的详情区
+  detailNoSelect: '从上方行情条选择一个标的查看详情',
+  open: '今开',
+  high: '最高',
+  low: '最低',
+  prevClose: '昨收',
+  volume: '成交量',
+  turnover: '成交额',
+  marketCap: '总市值',
+  pe: '市盈率',
+  pb: '市净率',
+  turnoverRate: '换手率',
+  klineTitle: '日K走势',
+  technicalTitle: '技术指标',
+  sma5: 'MA5',
+  sma20: 'MA20',
+  rsi: 'RSI(14)',
+  macd: 'MACD',
+  up: '涨',
+  down: '跌',
+  flat: '平',
+
+  // C. 研究报告区
+  tabResearch: '券商研报',
+  tabAnnouncements: '公司公告',
+  tabNews: '财经资讯',
+  rating: '评级',
+  targetPrice: '目标价',
+  reportDate: '日期',
+  institution: '机构',
+  announcementCategory: '类别',
+  source: '来源',
+  emptyList: '暂无数据',
+
+  // D. 专业功能区
+  functionsTitle: '专业功能',
+  fnScreener: '选股器',
+  fnScreenerDesc: '多条件筛选 A 股 / 港股 / 美股',
+  fnFinancials: '财务分析',
+  fnFinancialsDesc: '营收 / 净利 / ROE / 毛利率',
+  fnRisk: '风险分析',
+  fnRiskDesc: 'Beta / 夏普 / 最大回撤 / VaR',
+  fnMacro: '宏观数据',
+  fnMacroDesc: 'GDP / CPI / PMI / M2',
+  fnSector: '板块行情',
+  fnSectorDesc: '行业与概念板块资金动向',
+  fnMoneyflow: '资金流向',
+  fnMoneyflowDesc: '主力 / 超大单 / 大单净额',
+  hintTools: '在对话框输入金融问题，助手将调用 17 个金融工具为你分析',
+} satisfies Record<string, string>
+
+/** The finance namespace key union. */
+export type FinanceKey = keyof typeof zh
+
+/** English dictionary, checked complete against the zh key set. */
+export const en: Record<FinanceKey, string> = {
+  panelTitle: 'Finance Terminal',
+  subtitle: 'Quote · Symbols · Research · News',
+  demoBadge: 'DEMO DATA',
+  backToChat: 'Back to chat',
+  refresh: 'Refresh',
+
+  quoteBarTitle: 'Watchlist / Indices',
+  quotePrice: 'Last',
+  quoteChange: 'Change%',
+  quoteChangeAmt: 'Chg',
+
+  detailNoSelect: 'Pick a symbol from the quote bar to inspect',
+  open: 'Open',
+  high: 'High',
+  low: 'Low',
+  prevClose: 'Prev Close',
+  volume: 'Volume',
+  turnover: 'Turnover',
+  marketCap: 'Mkt Cap',
+  pe: 'P/E',
+  pb: 'P/B',
+  turnoverRate: 'Turnover%',
+  klineTitle: 'Daily Trend',
+  technicalTitle: 'Technicals',
+  sma5: 'MA5',
+  sma20: 'MA20',
+  rsi: 'RSI(14)',
+  macd: 'MACD',
+  up: 'UP',
+  down: 'DOWN',
+  flat: 'FLAT',
+
+  tabResearch: 'Research',
+  tabAnnouncements: 'Announcements',
+  tabNews: 'News',
+  rating: 'Rating',
+  targetPrice: 'Target',
+  reportDate: 'Date',
+  institution: 'Firm',
+  announcementCategory: 'Category',
+  source: 'Source',
+  emptyList: 'No data',
+
+  functionsTitle: 'Pro Tools',
+  fnScreener: 'Screener',
+  fnScreenerDesc: 'Screen CN / HK / US equities',
+  fnFinancials: 'Financials',
+  fnFinancialsDesc: 'Revenue / Profit / ROE / Margin',
+  fnRisk: 'Risk',
+  fnRiskDesc: 'Beta / Sharpe / Drawdown / VaR',
+  fnMacro: 'Macro',
+  fnMacroDesc: 'GDP / CPI / PMI / M2',
+  fnSector: 'Sectors',
+  fnSectorDesc: 'Industry & concept flows',
+  fnMoneyflow: 'Money Flow',
+  fnMoneyflowDesc: 'Main / super-large / large order net',
+  hintTools: 'Ask the chat — the assistant has 17 finance tools',
+}
