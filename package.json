@@ -48,7 +48,6 @@
     "build:native-system": "tsx native/system/scripts/build.ts --host-addon-only",
     "migrate:packed-session-fixtures": "tsx scripts/migrate-packed-session-fixtures.ts",
     "migrate:sessions-to-v4": "tsx scripts/migrate-sessions-to-v4.ts",
-    "test:web:ci": "tsx scripts/run-web-snapshots.ts",
     "gen-tsconfig-paths": "tsx scripts/gen-tsconfig-paths.ts",
     "verify-tsconfig-paths": "tsx scripts/gen-tsconfig-paths.ts --check",
     "gen-cordis-catalog": "tsx scripts/gen-cordis-catalog.ts",
