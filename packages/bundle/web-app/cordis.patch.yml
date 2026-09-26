@@ -278,6 +278,11 @@
     - id: ui-plugin-manager
       name: '@deepseek-ai/dsh-client-ui-plugin-manager'
 
+    # Plugin marketplace: browse/search/categorize the curated catalog, view
+    # details, and toggle installs on a local state layer (restart to apply).
+    - id: ui-plugin-market
+      name: '@deepseek-ai/dsh-client-ui-plugin-market'
+
     # Read-only Plugin list tab in the Settings Plugins section; the built-in
     # bundles the sidebar page leaves out are inspected here.
     - id: ui-settings-plugin-inventory
@@ -320,6 +325,14 @@
 
     - id: ui-workspace
       name: '@deepseek-ai/dsh-client-ui-workspace'
+
+    # OmniAgent 顶部状态栏：模型 / 会话 / token / 连接状态，注册进 ui-layout 的 shell.statusbar 行。
+    - id: ui-status-bar
+      name: '@deepseek-ai/dsh-client-ui-status-bar'
+
+    # OmniAgent 会话历史面板：侧栏入口 + 按时间分组的会话列表（切换/新建/重命名/分支/归档）。
+    - id: ui-session-history
+      name: '@deepseek-ai/dsh-client-ui-session-history'
 
     # Durable workflow lifecycle as an independent Chat node after the
     # existing generic workflow tool row.
