@@ -41,7 +41,6 @@
     "change-scope": "tsx scripts/change-scope.ts",
     "typecheck:contracts-ready": "tsc -b tsconfig.client.json",
     "lint:contracts-ready": "tsx scripts/run-oxlint.ts .",
-    "duplication": "jscpd --config .jscpd.json packages scripts",
     "build:native-system": "tsx native/system/scripts/build.ts --host-addon-only",
     "migrate:packed-session-fixtures": "tsx scripts/migrate-packed-session-fixtures.ts",
     "migrate:sessions-to-v4": "tsx scripts/migrate-sessions-to-v4.ts",
@@ -82,9 +81,12 @@
     "verify-scoped-events": "tsx scripts/gen-scoped-events.ts --check",
     "verify-module-graph": "tsx scripts/gen-module-graph.ts --check",
     "constraints": "tsx scripts/check-workspace-constraints.ts",
+    "dsh": "node --import tsx/esm apps/cli/src/bin.ts",
     "demo:ptc": "node scripts/demo-ptc.mjs",
     "mock:llm": "node --import tsx packages/test-support/llm-mock-server/src/bin.ts",
-    "dev:web": "tsx scripts/dev-web.ts --poll"
+    "start:web": "node --import tsx/esm apps/cli/src/bin.ts web",
+    "dev:web": "tsx scripts/dev-web.ts --poll",
+    "oa": "node --import tsx/esm apps/cli/src/bin.ts"
   },
   "devDependencies": {
     "@deepseek-ai/dsh-agent": "workspace:*",
