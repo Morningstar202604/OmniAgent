@@ -28,6 +28,9 @@ import { MemoryStore } from './store.ts'
 /** Cordis 插件名。 */
 export const name = 'memory'
 
+/** 访问 tools（注册记忆/知识库工具）与 systemPrompt（注入记忆段落），必须声明 inject。 */
+export const inject: readonly string[] = ['tools', 'systemPrompt']
+
 /** 插件配置。 */
 export interface Config {
   /** 数据库文件路径。默认 `~/.omniagent/memory.db`；可用环境变量 DSH_MEMORY_DB_PATH 覆盖。 */
@@ -159,7 +162,7 @@ export function apply(ctx: Context, config: Config): void {
     },
     output: {
       schema: {
-        type: 'object', additionalProperties: false, required: undefined,
+        type: 'object', additionalProperties: false,
         properties: {
           results: {
             type: 'array', required: true,

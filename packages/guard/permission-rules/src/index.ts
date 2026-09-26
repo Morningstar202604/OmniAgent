@@ -30,8 +30,8 @@ import {
 /** Cordis 插件名。 */
 export const name = 'permission-rules'
 
-/** 规则可被运行时修改，因此无需 inject（纯事件/工具注册型插件）。 */
-export const inject: readonly string[] = []
+/** 访问 tools 服务（注册工具 + 监听 pre-execute 事件），必须声明 inject。 */
+export const inject: readonly string[] = ['tools']
 
 /** 一条决策审计记录。 */
 interface DecisionRecord {
