@@ -1877,9 +1877,15 @@ importers:
       '@deepseek-ai/dsh-mcp-resources':
         specifier: workspace:*
         version: link:../../mcp/mcp-resources
+      '@deepseek-ai/dsh-memory':
+        specifier: workspace:*
+        version: link:../../memory/memory
       '@deepseek-ai/dsh-permission-presets':
         specifier: workspace:*
         version: link:../../interaction/permission-presets
+      '@deepseek-ai/dsh-permission-rules':
+        specifier: workspace:*
+        version: link:../../guard/permission-rules
       '@deepseek-ai/dsh-plan-mode':
         specifier: workspace:*
         version: link:../../plan/plan-mode
