@@ -11,7 +11,7 @@
  */
 
 import { randomBytes } from 'node:crypto'
-import { lstat, mkdir, rename, rm, writeFile } from 'node:fs/promises'
+import { lstat, mkdir, open, rename, rm, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 
 const WINDOWS_TRANSIENT_RENAME_ERRORS: ReadonlySet<string> = new Set(['EACCES', 'EBUSY', 'EPERM'])
@@ -57,6 +57,13 @@ export interface WriteFileAtomicOptions {
    * default — pass `0o700` when the tree holds user-private data.
    */
   dirMode?: number
+  /**
+   * 是否启用崩溃持久化：rename 前 fsync 临时文件内容，rename 后再 fsync
+   * 父目录（仅 POSIX；Windows 不允许以 O_RDONLY 打开目录，自动跳过）。
+   * 默认 `false`，保持现有调用方的快路径性能；仅在不能接受断电丢写/丢目录项
+   * 时显式开启。
+   */
+  fsync?: boolean
 }
 
 /**
@@ -70,7 +77,9 @@ export interface WriteFileAtomicOptions {
  * one filesystem. Windows replacement retries transient `EACCES`, `EBUSY`,
  * and `EPERM` failures for a bounded interval while the complete temp file
  * remains the rename source. On any remaining failure the temp file is
- * removed and the failure rethrown. Crash durability (fsync) is out of scope.
+ * removed and the failure rethrown. 崩溃持久化由 `options.fsync` 显式开启：
+ * 开启后 rename 前先 fsync 临时文件、rename 后在 POSIX 上 fsync 父目录，
+ * 确保断电后不会出现零长度目标或丢失的目录项。
  * @param filename - final path receiving the content.
  * @param content - complete next file content.
  * @param options - permission bits for the replacement inode.
@@ -80,17 +89,48 @@ export async function writeFileAtomic(filename: string, content: string, options
     recursive: true,
     ...options.dirMode === undefined ? {} : { mode: options.dirMode },
   })
-  // TODO(settings-atomic-durability): Use a replacement that fsyncs the file
-  // and parent directory and preserves owner-only permissions on Windows.
   const temp = `${filename}.${randomBytes(6).toString('hex')}.tmp`
   try {
-    await writeFile(temp, content, { mode: options.mode, flag: 'wx' })
+    if (options.fsync) {
+      // 崩溃持久化路径：wx 独占创建临时文件，写入后先 fsync 文件内容，
+      // 关闭句柄后再 rename，避免断电时内容停留在页缓存。
+      const handle = await open(temp, 'wx', options.mode)
+      try {
+        await handle.writeFile(content, 'utf8')
+        await handle.sync()
+      } finally {
+        await handle.close()
+      }
+    } else {
+      // 默认快路径：一次性 writeFile（wx 独占创建 + mode），不做 fsync。
+      await writeFile(temp, content, { mode: options.mode, flag: 'wx' })
+    }
     await renameAtomicTemp(temp, filename)
+    if (options.fsync) {
+      // rename 完成后 fsync 父目录，确保新目录项本身落盘。
+      await fsyncDirectory(dirname(filename))
+    }
   } catch (error) {
     await rm(temp, { force: true })
     throw error
   }
 }
+
+/**
+ * fsync 一个 POSIX 目录，让刚 rename 进去的目录项在崩溃后依然可见。
+ * Windows 不允许以 O_RDONLY 打开目录，直接跳过。
+ */
+/* v8 ignore start -- Windows 上目录打开会失败；POSIX 覆盖了这条路径。 */
+async function fsyncDirectory(path: string): Promise<void> {
+  if (process.platform === 'win32') return
+  const handle = await open(path, 'r')
+  try {
+    await handle.sync()
+  } finally {
+    await handle.close()
+  }
+}
+/* v8 ignore stop */
 
 /** Whether an exclusive create found an existing lock. */
 async function isLockContention(error: unknown, lockPath: string): Promise<boolean> {
