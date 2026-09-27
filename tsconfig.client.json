@@ -129,6 +129,8 @@
     { "path": "./packages/client/locale/tsconfig.client.json" },
     { "path": "./packages/client/ui-renderer" },
     { "path": "./packages/client/ui-session" },
+    { "path": "./packages/client/ui-session-history" },
+    { "path": "./packages/client/ui-status-bar" },
     { "path": "./packages/tools/tool-notify" },
     { "path": "./packages/bundle/plugin-template" },
     { "path": "./packages/client/resources" },

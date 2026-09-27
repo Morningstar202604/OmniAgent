@@ -1,16 +1,17 @@
-# OmniAgent（`oa`）—— 万物皆可插件的通用智能体
+# OmniAgent (`oa`) — a universal agent where everything is a plugin
 
-> 一个底座，N 种职业。不装插件，它是一个开箱即用的通用全能 Agent；装上某个插件，同一个 Agent 立刻变成那个垂直领域的专业应用；卸下插件，立刻回归通用——**通用能力永远不被削弱**。
+**English** · [简体中文](README.zh.md)
 
+> One base, N professions. With no plugin installed it is an out-of-the-box general-purpose agent; install a plugin and the same agent instantly becomes a professional app for that vertical; remove it and the agent returns to general-purpose — **the general capabilities are never weakened**.
 
-[[![CI](https://github.com/X33834/OmniAgent/actions/workflows/ci.yml/badge.svg)](https://github.com/X33834/OmniAgent/actions/workflows/ci.yml)
-![version](https://img.shields.io/badge/version-0.1.7-6366f1)](https://gitcode.com/badhope/OmniAgent)
+[![CI](https://github.com/X33834/OmniAgent/actions/workflows/ci.yml/badge.svg)](https://github.com/X33834/OmniAgent/actions/workflows/ci.yml)
+[![version](https://img.shields.io/badge/version-0.1.7-6366f1)](https://gitcode.com/badhope/OmniAgent)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![node](https://img.shields.io/badge/node-%3E%3D22.19-339933)](package.json)
 [![pnpm](https://img.shields.io/badge/pnpm-%3E%3D11.0-F69220)](package.json)
 [![platform](https://img.shields.io/badge/platform-Web%20%7C%20CLI%20%7C%20Desktop-0ea5e9)](#quick-start)
 
-> 官网：**[x33834.github.io/OmniAgent](https://x33834.github.io/OmniAgent/)** — 产品介绍、截图与文档
+> Website: **[x33834.github.io/OmniAgent](https://x33834.github.io/OmniAgent/)** — product overview, screenshots and docs
 
 ## Screenshots
 
@@ -26,149 +27,149 @@
 |:---:|:---:|
 | ![Global command palette: new chat, plugin zone, light/dark/system theme switch](frontend-screens/mobile-04-command-palette.png) | ![Responsive mobile home on a phone viewport](frontend-screens/mobile-01b-home-hero.png) |
 
-## 这是什么
+## What this is
 
-OmniAgent 不是某一个行业专用的 Agent，而是一个「**万物皆可插件**」的通用智能体平台：
+OmniAgent is not an agent dedicated to a single industry; it is a universal agent platform built on the idea that **everything can be a plugin**:
 
-- **底座本身就是一个功能完整的通用 Agent**：文件读写、命令执行、联网搜索、推理、工具链、Web UI 在不挂任何插件时即可独立处理日常任务。
-- **所有领域能力都来自插件**：把一个垂直领域的专业知识、工具（甚至整套 UI）打包成插件。装载时，同一个 Agent 瞬间获得该领域的人设、工具与专业界面；卸载后恢复通用底座——能力是**叠加**的，不是重造轮子。
-- **需要时装、不用时退**：需要某个领域就打开插件市场一键启用，界面与工具集随之一切为专业应用；不用时它依然是那个通用全能 Agent。
-- **一个底座统一所有垂直**：用「一个统一底座 + 插件生态」解决垂直 Agent 各自为政、永不统一的乱象。
+- **The base is itself a fully-featured general-purpose agent**: file I/O, command execution, web search, reasoning, the toolchain and the Web UI all work on their own, with no plugin installed, for everyday tasks.
+- **All domain capabilities come from plugins**: package a vertical's domain knowledge and tools (even its whole UI) into a plugin. On install, the same agent instantly gains that domain's persona, tools and professional interface; on removal, it returns to the general base — capabilities **stack**, they are not rebuilt from scratch.
+- **Load it when needed, drop it when not**: open the plugin marketplace and enable a domain with one click; the UI and toolset turn into the professional app. When you don't need it, it is still the general-purpose agent.
+- **One base unifies every vertical**: a "single base + plugin ecosystem" replaces the chaos of vertical agents that each go their own way and never converge.
 
-## 快速开始
+## Quick start
 
-### 环境要求
+### Requirements
 
-- **Node.js** `^22.19.0`（或 `>=24.0.0`）
-- **pnpm** `11.7.0`（仓库已锁定 `packageManager`）
+- **Node.js** `^22.19.0` (or `>=24.0.0`)
+- **pnpm** `11.7.0` (the repo pins `packageManager`)
 
-### 安装
+### Install
 
 ```bash
 git clone <your-fork>.git omniagent
 cd omniagent
 pnpm install
-pnpm run build        # 产出 host/client 库与 web 前端产物
+pnpm run build        # produces the host/client libs and the web frontend artifacts
 ```
 
-### 配置模型 Key
+### Configure a model key
 
-OmniAgent 通过 OpenAI 兼容协议接入任意大模型端点。任选一种：
+OmniAgent reaches any LLM endpoint over the OpenAI-compatible protocol. Pick one:
 
-**方式一：Agnes AI（仓库自带示例 overlay）**
+**Option 1: Agnes AI (example overlay shipped in the repo)**
 
 ```bash
 export AGNES_API_KEY=sk-...
 ```
 
-然后启动时挂上 `config/agnes-ai.patch.yml`：
+Then start with `config/agnes-ai.patch.yml` attached:
 
 ```bash
 pnpm oa web --patch config/agnes-ai.patch.yml
 ```
 
-**方式二：DeepSeek（finance/ecommerce 领域包已内置默认路由）**
+**Option 2: DeepSeek (the finance/ecommerce domain bundles ship with a default route)**
 
 ```bash
 export DEEPSEEK_API_KEY=sk-...
 ```
 
-base 包同时预置了通义千问（`DASHSCOPE_API_KEY`）、智谱 GLM（`ZHIPU_API_KEY`）、Ollama（本地）等 OpenAI 兼容 provider，在 Web 设置页的「模型」中即可切换。任意 OpenAI 兼容端点（vLLM、本地模型网关等）都可照此扩展。
+The base bundle also presets OpenAI-compatible providers for Qwen (`DASHSCOPE_API_KEY`), Zhipu GLM (`ZHIPU_API_KEY`) and Ollama (local); switch between them on the "Models" page in the Web settings. Any OpenAI-compatible endpoint (vLLM, a local model gateway, etc.) extends the same way.
 
-### 启动
+### Run
 
 ```bash
-# Web 界面（默认 http://127.0.0.1:3080，--no-open 不自动开浏览器）
-pnpm run start:web            # 等价 pnpm oa web
+# Web UI (defaults to http://127.0.0.1:3080; --no-open skips opening the browser)
+pnpm run start:web            # equivalent to pnpm oa web
 
-# 一次性命令行对话（headless）
-pnpm run dsh headless "帮我整理这个目录并写个 README"
-#   等价 pnpm oa headless "..."
+# One-shot command-line conversation (headless)
+pnpm run dsh headless "tidy up this directory and write a README"
+#   equivalent to pnpm oa headless "..."
 ```
 
-### 加载插件
+### Load a plugin
 
-有三种方式获得领域能力：
+There are three ways to gain domain capabilities:
 
-1. **Web 插件市场**：打开 Web 侧栏「插件」页，官方随包插件（默认关闭）一键启用/停用——这就是 `OPTIONAL_BUNDLES`。
-2. **切换领域 profile**：直接以领域 profile 启动，界面瞬变为专业应用：
+1. **Web plugin marketplace**: open the "Plugins" page in the Web sidebar and toggle the bundled official plugins (off by default) on or off — these are the `OPTIONAL_BUNDLES`.
+2. **Switch domain profile**: start directly with a domain profile and the UI instantly becomes the professional app:
    ```bash
-   pnpm oa finance "查一下贵州茅台的最新行情和估值"
-   pnpm oa ecommerce "帮我给'无线蓝牙耳机'拓词"
+   pnpm oa finance "check the latest quote and valuation for Kweichow Moutai"
+   pnpm oa ecommerce "expand keywords for 'wireless bluetooth earbuds'"
    ```
-3. **安装外部插件**：
+3. **Install an external plugin**:
    ```bash
-   pnpm oa plugin --profile web add <npm 包名 | Git URL | tarball | 本地路径>
+   pnpm oa plugin --profile web add <npm-package | Git URL | tarball | local-path>
    ```
 
-## 核心功能
+## Core features
 
-### 通用底座（`dsh-base`，开箱即用）
+### Universal base (`dsh-base`, out of the box)
 
-对话与会话管理、会话持久化与自动标题、分支时间线、全局命令面板、顶部状态栏（模型/会话/token/连接状态/时钟/主题）、插件市场与插件管理、长期记忆与知识库、细粒度权限规则（allow/auto/ask/deny 四档 + 通配符）、后台任务队列、定时任务调度、工作区变更追踪（可回看/回滚）、OS 级系统通知、Web 端浏览器通知、MCP 客户端、技能（skill）体系、沙箱执行与审批、多模型路由。
+Chat and session management, session persistence with automatic titles, branching timeline, global command palette, top status bar (model/session/token/connection/clock/theme), plugin marketplace and plugin management, long-term memory and knowledge base, fine-grained permission rules (allow/auto/ask/deny plus wildcards), background job queue, scheduled tasks, workspace change tracking (review/rollback), OS-level system notifications, browser notifications on the Web, MCP client, the skill system, sandboxed execution with approvals, and multi-model routing.
 
-### 已随包发布的官方插件
+### Official plugins shipped with the package
 
-| 插件 | Bundle | 说明 |
+| Plugin | Bundle | Description |
 |---|---|---|
-| **金融终端** | `@deepseek-ai/dsh-finance` | 19 个金融工具：行情/财务/估值/K线/资金流/公告/资讯/宏观/行业/风险/固收/汇率/技术指标；多因子选股（PE/PB/ROE/涨跌幅）、双均线/定投回测、自然语言转量化代码；配套 `ui-finance` 专业面板（行情条轮询、标的详情、SVG K线、选股器表格、产业链图谱）；报告一键导出真实 PDF |
-| **电商运营** | `@deepseek-ai/dsh-ecommerce` | 拓词、标题优化、市场洞察、选品评估、评论分析、价格带分析、带货话术、活动策划 |
-| **通用增强** | `@deepseek-ai/dsh-general-full` | LSP 语言服务器缝、定时任务调度、产物交付（present）、工作区变更追踪、computer-use / browser-use 自动化注册表（惰性挂载，装驱动即激活） |
+| **Finance terminal** | `@deepseek-ai/dsh-finance` | 19 finance tools: quotes/financials/valuation/K-line/fund flows/announcements/news/macro/industry/risk/fixed income/FX/technical indicators; multi-factor screening (PE/PB/ROE/change), dual-moving-average and dollar-cost-averaging backtests, natural language to quant code; a matching `ui-finance` professional panel (quote bar polling, instrument details, SVG K-line, screener table, industry-chain map); one-click export to a real PDF report |
+| **E-commerce operations** | `@deepseek-ai/dsh-ecommerce` | Keyword expansion, title optimization, market insight, product selection scoring, review analysis, price-band analysis, live-selling scripts, campaign planning |
+| **General enhancement** | `@deepseek-ai/dsh-general-full` | LSP language-server seam, scheduled tasks, deliverable presentation (present), workspace change tracking, computer-use / browser-use automation registries (lazily mounted, activated once a driver is installed) |
 
-### 高级能力
+### Advanced capabilities
 
-- **多智能体 DAG 编排**：`agent_team_run` 支持角色间 `dependsOn` 拓扑排序、同阶段并行、跨阶段串行、上游输出注入下游。
-- **Hybrid 记忆检索**：纯 TypeScript BM25（中文 bigram 分词）+ 可插拔 embedding（本地 TF / OpenAI 兼容端点）向量召回，`alpha` 加权融合，未配 key 自动降级。
-- **真实 PDF 导出**：基于 pdfkit 纯 JS 渲染（无 Chromium），支持中文子集嵌入、表格、代码块、Markdown 图片、`<!-- chart:bar|line -->` 矢量柱状图/折线图、页码页脚。
-- **消息级操作**：消息导出为 Markdown 下载、用户消息编辑后 fork 重跑。
-- **工程化体验**：代码块「新标签打开」、会话历史虚拟滚动（500+ 条仅渲染可视窗口）、移动端响应式（768px/480px 断点）、模型参数滑杆（temperature / maxTokens，localStorage 持久化）。
+- **Multi-agent DAG orchestration**: `agent_team_run` supports `dependsOn` topological ordering between roles, parallel execution within a stage, serial execution across stages, and injection of upstream output into downstream roles.
+- **Hybrid memory retrieval**: pure-TypeScript BM25 (Chinese bigram tokenization) plus pluggable embedding (local TF / OpenAI-compatible endpoint) vector recall, fused with an `alpha` weight, degrading automatically when no key is configured.
+- **Real PDF export**: pure-JS rendering on pdfkit (no Chromium), with embedded Chinese subsets, tables, code blocks, Markdown images, `<!-- chart:bar|line -->` vector bar/line charts, and page footers.
+- **Message-level actions**: export a message as a Markdown download, or edit a user message and fork to re-run.
+- **Engineered experience**: "open in new tab" for code blocks, virtualized session history (500+ entries render only the visible window), responsive mobile layout (768px/480px breakpoints), and model parameter sliders (temperature / maxTokens, persisted in localStorage).
 
-## 目录结构
+## Repository layout
 
 ```
 omniagent/
-├── packages/               # monorepo 工作区（320+ 内部包）
-│   ├── boot/               # profile 启动、bundle/插件加载、PROFILE_TEMPLATES
-│   ├── host/               # 宿主侧：webserver、frontend-static、目录选择、通知
-│   ├── client/             # 浏览器侧 React UI：ui-* 各面板与槽位
+├── packages/               # monorepo workspace (320+ internal packages)
+│   ├── boot/               # profile startup, bundle/plugin loading, PROFILE_TEMPLATES
+│   ├── host/               # host side: webserver, frontend-static, directory picker, notifications
+│   ├── client/             # browser-side React UI: ui-* panels and slots
 │   ├── core/ llm/ session/ memory/ guard/ tools/ util/ ...
-│   ├── finance/ ecommerce/ # 领域 Agent 插件（host 半边）
-│   └── bundle/             # profile 组合包：base / web-app / headless / finance / ecommerce / general-full
+│   ├── finance/ ecommerce/ # domain agent plugins (host half)
+│   └── bundle/             # profile bundles: base / web-app / headless / finance / ecommerce / general-full
 ├── apps/
-│   ├── cli/                # oa / dsh 命令行入口（bin.ts）
-│   ├── web/                # web 前端工程（vite）
-│   └── desktop/ desktop-host/  # Electron 桌面壳
-├── config/                 # overlay 示例（agnes-ai.patch.yml）
-├── scripts/                # 构建、代码生成、约束检查、rebrand 等工程脚本
-├── docs/                   # 架构、代码审计、markdown 安全、编辑器评估等文档
-└── native/ python/ vendor/ # 原生模块 / Python SDK / 第三方 vendored 依赖
+│   ├── cli/                # oa / dsh command-line entry (bin.ts)
+│   ├── web/                # web frontend project (vite)
+│   └── desktop/ desktop-host/  # Electron desktop shell
+├── config/                 # example overlay (agnes-ai.patch.yml)
+├── scripts/                # build, codegen, constraint checks, rebrand and other engineering scripts
+├── docs/                   # architecture, code audit, markdown safety, editor evaluation and other docs
+└── native/ python/ vendor/ # native modules / Python SDK / vendored third-party dependencies
 ```
 
-## 插件与生态
+## Plugins and ecosystem
 
-### 「万物皆可插件」
+### "Everything can be a plugin"
 
-一个领域插件 = 一个 Agent 插件包（host 半边：数据契约 + 纯逻辑 + 工具 + 人设注入）+ 一个 profile 组合包（声明 `dsh.bundle.patch` 的 `cordis.patch.yml`，可选挂载 client 半边 UI 槽位）。工具只依赖数据契约，与具体数据源解耦；示例数据须带 `mock` 标记并向用户明示。
+A domain plugin = one agent plugin package (host half: data contracts + pure logic + tools + persona injection) + one profile bundle (a `cordis.patch.yml` declaring `dsh.bundle.patch`, optionally mounting client-half UI slots). Tools depend only on data contracts, decoupled from any specific data source; sample data must carry a `mock` marker and be disclosed to the user.
 
-插件开发完整指南见 **[`docs/plugin-dev.md`](docs/plugin-dev.md)**。**想自己做一个插件？从最小模板起步**：复制 [`packages/bundle/plugin-template/`](packages/bundle/plugin-template/) → 改个包名 → 写自己的工具，5 分钟跑通（详见指南开头「从模板开始」）。完整范例可参考 `packages/finance/finance-agent/` 与 `packages/ecommerce/ecommerce-agent/`。
+The full plugin development guide is in **[`docs/plugin-dev.md`](docs/plugin-dev.md)**. **Want to build your own plugin? Start from the minimal template**: copy [`packages/bundle/plugin-template/`](packages/bundle/plugin-template/) → rename the package → write your own tool, working end-to-end in five minutes (see "Start from the template" at the top of the guide). For complete examples, see `packages/finance/finance-agent/` and `packages/ecommerce/ecommerce-agent/`.
 
-### 从哪里获得插件
+### Where to get plugins
 
-1. **官方组合包**：随安装发布、默认关闭，Web「插件」页一键启用（`OPTIONAL_BUNDLES`）。
-2. **外部安装**：`oa plugin --profile <p> add <spec>` 支持 npm 包 / Git URL / tarball / 本地路径。
-3. **自己写**：按上述模式打包发布，任何人都能安装。
+1. **Official bundles**: shipped with the install, off by default, enabled with one click on the Web "Plugins" page (`OPTIONAL_BUNDLES`).
+2. **External install**: `oa plugin --profile <p> add <spec>` supports npm packages / Git URLs / tarballs / local paths.
+3. **Build your own**: package and publish following the pattern above, and anyone can install it.
 
-## 开发
+## Development
 
 ```bash
-pnpm run dev:web        # 源码改动即重建 client bundle 并热更新
-pnpm run typecheck      # 全量类型检查（host → client）
+pnpm run dev:web        # rebuild the client bundle and hot-reload on source changes
+pnpm run typecheck      # full typecheck (host → client)
 pnpm run lint           # oxlint
-make help               # Web / Desktop 相关 Make 目标
+make help               # Web / Desktop related Make targets
 ```
 
-## 许可
+## License
 
-[MIT](LICENSE)。第三方依赖及其许可见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+[MIT](LICENSE). Third-party dependencies and their licenses are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-> 本仓库为基于 DSH（DeepSeek Harness）体系的改造发布；LICENSE 中的 MIT 版权行（Copyright (c) 2026 DeepSeek）按合规要求原样保留，未作改动。
+> This repository is a derivative release built on the DSH (DeepSeek Harness) system; the MIT copyright line in LICENSE (Copyright (c) 2026 DeepSeek) is retained verbatim for compliance and has not been modified.

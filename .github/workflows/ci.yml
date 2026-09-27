@@ -14,7 +14,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
@@ -30,17 +30,22 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Generate typert remote types (tsdown host) before tsc and lint
-        run: npx tsdown --env.DSH_BUILD_FACE host
+      # Bootstrap order matters and cannot be reversed:
+      # `tsc -b tsconfig.host.json` first emits every host package's lib/types,
+      # including packages/typert/generator/lib/types/tsdown-plugin.js that
+      # tsdown.config.ts imports. Only then can tsdown run the typert plugin,
+      # which writes the `lib/typert.remote-client.d.ts` files that the client
+      # typecheck and oxlint (typeAware) resolve. Running tsdown first fails to
+      # load its own config; running the full `tsc -b` first fails on the
+      # missing remote-client declarations.
+      - name: Build host lib — tsc host then tsdown host (emits typert remote types)
+        run: pnpm run build:lib:host
 
-      - name: Typecheck (tsc -b)
+      - name: Typecheck (tsc -b, host and client)
         run: npx tsc -b
 
       - name: Lint (oxlint, single-thread for low-memory hosts)
         run: pnpm exec oxlint --threads 1 .
-
-      - name: Build host lib
-        run: pnpm run build:lib:host
 
       - name: Build client lib
         run: pnpm run build:lib:client
@@ -48,7 +53,7 @@ jobs:
       - name: Build web
         run: pnpm run build:web
 
-      - name: Smoke — 官网可访问
+      - name: Smoke — official site
         run: curl -sf -o /dev/null -w "official site HTTP %{http_code}\n" https://x33834.github.io/OmniAgent/ || echo "site not yet reachable (Pages build may lag)"
 
   site:

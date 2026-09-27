@@ -290,9 +290,9 @@ export function SessionHistoryPage({
   const offsets = useMemo(() => {
     const arr = new Array<number>(flatItems.length + 1).fill(0)
     let y = 0
-    for (let i = 0; i < flatItems.length; i += 1) {
+    for (const [i, item] of flatItems.entries()) {
       arr[i] = y
-      y += flatItems[i].type === 'header' ? headerHeight : rowHeight
+      y += item.type === 'header' ? headerHeight : rowHeight
     }
     arr[flatItems.length] = y
     return arr
@@ -311,7 +311,7 @@ export function SessionHistoryPage({
     let hi = n - 1
     while (lo < hi) {
       const mid = (lo + hi) >> 1
-      if (offsets[mid + 1] <= scrollTop) lo = mid + 1
+      if ((offsets[mid + 1] ?? Number.POSITIVE_INFINITY) <= scrollTop) lo = mid + 1
       else hi = mid
     }
     const first = Math.max(0, lo - OVERSCAN)
@@ -320,7 +320,7 @@ export function SessionHistoryPage({
     hi = n - 1
     while (lo < hi) {
       const mid = (lo + hi + 1) >> 1
-      if (offsets[mid] < bottom) lo = mid
+      if ((offsets[mid] ?? Number.POSITIVE_INFINITY) < bottom) lo = mid
       else hi = mid - 1
     }
     const last = Math.min(n - 1, lo + OVERSCAN)
