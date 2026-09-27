@@ -79,6 +79,7 @@
     "@deepseek-ai/dsh-message-feedback": "workspace:*",
     "@deepseek-ai/dsh-scope": "workspace:*",
     "@deepseek-ai/dsh-permission-presets": "workspace:*",
+    "@deepseek-ai/dsh-permission-rules": "workspace:*",
     "@deepseek-ai/dsh-session-reference": "workspace:*",
     "@deepseek-ai/dsh-settings": "workspace:*",
     "@deepseek-ai/dsh-subagent": "workspace:*",
