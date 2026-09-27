@@ -441,3 +441,52 @@
   font-size: 12px;
   color: var(--dsw-alias-label-caption);
 }
+
+/* ── 窄屏适配：平板 <768px，手机 <480px ──────────────────────
+   卡片网格用 auto-fill minmax(280/300px,1fr)，窄屏自动单列；
+   这里收紧页面留白与标题字号，避免 375px 下两侧留白吃掉内容。 */
+@media (max-width: 768px) {
+  .root {
+    gap: 14px;
+    padding: 18px 16px 32px;
+  }
+  .gradientTitle {
+    font-size: 22px;
+  }
+  .header {
+    gap: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .root {
+    gap: 12px;
+    padding: 14px 12px 28px;
+  }
+  .gradientTitle {
+    font-size: 20px;
+  }
+  .toolbar {
+    gap: 8px;
+  }
+  .search {
+    max-width: 100%;
+  }
+  .featuredCard {
+    padding: 12px;
+    gap: 10px;
+  }
+  .card {
+    padding: 14px;
+  }
+  .detailHead {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .detailName {
+    font-size: 19px;
+  }
+  .detailInfo {
+    gap: 16px;
+  }
+}
