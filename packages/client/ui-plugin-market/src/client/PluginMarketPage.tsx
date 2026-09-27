@@ -243,7 +243,7 @@ export function PluginMarketPage({ t }: PluginMarketPageProps) {
             <button
               key={mode}
               type="button"
-              className={css.sortChip + (sort === mode ? ` ${css.sortChipActive}` : '')}
+              className={`${css.sortChip ?? ''}${sort === mode ? ` ${css.sortChipActive}` : ''}`}
               onClick={() => { setSort(mode) }}
             >
               {t(mode === 'recommended' ? 'sortRecommended' : mode === 'newest' ? 'sortNewest' : 'sortInstalls')}
@@ -255,7 +255,7 @@ export function PluginMarketPage({ t }: PluginMarketPageProps) {
       <div className={css.categoryRow}>
         <button
           type="button"
-          className={css.categoryChip + (category === 'all' ? ` ${css.categoryChipActive}` : '')}
+          className={`${css.categoryChip ?? ''}${category === 'all' ? ` ${css.categoryChipActive}` : ''}`}
           onClick={() => { setCategory('all') }}
         >
           {t('categoryAll')}
@@ -264,7 +264,7 @@ export function PluginMarketPage({ t }: PluginMarketPageProps) {
           <button
             key={id}
             type="button"
-            className={css.categoryChip + (category === id ? ` ${css.categoryChipActive}` : '')}
+            className={`${css.categoryChip ?? ''}${category === id ? ` ${css.categoryChipActive}` : ''}`}
             onClick={() => { setCategory(id) }}
           >
             {t(CATEGORY_KEY[id])}
