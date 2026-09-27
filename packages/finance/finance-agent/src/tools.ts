@@ -178,39 +178,66 @@ export function buildFinanceTools(source: FinanceDataSource): ToolDefinition[] {
 
   const screener: ToolDefinition = defineTool({
     name: 'finance_screener',
-    description: '按条件筛选股票（市场、行业、市值区间、PE 上限、当日涨幅下限）。',
+    description: '多因子选股：按市场/行业/市值/PE/PB/ROE/当日涨跌幅等条件确定性筛选股票，输出可复核表格（含筛选公式与命中数）。基于内置示例股票池（30 只）纯 TS 过滤，结果可逐只对照复核；接真实数据源后替换为全市场扫描。',
     parameters: {
-      market: { type: 'string', enum: ['cn', 'hk', 'us'], description: '市场，默认 cn' },
-      industry: { type: 'string', description: '行业名称，如 食品饮料、科技硬件' },
-      minMarketCap: { type: 'number', description: '最小市值（元）' },
+      market: { type: 'string', enum: ['cn', 'hk', 'us'], description: '市场，默认全部市场（不限制）' },
+      industry: { type: 'string', description: '行业名称，如 食品饮料、银行、新能源、半导体、互联网' },
+      minMarketCap: { type: 'number', description: '最小市值（元），如 5e11=5000 亿' },
       maxMarketCap: { type: 'number', description: '最大市值（元）' },
-      maxPe: { type: 'number', description: 'PE 上限' },
-      minChangePct: { type: 'number', description: '当日涨幅下限（%）' },
+      minPe: { type: 'number', description: 'PE(TTM) 下限' },
+      maxPe: { type: 'number', description: 'PE(TTM) 上限' },
+      minPb: { type: 'number', description: 'PB 下限' },
+      maxPb: { type: 'number', description: 'PB 上限' },
+      minRoe: { type: 'number', description: 'ROE(%) 下限，如 15 表示 ROE≥15%' },
+      minChangePct: { type: 'number', description: '当日涨跌幅(%) 下限' },
+      maxChangePct: { type: 'number', description: '当日涨跌幅(%) 上限' },
     },
     output: {
       schema: {
-        type: 'array',
-        items: {
-          type: 'object',
-          additionalProperties: false,
-          properties: {
-            symbol: { type: 'string', required: true },
-            name: { type: 'string', required: true },
-            market: { type: 'string', required: true },
-            industry: { type: 'string', required: true },
-            price: { type: 'number', required: true },
-            changePct: { type: 'number', required: true },
-            pe: { type: 'number', required: true },
-            marketCap: { type: 'number', required: true },
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          poolSize: { type: 'number', required: true },
+          total: { type: 'number', required: true },
+          criteria: { type: 'object', additionalProperties: true, required: true },
+          formula: { type: 'string', required: true },
+          items: {
+            type: 'array',
+            items: {
+              type: 'object',
+              additionalProperties: false,
+              properties: {
+                symbol: { type: 'string', required: true },
+                name: { type: 'string', required: true },
+                market: { type: 'string', required: true },
+                industry: { type: 'string', required: true },
+                price: { type: 'number', required: true },
+                changePct: { type: 'number', required: true },
+                pe: { type: 'number', required: true },
+                pb: { type: 'number', required: true },
+                roe: { type: 'number', required: true },
+                marketCap: { type: 'number', required: true },
+              },
+            },
+            required: true,
           },
+          mock: { oneOf: [{ type: 'boolean' }, { type: 'null' }], required: true },
         },
       },
       render: (_args, value) => [{
         type: 'text',
-        text: value.length === 0
-          ? '未找到符合筛选条件的股票'
-          : `筛选到 ${value.length} 只股票：\n` + value.map((row: { symbol: string; name: string; market: string; industry: string; price: number; changePct: number; pe: number }) =>
-            `- ${row.symbol} ${row.name}（${row.market}）行业:${row.industry} 价:${row.price} 涨跌:${row.changePct}% PE:${row.pe}`).join('\n'),
+        text: [
+          `选股结果：从 ${value.poolSize} 只示例股票池中筛出 ${value.total} 只`,
+          `筛选公式：${value.formula}`,
+          ...(value.items.length === 0
+            ? ['（无命中股票，可放宽条件）']
+            : value.items.map((row: { symbol: string; name: string; market: string; industry: string; price: number; changePct: number; pe: number; pb: number; roe: number; marketCap: number }) => {
+              const mktCapYi = row.marketCap >= 1e12 ? `${(row.marketCap / 1e12).toFixed(2)}万亿` : `${(row.marketCap / 1e8).toFixed(0)}亿`
+              const pct = row.changePct > 0 ? `+${row.changePct}%` : `${row.changePct}%`
+              return `- ${row.symbol} ${row.name}｜${row.industry}｜价 ${row.price}｜涨跌 ${pct}｜PE ${row.pe}｜PB ${row.pb}｜ROE ${row.roe}%｜市值 ${mktCapYi}`
+            })),
+          value.mock === true ? '（示例股票池数据，真实行情待接 host 数据源）' : '',
+        ].filter((l: string) => l.length > 0).join('\n'),
       }],
     },
     async execute(args: {
@@ -218,18 +245,41 @@ export function buildFinanceTools(source: FinanceDataSource): ToolDefinition[] {
       industry?: string
       minMarketCap?: number
       maxMarketCap?: number
+      minPe?: number
       maxPe?: number
+      minPb?: number
+      maxPb?: number
+      minRoe?: number
       minChangePct?: number
+      maxChangePct?: number
     }) {
       try {
-        return await source.screener({
-          market: parseMarket(args.market) as FinanceMarket,
+        const criteria: Record<string, string | number> = {}
+        if (args.market !== undefined) criteria.market = parseMarket(args.market)
+        if (args.industry !== undefined) criteria.industry = args.industry
+        if (num(args.minMarketCap) !== undefined) criteria.minMarketCap = num(args.minMarketCap) as number
+        if (num(args.maxMarketCap) !== undefined) criteria.maxMarketCap = num(args.maxMarketCap) as number
+        if (num(args.minPe) !== undefined) criteria.minPe = num(args.minPe) as number
+        if (num(args.maxPe) !== undefined) criteria.maxPe = num(args.maxPe) as number
+        if (num(args.minPb) !== undefined) criteria.minPb = num(args.minPb) as number
+        if (num(args.maxPb) !== undefined) criteria.maxPb = num(args.maxPb) as number
+        if (num(args.minRoe) !== undefined) criteria.minRoe = num(args.minRoe) as number
+        if (num(args.minChangePct) !== undefined) criteria.minChangePct = num(args.minChangePct) as number
+        if (num(args.maxChangePct) !== undefined) criteria.maxChangePct = num(args.maxChangePct) as number
+        const result = await source.screener({
+          ...(args.market === undefined ? {} : { market: parseMarket(args.market) as FinanceMarket }),
           ...(args.industry === undefined ? {} : { industry: args.industry }),
           ...(num(args.minMarketCap) === undefined ? {} : { minMarketCap: num(args.minMarketCap) as number }),
           ...(num(args.maxMarketCap) === undefined ? {} : { maxMarketCap: num(args.maxMarketCap) as number }),
+          ...(num(args.minPe) === undefined ? {} : { minPe: num(args.minPe) as number }),
           ...(num(args.maxPe) === undefined ? {} : { maxPe: num(args.maxPe) as number }),
+          ...(num(args.minPb) === undefined ? {} : { minPb: num(args.minPb) as number }),
+          ...(num(args.maxPb) === undefined ? {} : { maxPb: num(args.maxPb) as number }),
+          ...(num(args.minRoe) === undefined ? {} : { minRoe: num(args.minRoe) as number }),
           ...(num(args.minChangePct) === undefined ? {} : { minChangePct: num(args.minChangePct) as number }),
+          ...(num(args.maxChangePct) === undefined ? {} : { maxChangePct: num(args.maxChangePct) as number }),
         })
+        return { ...result, criteria, mock: result.mock === true ? true : null }
       } catch (error) {
         throw dataSourceError(error)
       }

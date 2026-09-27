@@ -66,17 +66,31 @@ export interface FinanceMetrics {
   mock?: boolean
 }
 
-/** 选股筛选项。 */
+/** 选股筛选条件（全部可选，未传表示不限制；均为闭区间）。 */
 export interface ScreenerFilter {
   market?: FinanceMarket
   industry?: string
+  /** 最小市值（元）。 */
   minMarketCap?: number
+  /** 最大市值（元）。 */
   maxMarketCap?: number
+  /** PE(TTM) 下限。 */
+  minPe?: number
+  /** PE(TTM) 上限。 */
   maxPe?: number
+  /** PB 下限。 */
+  minPb?: number
+  /** PB 上限。 */
+  maxPb?: number
+  /** ROE(%) 下限。 */
+  minRoe?: number
+  /** 当日涨跌幅(%) 下限。 */
   minChangePct?: number
+  /** 当日涨跌幅(%) 上限。 */
+  maxChangePct?: number
 }
 
-/** 选股结果行。 */
+/** 选股结果行：每只入选股票的核心指标，可与示例股票池逐只复核。 */
 export interface ScreenerRow {
   symbol: string
   name: string
@@ -85,7 +99,27 @@ export interface ScreenerRow {
   price: number
   changePct: number
   pe: number
+  pb: number
+  roe: number
   marketCap: number
+}
+
+/**
+ * 选股结果：回显筛选条件 + 可读公式 + 命中行。
+ * poolSize 为本次扫描的股票池总数，total 为命中数，便于复核「从 N 只里筛出 M 只」。
+ */
+export interface ScreenerResult {
+  /** 本次扫描的股票池总数。 */
+  poolSize: number
+  /** 命中条件的股票数。 */
+  total: number
+  /** 回显本次实际生效的筛选条件。 */
+  criteria: ScreenerFilter
+  /** 人类可读的筛选公式（闭区间描述），用于复核。 */
+  formula: string
+  /** 命中股票列表（按市值降序）。 */
+  items: ScreenerRow[]
+  mock?: boolean
 }
 
 /** 汇率。pair 形如 USD/CNY（base 兑 quote，rate=1 base 兑多少 quote）。 */
@@ -430,7 +464,7 @@ export interface FinanceDataSource {
   quote(symbol: string, market: FinanceMarket): Promise<FinanceQuote>
   financials(symbol: string, market: FinanceMarket, year?: number): Promise<FinanceFinancials>
   metrics(symbol: string, market: FinanceMarket): Promise<FinanceMetrics>
-  screener(filter: ScreenerFilter): Promise<ScreenerRow[]>
+  screener(filter: ScreenerFilter): Promise<ScreenerResult>
   fx(pair: string): Promise<FinanceFxRate>
   rates(category: FinanceRateCategory): Promise<FinanceRateQuote[]>
   kline(symbol: string, market: FinanceMarket, period: FinanceKlinePeriod, limit: number): Promise<FinanceKlineResult>
@@ -498,6 +532,48 @@ const MOCK_METRICS: Record<string, Omit<FinanceMetrics, 'mock'>> = {
   '0700': { symbol: '0700', name: '腾讯控股', market: 'hk', pe: 27.3, pb: 4.5, ps: 5.8, dividendYield: 0.8, week52High: 521.0, week52Low: 348.0, marketCap: 4.31e12, updatedAt: '2026-09-24T16:00:00+08:00' },
   'AAPL': { symbol: 'AAPL', name: 'Apple Inc.', market: 'us', pe: 34.8, pb: 54.0, ps: 8.5, dividendYield: 0.4, week52High: 241.2, week52Low: 164.0, marketCap: 3.54e12, updatedAt: '2026-09-23T20:00:00+00:00' },
 }
+
+/**
+ * 选股示例股票池（30 只，覆盖 A 股 / 港股 / 美股，跨行业）。
+ * PE/PB/ROE/涨跌幅/市值均为演示用确定性数值，分布刻意拉开，便于多条件筛选复核。
+ * 后续接真实数据源后，本池由 source.screener 实时结果替代。
+ */
+const MOCK_SCREENER_UNIVERSE: ScreenerRow[] = [
+  // —— A 股 ——
+  { symbol: '600519', name: '贵州茅台', market: 'cn', industry: '食品饮料', price: 1688.0, changePct: 0.75, pe: 24.6, pb: 8.3, roe: 33.8, marketCap: 2.12e12 },
+  { symbol: '000858', name: '五粮液', market: 'cn', industry: '食品饮料', price: 128.6, changePct: -1.08, pe: 16.6, pb: 4.0, roe: 24.1, marketCap: 4.99e11 },
+  { symbol: '601318', name: '中国平安', market: 'cn', industry: '非银金融', price: 52.3, changePct: 1.16, pe: 8.0, pb: 1.1, roe: 13.5, marketCap: 9.56e11 },
+  { symbol: '600036', name: '招商银行', market: 'cn', industry: '银行', price: 38.4, changePct: 1.48, pe: 6.5, pb: 0.95, roe: 16.2, marketCap: 8.90e11 },
+  { symbol: '600900', name: '长江电力', market: 'cn', industry: '公用事业', price: 27.8, changePct: 0.62, pe: 20.5, pb: 2.8, roe: 15.8, marketCap: 7.80e11 },
+  { symbol: '600276', name: '恒瑞医药', market: 'cn', industry: '医药生物', price: 46.5, changePct: 1.22, pe: 42.3, pb: 6.1, roe: 12.4, marketCap: 2.90e11 },
+  { symbol: '300750', name: '宁德时代', market: 'cn', industry: '新能源', price: 187.45, changePct: -1.68, pe: 21.3, pb: 4.2, roe: 18.6, marketCap: 8.26e11 },
+  { symbol: '002594', name: '比亚迪', market: 'cn', industry: '汽车', price: 246.8, changePct: 1.95, pe: 23.5, pb: 3.6, roe: 20.1, marketCap: 6.80e11 },
+  { symbol: '600030', name: '中信证券', market: 'cn', industry: '非银金融', price: 25.4, changePct: 2.10, pe: 15.2, pb: 1.3, roe: 9.8, marketCap: 3.40e11 },
+  { symbol: '601899', name: '紫金矿业', market: 'cn', industry: '有色金属', price: 17.9, changePct: 3.42, pe: 11.8, pb: 3.2, roe: 22.5, marketCap: 5.20e11 },
+  { symbol: '601012', name: '隆基绿能', market: 'cn', industry: '新能源', price: 18.6, changePct: -2.35, pe: 18.9, pb: 1.8, roe: 8.5, marketCap: 1.70e11 },
+  { symbol: '000333', name: '美的集团', market: 'cn', industry: '家用电器', price: 68.2, changePct: 0.92, pe: 13.6, pb: 2.9, roe: 22.8, marketCap: 4.10e11 },
+  { symbol: '002415', name: '海康威视', market: 'cn', industry: '电子', price: 31.5, changePct: -0.58, pe: 20.1, pb: 3.4, roe: 17.2, marketCap: 2.90e11 },
+  { symbol: '600031', name: '三一重工', market: 'cn', industry: '机械设备', price: 17.3, changePct: 2.05, pe: 14.2, pb: 1.7, roe: 11.3, marketCap: 2.30e11 },
+  { symbol: '601888', name: '中国中免', market: 'cn', industry: '商贸零售', price: 68.9, changePct: -1.82, pe: 22.4, pb: 4.1, roe: 16.8, marketCap: 2.60e11 },
+  { symbol: '600309', name: '万华化学', market: 'cn', industry: '基础化工', price: 71.4, changePct: 1.33, pe: 10.9, pb: 1.9, roe: 14.6, marketCap: 2.80e11 },
+  { symbol: '601088', name: '中国神华', market: 'cn', industry: '煤炭', price: 39.6, changePct: 0.45, pe: 9.2, pb: 1.5, roe: 13.9, marketCap: 7.60e11 },
+  { symbol: '600585', name: '海螺水泥', market: 'cn', industry: '建筑材料', price: 26.8, changePct: -0.92, pe: 7.8, pb: 0.75, roe: 6.2, marketCap: 1.50e11 },
+  { symbol: '000063', name: '中兴通讯', market: 'cn', industry: '通信', price: 34.2, changePct: 2.76, pe: 16.8, pb: 1.6, roe: 10.5, marketCap: 1.60e11 },
+  { symbol: '688981', name: '中芯国际', market: 'cn', industry: '半导体', price: 88.5, changePct: 4.05, pe: 58.4, pb: 3.9, roe: 6.8, marketCap: 4.60e11 },
+  // —— 港股 ——
+  { symbol: '0700', name: '腾讯控股', market: 'hk', industry: '互联网', price: 378.6, changePct: 1.12, pe: 18.4, pb: 3.6, roe: 28.4, marketCap: 3.52e12 },
+  { symbol: '9988', name: '阿里巴巴-W', market: 'hk', industry: '互联网', price: 78.4, changePct: -0.95, pe: 12.6, pb: 1.9, roe: 11.2, marketCap: 2.30e12 },
+  { symbol: '3690', name: '美团-W', market: 'hk', industry: '互联网', price: 118.2, changePct: 2.31, pe: 22.8, pb: 3.1, roe: 15.4, marketCap: 7.80e11 },
+  // —— 美股 ——
+  { symbol: 'AAPL', name: '苹果', market: 'us', industry: '科技硬件', price: 227.73, changePct: 1.39, pe: 33.1, pb: 58.2, roe: 156.3, marketCap: 3.47e12 },
+  { symbol: 'MSFT', name: '微软', market: 'us', industry: '软件', price: 442.5, changePct: 0.85, pe: 36.5, pb: 12.8, roe: 38.2, marketCap: 3.10e12 },
+  { symbol: 'NVDA', name: '英伟达', market: 'us', industry: '半导体', price: 138.4, changePct: 3.25, pe: 52.4, pb: 42.5, roe: 112.6, marketCap: 3.80e12 },
+  { symbol: 'JPM', name: '摩根大通', market: 'us', industry: '银行', price: 224.6, changePct: 0.42, pe: 13.2, pb: 1.8, roe: 16.5, marketCap: 6.20e11 },
+  { symbol: 'BRK-B', name: '伯克希尔B', market: 'us', industry: '综合金融', price: 472.8, changePct: 0.28, pe: 9.8, pb: 1.3, roe: 9.5, marketCap: 1.00e12 },
+  // —— 补充：大行与港股消费电子，凑足 30 只并覆盖更多行业 ——
+  { symbol: '601988', name: '中国银行', market: 'cn', industry: '银行', price: 4.92, changePct: 0.38, pe: 5.8, pb: 0.6, roe: 9.2, marketCap: 1.70e12 },
+  { symbol: '1810', name: '小米集团-W', market: 'hk', industry: '消费电子', price: 23.5, changePct: 2.08, pe: 25.6, pb: 3.8, roe: 19.5, marketCap: 8.90e11 },
+]
 
 /** 主要货币对示例汇率（1 base 兑多少 quote）。 */
 const MOCK_FX: Record<string, Omit<FinanceFxRate, 'mock'>> = {
@@ -811,25 +887,44 @@ export class MockFinanceSource implements FinanceDataSource {
     return rows.map((row) => ({ ...row, mock: true }))
   }
 
-  async screener(filter: ScreenerFilter): Promise<ScreenerRow[]> {
-    const rows: ScreenerRow[] = Object.values(MOCK_QUOTES)
-      .filter((q) => filter.market === undefined || q.market === filter.market)
-      .map((q) => ({
-        symbol: q.symbol,
-        name: q.name,
-        market: q.market,
-        industry: q.symbol === '600519' || q.symbol === '000858' ? '食品饮料' : q.symbol === '601318' ? '非银金融' : q.market === 'us' ? '科技硬件' : '互联网',
-        price: q.price,
-        changePct: q.changePct,
-        pe: MOCK_METRICS[q.symbol]?.pe ?? 0,
-        marketCap: q.marketCap,
-      }))
+  async screener(filter: ScreenerFilter): Promise<ScreenerResult> {
+    const poolSize = MOCK_SCREENER_UNIVERSE.length
+    const parts: string[] = []
+    if (filter.market !== undefined) parts.push(`市场=${filter.market.toUpperCase()}`)
+    if (filter.industry !== undefined) parts.push(`行业=${filter.industry}`)
+    if (filter.minMarketCap !== undefined || filter.maxMarketCap !== undefined) {
+      const lo = filter.minMarketCap === undefined ? '—' : `${(filter.minMarketCap / 1e8).toFixed(0)}亿`
+      const hi = filter.maxMarketCap === undefined ? '—' : `${(filter.maxMarketCap / 1e8).toFixed(0)}亿`
+      parts.push(`市值∈[${lo}, ${hi}]`)
+    }
+    if (filter.minPe !== undefined || filter.maxPe !== undefined) {
+      parts.push(`PE∈[${filter.minPe ?? '—'}, ${filter.maxPe ?? '—'}]`)
+    }
+    if (filter.minPb !== undefined || filter.maxPb !== undefined) {
+      parts.push(`PB∈[${filter.minPb ?? '—'}, ${filter.maxPb ?? '—'}]`)
+    }
+    if (filter.minRoe !== undefined) parts.push(`ROE≥${filter.minRoe}%`)
+    if (filter.minChangePct !== undefined || filter.maxChangePct !== undefined) {
+      parts.push(`当日涨跌∈[${filter.minChangePct ?? '—'}%, ${filter.maxChangePct ?? '—'}%]`)
+    }
+    const formula = parts.length === 0 ? '无过滤条件（返回全部股票池，按市值降序）' : parts.join(' 且 ')
+
+    const items = MOCK_SCREENER_UNIVERSE
+      .filter((r) => filter.market === undefined || r.market === filter.market)
       .filter((r) => filter.industry === undefined || r.industry === filter.industry)
       .filter((r) => filter.minMarketCap === undefined || r.marketCap >= filter.minMarketCap)
       .filter((r) => filter.maxMarketCap === undefined || r.marketCap <= filter.maxMarketCap)
+      .filter((r) => filter.minPe === undefined || r.pe >= filter.minPe)
       .filter((r) => filter.maxPe === undefined || r.pe <= filter.maxPe)
+      .filter((r) => filter.minPb === undefined || r.pb >= filter.minPb)
+      .filter((r) => filter.maxPb === undefined || r.pb <= filter.maxPb)
+      .filter((r) => filter.minRoe === undefined || r.roe >= filter.minRoe)
       .filter((r) => filter.minChangePct === undefined || r.changePct >= filter.minChangePct)
-    return rows
+      .filter((r) => filter.maxChangePct === undefined || r.changePct <= filter.maxChangePct)
+      .slice()
+      .sort((a, b) => b.marketCap - a.marketCap)
+
+    return { poolSize, total: items.length, criteria: { ...filter }, formula, items, mock: true }
   }
 
   async kline(symbol: string, market: FinanceMarket, period: FinanceKlinePeriod, limit: number): Promise<FinanceKlineResult> {
@@ -1052,14 +1147,19 @@ export class HttpFinanceSource implements FinanceDataSource {
     return this.get<FinanceRateQuote[]>('rates', { category })
   }
 
-  async screener(filter: ScreenerFilter): Promise<ScreenerRow[]> {
-    return this.get<ScreenerRow[]>('screener', {
+  async screener(filter: ScreenerFilter): Promise<ScreenerResult> {
+    return this.get<ScreenerResult>('screener', {
       market: filter.market,
       industry: filter.industry,
       minMarketCap: filter.minMarketCap,
       maxMarketCap: filter.maxMarketCap,
+      minPe: filter.minPe,
       maxPe: filter.maxPe,
+      minPb: filter.minPb,
+      maxPb: filter.maxPb,
+      minRoe: filter.minRoe,
       minChangePct: filter.minChangePct,
+      maxChangePct: filter.maxChangePct,
     })
   }
 

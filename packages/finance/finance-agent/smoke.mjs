@@ -32,7 +32,13 @@ check('metrics AAPL', m.pe === 34.8 && m.market === 'us', JSON.stringify(m))
 
 // 4. 选股（过滤：A股 + PE<=20）
 const rows = await source.screener({ market: 'cn', maxPe: 20 })
-check('screener cn PE<=20', Array.isArray(rows) && rows.length >= 1 && rows.every(r => r.pe <= 20), JSON.stringify(rows))
+check('screener cn PE<=20', rows.total >= 1 && rows.items.every(r => r.pe <= 20 && r.pb > 0 && r.roe > 0), JSON.stringify(rows.items.map(r=>[r.symbol,r.pe])))
+check('screener 返回公式与池大小', typeof rows.formula === 'string' && rows.poolSize === 30 && rows.total === rows.items.length, `pool=${rows.poolSize} total=${rows.total} formula=${rows.formula}`)
+check('screener 结果按市值降序', rows.items.every((r,i,a)=> i===0 || a[i-1].marketCap >= r.marketCap), '未按市值降序')
+const rowsRoe = await source.screener({ minRoe: 20 })
+check('screener ROE>=20 全部达标', rowsRoe.total >= 1 && rowsRoe.items.every(r => r.roe >= 20), JSON.stringify(rowsRoe.items.map(r=>[r.symbol,r.roe])))
+const rowsPb = await source.screener({ market: 'cn', maxPb: 1.5, maxPe: 10 })
+check('screener PB<=1.5 且 PE<=10（低估值）', rowsPb.total >= 1 && rowsPb.items.every(r => r.pb <= 1.5 && r.pe <= 10), JSON.stringify(rowsPb.items.map(r=>[r.symbol,r.pe,r.pb])))
 
 // 5. 非法市场参数
 try {
@@ -52,7 +58,7 @@ try {
 
 // 7. 空结果
 const none = await source.screener({ market: 'cn', minMarketCap: 1e15 })
-check('screener 空结果', Array.isArray(none) && none.length === 0, JSON.stringify(none))
+check('screener 空结果', none.total === 0 && Array.isArray(none.items) && none.items.length === 0, `total=${none.total}`)
 
 // 8. Http 数据源缺 baseURL 拒绝
 try {
