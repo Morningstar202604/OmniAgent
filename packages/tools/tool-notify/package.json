@@ -1,0 +1,41 @@
+{
+  "name": "@deepseek-ai/dsh-tool-notify",
+  "description": "OmniAgent OS 级通知工具包：notify_send 发送系统通知。任务完成或定时触发时提醒用户，优先走系统通知命令（Linux notify-send / macOS osascript / Windows BurntToast），失败自动降级为终端响铃+打印，静默兜底不阻断主流程。基于 node:child_process 调用系统命令，无第三方通知依赖。",
+  "version": "0.1.7-rc.1",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "packages/tools/tool-notify"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@deepseek-ai/schemastery": "workspace:~"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "workspace:~",
+    "@deepseek-ai/dsh-tools": "workspace:*"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "workspace:~",
+    "@deepseek-ai/schemastery": "workspace:~",
+    "@deepseek-ai/dsh-tools": "workspace:*"
+  }
+}
