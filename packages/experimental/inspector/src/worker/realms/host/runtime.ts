@@ -1,5 +1,6 @@
 /** RuntimeBackend implementation over one native Node inspector session. */
 
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { inspectorId } from '../../../shared/identity.ts'
 import type { RuntimeBackendObjectHandle } from '../../../shared/cdp/ids.ts'
 import { isJsonValue } from '../../../shared/json.ts'
@@ -333,6 +334,3 @@ function backendHandle(value: string): RuntimeBackendObjectHandle {
   return inspectorId<'RuntimeBackendObjectHandle'>(value, 'Runtime backend object handle')
 }
 
-function assertNever(value: never): never {
-  throw new Error(`Unexpected Runtime call argument: ${JSON.stringify(value)}`)
-}

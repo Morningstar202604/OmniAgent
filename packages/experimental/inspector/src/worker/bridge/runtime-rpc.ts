@@ -1,5 +1,6 @@
 /** Worker-owned routing between synthetic Client contexts and source generations. */
 
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { randomUUID } from 'node:crypto'
 import type {
   ClientConsoleEventFrame,
@@ -375,6 +376,3 @@ function renderError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error))
 }
 
-function assertNever(value: never): never {
-  throw new Error(`Unexpected source event: ${JSON.stringify(value)}`)
-}

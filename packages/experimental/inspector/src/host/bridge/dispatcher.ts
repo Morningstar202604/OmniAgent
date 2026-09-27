@@ -1,5 +1,6 @@
 /** Dispatch of validated Worker frames accepted by the Host MessagePort. */
 
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import type {
   SourceAcceptedFrame,
   SourceAppendAcknowledgedFrame,
@@ -56,6 +57,3 @@ export function dispatchBridgeFrame(frame: WorkerToSourceFrame, handlers: HostBr
   }
 }
 
-function assertNever(value: never): never {
-  throw new Error(`Unexpected Worker source frame: ${JSON.stringify(value)}`)
-}

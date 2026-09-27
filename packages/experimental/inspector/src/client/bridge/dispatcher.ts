@@ -1,5 +1,6 @@
 /** Dispatch of validated Worker frames to browser-realm capability handlers. */
 
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import type {
   ClientConsoleDisableFrame,
   ClientConsoleEnableFrame,
@@ -81,6 +82,3 @@ export function dispatchBridgeFrame(frame: WorkerToSourceFrame, handlers: Client
   }
 }
 
-function assertNever(value: never): never {
-  throw new Error(`Unexpected Worker source frame: ${JSON.stringify(value)}`)
-}

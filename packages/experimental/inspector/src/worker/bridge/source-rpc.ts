@@ -1,5 +1,6 @@
 /** Worker-owned request routing for Client read-only source catalogs. */
 
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { randomUUID } from 'node:crypto'
 import type {
   ClientSourceCommand,
@@ -187,6 +188,3 @@ function renderError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error))
 }
 
-function assertNever(value: never): never {
-  throw new Error(`Unexpected source event: ${JSON.stringify(value)}`)
-}

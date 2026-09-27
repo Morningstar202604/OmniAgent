@@ -1,5 +1,6 @@
 /** CDP Network projection over the Worker-owned normalized network store. */
 
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { Buffer } from 'node:buffer'
 import type { InspectorHeader } from '../../../../shared/network/observation.ts'
 import type { NetworkStore, NetworkStoreEvent } from '../../../inspection/network-store.ts'
@@ -245,6 +246,3 @@ function cdpHeaders(entries: readonly InspectorHeader[]): Record<string, string>
   return headers
 }
 
-function assertNever(value: never): never {
-  throw new Error(`Unexpected network event: ${JSON.stringify(value)}`)
-}

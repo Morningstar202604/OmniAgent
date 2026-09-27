@@ -1,5 +1,6 @@
 /** Client-realm executor for the typed Runtime command protocol. */
 
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import type {
   ClientCallArgument,
   ClientRuntimeCapability,
@@ -496,6 +497,3 @@ async function awaitWithCancellation(
   }
 }
 
-function assertNever(value: never): never {
-  throw new Error(`Unexpected Client Runtime variant: ${JSON.stringify(value)}`)
-}

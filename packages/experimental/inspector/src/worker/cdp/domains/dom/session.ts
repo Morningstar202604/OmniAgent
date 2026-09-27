@@ -1,5 +1,6 @@
 /** Per-DevTools-session read-only DOM projection over Cordis tree snapshots. */
 
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { realmObjectExpression } from '../../../../shared/cordis/object-registry.ts'
 import type { InspectorSourceDescriptor } from '../../../../shared/bridge/messages/observation.ts'
 import type { InspectorObjectReference } from '../../../../shared/cordis/object-reference.ts'
@@ -517,6 +518,3 @@ function presentation(node: CordisDomNode): RuntimeObjectPresentation {
   }
 }
 
-function assertNever(value: never): never {
-  throw new Error(`Unexpected Cordis DOM mutation: ${JSON.stringify(value)}`)
-}

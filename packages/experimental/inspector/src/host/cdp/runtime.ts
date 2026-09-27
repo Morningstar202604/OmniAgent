@@ -1,5 +1,6 @@
 /** Host Runtime is served directly by the Worker-side Node inspector adapter. */
 
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import type { ClientRuntimeCommand } from '../../shared/bridge/messages/runtime/index.ts'
 import type { InspectorSourceCapability } from '../../shared/bridge/messages/observation.ts'
 import { HostCdpBridgeUnavailableError } from './errors.ts'
@@ -37,6 +38,3 @@ export function rejectRuntimeBridgeCommand(command: ClientRuntimeCommand): never
   }
 }
 
-function assertNever(value: never): never {
-  throw new Error(`Unexpected Host Runtime bridge command: ${JSON.stringify(value)}`)
-}

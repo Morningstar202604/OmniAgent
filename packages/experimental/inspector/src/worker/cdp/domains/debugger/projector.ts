@@ -1,5 +1,6 @@
 /** CDP projection for realm-neutral scripts and debugger events. */
 
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import type { RuntimeDebuggerEvent, RuntimeDebuggerLocation, RuntimeScript, RuntimeStackTrace } from '../../../../shared/cdp/index.ts'
 import type { RuntimeBackendObjectHandle } from '../../../../shared/cdp/ids.ts'
 import type { CdpNotification } from '../../protocol.ts'
@@ -109,6 +110,3 @@ function stackTrace(value: RuntimeStackTrace): Readonly<Record<string, unknown>>
   }
 }
 
-function assertNever(value: never): never {
-  throw new Error(`Unexpected debugger event: ${JSON.stringify(value)}`)
-}
