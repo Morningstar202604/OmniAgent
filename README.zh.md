@@ -2,6 +2,20 @@
 
 > 一个底座，N 个专业。不用插件时它是通用万能 Agent；加载插件后，它瞬间变成该垂直领域的专业 Agent，卸下即恢复。
 
+## 产品截图
+
+| 桌面端首页 —— 通用底座（浅色） | 金融终端 |
+|:---:|:---:|
+| ![OmniAgent 桌面端浅色首页：通用底座 Hero 与能力卡片](frontend-screens/11-web-profile-generic-hero.png) | ![金融终端：行情条轮询、指数 K 线、券商研报与公司公告](frontend-screens/02-finance-terminal-full.png) |
+
+| Agent 写策略代码 + 一键导出 PDF 报告 | 插件市场 |
+|:---:|:---:|
+| ![Agent 用 Python 编写回测策略并一键导出 PDF 报告](frontend-screens/15-dock-fix-navigates-to-chat.png) | ![插件市场：一键启用官方领域包（金融 / 电商 / 通用增强）](frontend-screens/mobile-03-plugin-market.png) |
+
+| 全局命令面板（Ctrl / ⌘ + K） | 移动端首页（响应式） |
+|:---:|:---:|
+| ![全局命令面板：新建会话、插件专区、浅色/深色/跟随系统主题切换](frontend-screens/mobile-04-command-palette.png) | ![手机视口下的响应式移动端首页](frontend-screens/mobile-01b-home-hero.png) |
+
 ## 定位
 
 OmniAgent 不是某个单一行业的专用 agent，而是一个**万物皆可插件**的智能体平台：
@@ -109,3 +123,5 @@ packages/bundle/<domain>/                # profile 组合包
 [MIT](LICENSE)
 
 第三方依赖及其许可证见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+
+> 本仓库为基于 DSH（DeepSeek Harness）体系的改造发布；LICENSE 中的 MIT 版权行（Copyright (c) 2026 DeepSeek）按合规要求原样保留，未作改动。

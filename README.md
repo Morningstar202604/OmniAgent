@@ -2,6 +2,20 @@
 
 > 一个底座，N 种职业。不装插件，它是一个开箱即用的通用全能 Agent；装上某个插件，同一个 Agent 立刻变成那个垂直领域的专业应用；卸下插件，立刻回归通用——**通用能力永远不被削弱**。
 
+## Screenshots
+
+| Desktop home — universal base (light) | Finance terminal |
+|:---:|:---:|
+| ![OmniAgent desktop home, light theme: the universal-base hero with capability cards](frontend-screens/11-web-profile-generic-hero.png) | ![Finance terminal: scrolling quote bar, index K-line, broker research and announcements](frontend-screens/02-finance-terminal-full.png) |
+
+| Agent coding & one-click PDF report | Plugin marketplace |
+|:---:|:---:|
+| ![Agent writing a backtest strategy in Python and exporting a one-click PDF report](frontend-screens/15-dock-fix-navigates-to-chat.png) | ![Plugin marketplace: enable official domain packs (finance / ecommerce / general) with one click](frontend-screens/mobile-03-plugin-market.png) |
+
+| Global command palette (Ctrl / ⌘ + K) | Mobile home (responsive) |
+|:---:|:---:|
+| ![Global command palette: new chat, plugin zone, light/dark/system theme switch](frontend-screens/mobile-04-command-palette.png) | ![Responsive mobile home on a phone viewport](frontend-screens/mobile-01b-home-hero.png) |
+
 ## 这是什么
 
 OmniAgent 不是某一个行业专用的 Agent，而是一个「**万物皆可插件**」的通用智能体平台：
@@ -146,3 +160,5 @@ make help               # Web / Desktop 相关 Make 目标
 ## 许可
 
 [MIT](LICENSE)。第三方依赖及其许可见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+
+> 本仓库为基于 DSH（DeepSeek Harness）体系的改造发布；LICENSE 中的 MIT 版权行（Copyright (c) 2026 DeepSeek）按合规要求原样保留，未作改动。
