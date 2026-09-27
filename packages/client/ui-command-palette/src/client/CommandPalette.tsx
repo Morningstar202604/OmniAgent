@@ -117,8 +117,8 @@ function CommandPaletteInner({ t, startSession, selectPanel, setTheme }: {
 
   if (!open) return null
   return (
-    <div className={css.backdrop} onMouseDown={() => setOpen(false)}>
-      <div className={css.panel} role="dialog" aria-modal="true" aria-label={t('open')} onMouseDown={e => e.stopPropagation()}>
+    <div className={css.backdrop} onMouseDown={() => { setOpen(false) }}>
+      <div className={css.panel} role="dialog" aria-modal="true" aria-label={t('open')} onMouseDown={e => { e.stopPropagation() }}>
         <div className={css.inputRow}>
           <IconSearchOutlineRegular className={css.searchIcon} size={16} />
           <input
@@ -138,8 +138,8 @@ function CommandPaletteInner({ t, startSession, selectPanel, setTheme }: {
               key={action.id}
               type="button"
               className={`${css.item}${i === index ? ` ${css.itemActive}` : ''}`}
-              onMouseEnter={() => setIndex(i)}
-              onClick={() => run(action)}
+              onMouseEnter={() => { setIndex(i) }}
+              onClick={() => { run(action) }}
             >
               <span className={css.itemIcon}>{action.icon}</span>
               <span className={css.itemText}>

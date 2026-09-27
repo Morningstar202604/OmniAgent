@@ -116,13 +116,13 @@ const SessionHistoryRow = memo(function SessionHistoryRow({
             value={draft}
             autoFocus
             placeholder={t('renamePlaceholder')}
-            onChange={e => onDraftChange(e.target.value)}
-            onClick={e => e.stopPropagation()}
+            onChange={e => { onDraftChange(e.target.value) }}
+            onClick={e => { e.stopPropagation() }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') onCommitRename(row.id, draft ?? '')
               else if (e.key === 'Escape') onCancelRename()
             }}
-            onBlur={() => onCommitRename(row.id, draft ?? '')}
+            onBlur={() => { onCommitRename(row.id, draft ?? '') }}
           />
         ) : (
           <>
@@ -212,15 +212,15 @@ export function SessionHistoryPage({
   }, [t])
 
   // 下发给 memo 行的稳定回调：注入动作一旦变化才重建，否则保持同一引用。
-  const handleOpen = useCallback((id: SessionId) => openSession(id), [openSession])
+  const handleOpen = useCallback((id: SessionId) => { openSession(id) }, [openSession])
   const handleFork = useCallback((id: SessionId) => { void forkSession(id) }, [forkSession])
-  const handleArchive = useCallback((id: SessionId) => archiveSession(id), [archiveSession])
+  const handleArchive = useCallback((id: SessionId) => { archiveSession(id) }, [archiveSession])
   const handleStartRename = useCallback((id: SessionId, title: string) => {
     setEditingId(id)
     setDraft(title)
   }, [])
-  const handleCancelRename = useCallback(() => setEditingId(undefined), [])
-  const handleDraftChange = useCallback((text: string) => setDraft(text), [])
+  const handleCancelRename = useCallback(() => { setEditingId(undefined) }, [])
+  const handleDraftChange = useCallback((text: string) => { setDraft(text) }, [])
   const handleCommitRename = useCallback((id: SessionId, title: string) => {
     setEditingId(undefined)
     const trimmed = title.trim()
@@ -260,9 +260,9 @@ export function SessionHistoryPage({
     const el = listRef.current
     if (!el) return
     setViewportH(el.clientHeight)
-    const ro = new ResizeObserver(() => setViewportH(el.clientHeight))
+    const ro = new ResizeObserver(() => { setViewportH(el.clientHeight) })
     ro.observe(el)
-    return () => ro.disconnect()
+    return () => { ro.disconnect() }
   }, [])
 
   const onListScroll = useCallback(() => {
@@ -358,7 +358,7 @@ export function SessionHistoryPage({
             role="tab"
             aria-selected={view === 'list'}
             className={clsx(css.viewTab, view === 'list' && css.viewTabActive)}
-            onClick={() => setView('list')}
+            onClick={() => { setView('list') }}
           >
             <IconFlatListOutlineRegular size={13} /> {t('viewList')}
           </button>
@@ -367,7 +367,7 @@ export function SessionHistoryPage({
             role="tab"
             aria-selected={view === 'timeline'}
             className={clsx(css.viewTab, view === 'timeline' && css.viewTabActive)}
-            onClick={() => setView('timeline')}
+            onClick={() => { setView('timeline') }}
           >
             <IconBranchOutlineRegular size={13} /> {t('viewTimeline')}
           </button>
@@ -377,7 +377,7 @@ export function SessionHistoryPage({
           className={css.search}
           placeholder={t('search')}
           value={query}
-          onChange={e => setQuery(e.target.value)}
+          onChange={e => { setQuery(e.target.value) }}
         />
         <button type="button" className={css.newBtn} onClick={() => { startSession() }}>
           <IconPlusOutlineRegular size={13} /> {t('newSession')}

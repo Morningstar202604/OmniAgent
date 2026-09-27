@@ -112,10 +112,10 @@ export function PermissionRulesSection({ load, save, useRules, t }: PermissionRu
           type="button"
           className={css.presetBtn}
           disabled={busy}
-          onClick={() => applyPreset([
+          onClick={() => { applyPreset([
             { id: 'preset-strict-shell', pattern: 'shell.*', level: 'deny', enabled: true },
             { id: 'preset-strict-git', pattern: 'git_*', level: 'ask', enabled: true },
-          ])}
+          ]) }}
         >
           <span className={css.presetName}>{t('preset.strict')}</span>
           <span className={css.presetDesc}>{t('preset.strict.desc')}</span>
@@ -124,9 +124,9 @@ export function PermissionRulesSection({ load, save, useRules, t }: PermissionRu
           type="button"
           className={css.presetBtn}
           disabled={busy}
-          onClick={() => applyPreset([
+          onClick={() => { applyPreset([
             { id: 'preset-relaxed-all', pattern: '*', level: 'auto', enabled: true },
-          ])}
+          ]) }}
         >
           <span className={css.presetName}>{t('preset.relaxed')}</span>
           <span className={css.presetDesc}>{t('preset.relaxed.desc')}</span>
@@ -146,21 +146,21 @@ export function PermissionRulesSection({ load, save, useRules, t }: PermissionRu
                 aria-label={t('add.level')}
                 value={row.level}
                 disabled={busy}
-                onChange={event => changeLevel(row.id, event.target.value as PermissionLevel)}
+                onChange={event => { changeLevel(row.id, event.target.value as PermissionLevel) }}
               >
                 {LEVELS.map(lvl => <option key={lvl} value={lvl}>{levelLabel(lvl)}</option>)}
               </select>
               <Switch
                 checked={row.enabled}
                 disabled={busy}
-                onChange={next => toggleRule(row.id, next)}
+                onChange={next => { toggleRule(row.id, next) }}
                 label={row.pattern}
               />
               {confirmDeleteId === row.id
                 ? (
                   <span className={css.rowActions}>
-                    <Button size="sm" variant="primary" onClick={() => removeRule(row.id)}>{t('confirm')}</Button>
-                    <Button size="sm" onClick={() => setConfirmDeleteId(null)}>{t('cancel')}</Button>
+                    <Button size="sm" variant="primary" onClick={() => { removeRule(row.id) }}>{t('confirm')}</Button>
+                    <Button size="sm" onClick={() => { setConfirmDeleteId(null) }}>{t('cancel')}</Button>
                   </span>
                 )
                 : (
@@ -168,7 +168,7 @@ export function PermissionRulesSection({ load, save, useRules, t }: PermissionRu
                     type="button"
                     className={css.deleteBtn}
                     disabled={busy}
-                    onClick={() => setConfirmDeleteId(row.id)}
+                    onClick={() => { setConfirmDeleteId(row.id) }}
                   >
                     {t('delete')}
                   </button>
@@ -184,14 +184,14 @@ export function PermissionRulesSection({ load, save, useRules, t }: PermissionRu
           placeholder={t('add.pattern.placeholder')}
           value={pattern}
           disabled={busy}
-          onChange={event => setPattern(event.target.value)}
+          onChange={event => { setPattern(event.target.value) }}
           onKeyDown={event => { if (event.key === 'Enter') addRule() }}
         />
         <select
           aria-label={t('add.level')}
           value={level}
           disabled={busy}
-          onChange={event => setLevel(event.target.value as PermissionLevel)}
+          onChange={event => { setLevel(event.target.value as PermissionLevel) }}
         >
           {LEVELS.map(lvl => <option key={lvl} value={lvl}>{levelLabel(lvl)}</option>)}
         </select>

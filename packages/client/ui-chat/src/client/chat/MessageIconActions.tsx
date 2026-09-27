@@ -30,7 +30,7 @@ function downloadMarkdown(text: string, time?: number | undefined): void {
   anchor.click()
   anchor.remove()
   // Revoke on the next tick so the download has a chance to start.
-  window.setTimeout(() => URL.revokeObjectURL(url), 0)
+  window.setTimeout(() => { URL.revokeObjectURL(url) }, 0)
 }
 
 export interface MessageIconActionsProps {

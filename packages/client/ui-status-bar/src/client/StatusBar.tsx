@@ -70,8 +70,8 @@ export function StatusBar({
   // 时钟：每 30s 刷新一次即可，状态栏不需要秒级精度。
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(new Date()), 30_000)
-    return () => window.clearInterval(timer)
+    const timer = window.setInterval(() => { setNow(new Date()) }, 30_000)
+    return () => { window.clearInterval(timer) }
   }, [])
 
   // 当前主会话（mainView 持有的会话）。
