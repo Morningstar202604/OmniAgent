@@ -9,10 +9,11 @@
  *   受 token（字符）预算约束，避免系统提示词过长。
  *
  * 设计取舍与后续路线：
- * - 检索为纯 TypeScript 实现的 BM25 打分（中文 bigram + 英文单词分词，
- *   SQLite 持久化倒排词项表），支持"同一语义不同措辞"的召回；
- *   BM25 无命中时自动退化为 LIKE 关键词匹配，不破坏旧有精确检索体验。
- *   向量数据库 / embedding 列为更远期路线，当前保持离线零外部依赖。
+ * - 检索为 BM25 + 向量 hybrid 融合（final = alpha*bm25 + (1-alpha)*vector）。
+ *   默认离线零依赖：本地 TF 稀疏向量复用词项表实时算余弦；
+ *   配置国产 embedding API（智谱/阿里/百度，OpenAI 兼容端点）后升级为真稠密向量，
+ *   可召回"无共同词但语义相近"的文档；未配置或网络失败时自动降级回本地 TF。
+ *   两路都未命中时仍退化为 LIKE 关键词匹配，不破坏旧有精确检索体验。
  * - 注入发生在同步 system-prompt provider 中，无法拿到当前用户消息，
  *   因此注入的是全局重要记忆而非"按当前问题召回"；按轮次语义召回待后续接入。
  *
@@ -26,12 +27,25 @@ import { join } from 'node:path'
 import { readFileSync } from 'node:fs'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import { MemoryStore } from './store.ts'
+import { LocalTFEmbedding, OpenAICompatibleEmbedding } from './embedding.ts'
 
 /** Cordis 插件名。 */
 export const name = 'memory'
 
 /** 访问 tools（注册记忆/知识库工具）与 systemPrompt（注入记忆段落），必须声明 inject。 */
 export const inject: readonly string[] = ['tools', 'systemPrompt']
+
+/** 向量召回相关配置。 */
+export interface EmbeddingConfig {
+  /** OpenAI 兼容 embedding 端点基础地址（智谱/阿里/百度等）；留空则用本地 TF。 */
+  baseURL?: string
+  /** API Key；留空时自动降级为本地 TF 稀疏召回。 */
+  apiKey?: string
+  /** 模型名，如 embedding-3 / text-embedding-v3。 */
+  model?: string
+  /** hybrid 融合中 BM25 权重（0~1），向量权重为 1-alpha，默认 0.5。 */
+  alpha?: number
+}
 
 /** 插件配置。 */
 export interface Config {
@@ -41,6 +55,8 @@ export interface Config {
   injectMaxEntries?: number
   /** 注入记忆的字符预算上限（默认 1500，约 1k token 内）。 */
   injectMaxChars?: number
+  /** 向量召回配置；整体留空则默认本地 TF（离线零依赖）。 */
+  embedding?: EmbeddingConfig
 }
 
 /** schemastery 校验器。 */
@@ -48,6 +64,12 @@ export const Config: z<Config> = z.object({
   path: z.string(),
   injectMaxEntries: z.number().default(6),
   injectMaxChars: z.number().default(1500),
+  embedding: z.object({
+    baseURL: z.string().default(''),
+    apiKey: z.string().default(''),
+    model: z.string().default(''),
+    alpha: z.number().default(0.5),
+  }).default({}),
 })
 
 /** 系统提示词中记忆段落的 order（位于交付物引用之后、结构化输出之前）。 */
@@ -59,11 +81,19 @@ interface MemoryResult {
   content: string
   tags: string[]
   importance: number
+  /** hybrid 融合分数（仅搜索结果附带，可选）。 */
+  score?: number
 }
 
 /** 把 MemoryEntry 映射为工具输出条目。 */
-function toResult(e: { id: string; content: string; tags: string[]; importance: number }): MemoryResult {
-  return { id: e.id, content: e.content, tags: e.tags, importance: e.importance }
+function toResult(e: { id: string; content: string; tags: string[]; importance: number; score?: number }): MemoryResult {
+  return {
+    id: e.id,
+    content: e.content,
+    tags: e.tags,
+    importance: e.importance,
+    ...(e.score !== undefined ? { score: Number(e.score.toFixed(4)) } : {}),
+  }
 }
 
 /** 按段落切分文档，并把过长段落按字符再切分，返回非空分块。 */
@@ -93,7 +123,23 @@ export function apply(ctx: Context, config: Config): void {
   const path = process.env.DSH_MEMORY_DB_PATH
     ?? config.path
     ?? join(homedir(), '.omniagent', 'memory.db')
-  const store = MemoryStore.open(path)
+
+  // 根据配置选择向量提供方：
+  // - 配置了 apiKey + baseURL + model：用 OpenAI 兼容端点（智谱/阿里/百度等），真稠密向量召回；
+  // - 否则（默认）：LocalTFEmbedding，离线、零依赖，复用词项表实时算余弦。
+  const emb = config.embedding ?? {}
+  const provider = emb.apiKey
+    ? new OpenAICompatibleEmbedding({
+      baseURL: emb.baseURL ?? '',
+      apiKey: emb.apiKey,
+      model: emb.model ?? '',
+    })
+    : new LocalTFEmbedding()
+
+  const store = MemoryStore.open(path, {
+    embedding: provider,
+    hybridAlpha: emb.alpha ?? 0.5,
+  })
   // 宿主停止时关闭数据库。
   ctx.effect(() => () => store.close(), 'memory.close')
 
@@ -144,7 +190,7 @@ export function apply(ctx: Context, config: Config): void {
       if (typeof args.content !== 'string' || args.content.trim().length === 0) {
         throw new Error('memory_add: content 不能为空')
       }
-      const entry = store.addMemory({
+      const entry = await store.addMemory({
         content: args.content.trim(),
         ...(args.tags !== undefined ? { tags: args.tags } : {}),
         ...(args.importance !== undefined ? { importance: args.importance } : {}),
@@ -175,6 +221,7 @@ export function apply(ctx: Context, config: Config): void {
                 content: { type: 'string', required: true },
                 tags: { type: 'array', required: true, items: { type: 'string' } },
                 importance: { type: 'number', required: true },
+                score: { type: 'number', description: 'hybrid 融合分数（越大越相关）。' },
               },
             },
           },
@@ -186,7 +233,7 @@ export function apply(ctx: Context, config: Config): void {
       },
     },
     async execute(args: { query: string; tags?: string; limit?: number }) {
-      const results = store.searchMemory(args.query, {
+      const results = await store.searchMemory(args.query, {
         ...(args.tags !== undefined ? { tags: args.tags } : {}),
         ...(args.limit !== undefined ? { limit: args.limit } : {}),
       })
@@ -214,7 +261,7 @@ export function apply(ctx: Context, config: Config): void {
       render: (_a, v) => [{ type: 'text', text: `已更新记忆：${v.content}` }],
     },
     async execute(args: { id: string; content?: string; tags?: string[]; importance?: number }) {
-      const entry = store.updateMemory(args.id, {
+      const entry = await store.updateMemory(args.id, {
         ...(args.content !== undefined ? { content: args.content } : {}),
         ...(args.tags !== undefined ? { tags: args.tags } : {}),
         ...(args.importance !== undefined ? { importance: args.importance } : {}),
@@ -261,6 +308,7 @@ export function apply(ctx: Context, config: Config): void {
                 content: { type: 'string', required: true },
                 tags: { type: 'array', required: true, items: { type: 'string' } },
                 importance: { type: 'number', required: true },
+                score: { type: 'number' },
               },
             },
           },
@@ -272,7 +320,7 @@ export function apply(ctx: Context, config: Config): void {
       },
     },
     async execute(args: { limit?: number; tags?: string }) {
-      const results = store.listMemory({
+      const results = await store.listMemory({
         limit: args.limit ?? 20,
         ...(args.tags !== undefined ? { tags: args.tags } : {}),
       })
@@ -301,7 +349,7 @@ export function apply(ctx: Context, config: Config): void {
     async execute(args: { path: string }) {
       const text = readFileSync(args.path, 'utf-8')
       const chunks = splitIntoChunks(text)
-      const n = store.importKnowledge(args.path, chunks)
+      const n = await store.importKnowledge(args.path, chunks)
       return { source: args.path, chunks: n }
     },
   }))
@@ -335,7 +383,7 @@ export function apply(ctx: Context, config: Config): void {
       },
     },
     async execute(args: { query: string; limit?: number }) {
-      const chunks = store.searchKnowledge(args.query, args.limit ?? 10)
+      const chunks = await store.searchKnowledge(args.query, args.limit ?? 10)
       return { results: chunks.map(c => ({ source: c.source, content: c.content })) }
     },
   }))
