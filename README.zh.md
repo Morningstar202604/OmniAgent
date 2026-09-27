@@ -3,7 +3,8 @@
 > 一个底座，N 个专业。不用插件时它是通用万能 Agent；加载插件后，它瞬间变成该垂直领域的专业 Agent，卸下即恢复。
 
 
-[![version](https://img.shields.io/badge/version-0.1.7-6366f1)](https://gitcode.com/badhope/OmniAgent)
+[[![CI](https://github.com/X33834/OmniAgent/actions/workflows/ci.yml/badge.svg)](https://github.com/X33834/OmniAgent/actions/workflows/ci.yml)
+![version](https://img.shields.io/badge/version-0.1.7-6366f1)](https://gitcode.com/badhope/OmniAgent)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![node](https://img.shields.io/badge/node-%3E%3D22.19-339933)](package.json)
 [![pnpm](https://img.shields.io/badge/pnpm-%3E%3D11.0-F69220)](package.json)

@@ -79,7 +79,8 @@
     "gen-session-format-catalog": "tsx scripts/gen-session-format-catalog.ts",
     "verify-session-format-catalog": "tsx scripts/gen-session-format-catalog.ts --check",
     "gen-third-party-notices": "tsx scripts/gen-third-party-notices.ts",
-    "verify-third-party-notices": "tsx scripts/gen-third-party-notices.ts --check"
+    "verify-third-party-notices": "tsx scripts/gen-third-party-notices.ts --check",
+    "check:all": "node scripts/check-all.mjs"
   },
   "devDependencies": {
     "@deepseek-ai/dsh-agent": "workspace:*",

@@ -1,0 +1,34 @@
+name: Mirror to GitCode & Gitee
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    if: github.repository == 'X33834/OmniAgent'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 配置 git 身份
+        run: |
+          git config user.name "${{ secrets.GIT_USER_NAME || 'badhope' }}"
+          git config user.email "${{ secrets.GIT_USER_EMAIL || 'badhope@users.noreply.gitcode.com' }}"
+
+      - name: 镜像到 GitCode
+        if: ${{ secrets.GITCODE_TOKEN != '' }}
+        run: |
+          git push --force \
+            "https://oauth2:${{ secrets.GITCODE_TOKEN }}@gitcode.com/badhope/OmniAgent.git" \
+            main:main
+
+      - name: 镜像到 Gitee
+        if: ${{ secrets.GITEE_TOKEN != '' }}
+        run: |
+          git push --force \
+            "https://badhope:${{ secrets.GITEE_TOKEN }}@gitee.com/badhope/omniagent.git" \
+            main:main
