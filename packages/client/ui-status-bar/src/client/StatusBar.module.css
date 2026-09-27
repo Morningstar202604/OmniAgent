@@ -103,3 +103,40 @@
   font-variant-numeric: tabular-nums;
   color: var(--dsw-alias-text-tertiary);
 }
+
+/* ── 窄屏适配：平板 <768px，手机 <480px ──────────────────────
+   窄屏下只保留 模型 + 会话标题 + 新建会话/主题按钮；
+   token 占用、时钟、连接文案依次收起，避免状态栏换行溢出。 */
+@media (max-width: 768px) {
+  .bar {
+    gap: 6px;
+    padding: 0 8px;
+  }
+  .left,
+  .right {
+    gap: 6px;
+  }
+  .sessionTitle {
+    max-width: 160px;
+  }
+  .tokenItem,
+  .clock {
+    display: none;
+  }
+  [data-token-sep] {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .bar {
+    height: 32px;
+  }
+  /* 手机端进一步收起连接文案，仅保留状态圆点。 */
+  .connText {
+    display: none;
+  }
+  .sessionTitle {
+    max-width: 120px;
+  }
+}
