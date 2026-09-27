@@ -10,7 +10,9 @@
  *   2. 终端降级：响铃 \x07 + stdout 打印 `[通知] title: body`；
  *   3. 最终兜底：静默（stdout 不可写等极端情况）。
  *
- * Web 端（浏览器原生 Notification API / 页面内 Toast）标注为后续路线，本包只做 host 端。
+ * Web 端（浏览器原生 Notification API / 页面内 Toast）由 `src/client/index.ts` 提供：
+ * 任务结束（running true→false）或审批请求出现时，若页面不在前台则弹系统通知，
+ * 点击聚焦窗口；Notification 不可用或权限被拒时静默降级为页面内 Toast。
  *
  * @module @deepseek-ai/dsh-tool-notify
  */
