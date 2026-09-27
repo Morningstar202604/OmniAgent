@@ -1,0 +1,11 @@
+第一次: {"totalReturnPct":-7.79,"annualizedReturnPct":-8.46,"maxDrawdownPct":-15.65,"sharpeRatio":-0.72,"winRatePct":22.22,"tradeCount":18,"finalEquity":922124.48,"profitFactor":0.48,"tradingDays":231}
+第二次: {"totalReturnPct":-7.79,"annualizedReturnPct":-8.46,"maxDrawdownPct":-15.65,"sharpeRatio":-0.72,"winRatePct":22.22,"tradeCount":18,"finalEquity":922124.48,"profitFactor":0.48,"tradingDays":231}
+确定性一致: true
+公式:
+  - 信号：SMA5 上穿 SMA20（金叉）满仓买入；下穿（死叉）全部卖出。成交价=当日收盘价。
+  - 手续费：每笔成交金额 × 0.030%，买卖双边各收一次。
+  - 累计收益率 = (期末权益 922124.48 − 初始资金 1000000) / 1000000 × 100% = -7.79%
+  - 年化收益率 = ((期末/初始)^(252/231) − 1) × 100% = -8.46%
+  - 最大回撤 = min((当日净值 − 历史峰值)/历史峰值) × 100% = -15.65%
+  - 夏普比率 = (年化收益 − 无风险利率2%) / 年化波动(日收益标准差×√252) = -0.722
+  - 胜率 = 盈利回合数 / 平仓回合数 × 100% = 22.2%
