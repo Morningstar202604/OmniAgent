@@ -137,3 +137,22 @@
   line-height: 18px;
   color: var(--dsw-alias-label-caption);
 }
+
+/* ── 窄屏适配：手机 <480px ──────────────────────────────
+   面板本身已是 min(560px,100%)，窄屏自动收窄；这里只收紧
+   背景层四周留白，确保 375px 视口下面板不贴边也不溢出。 */
+@media (max-width: 480px) {
+  .backdrop {
+    padding: 8vh 12px 16px;
+  }
+  .panel {
+    max-height: 70vh;
+  }
+  .inputRow {
+    padding: 10px 12px;
+  }
+  .item {
+    padding: 8px;
+    gap: 8px;
+  }
+}
