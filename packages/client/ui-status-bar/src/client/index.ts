@@ -5,6 +5,8 @@ import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { ConnectionState, ConnectionStateSource } from '@deepseek-ai/dsh-client-connection/client'
 import type { HostObservable } from '@deepseek-ai/dsh-client-ui-slots'
 import type { ModelDirectoryState, ModelDirectoryResolver } from '@deepseek-ai/dsh-client-ui-model-selection/client'
+// 仅类型：token 用量投影形状；运行时经 sessions.binding().session.projections.faceOf('tokenUsage') 读取。
+import type { TokenUsageProjection } from '@deepseek-ai/dsh-token-meter/client'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
@@ -101,6 +103,70 @@ function createModelLabelSource(
 }
 
 /**
+ * 把当前主会话累计 token 用量投影成一个 observable。
+ * 数据来自 Host 计算并推送的 `tokenUsage` 会话投影（整条日志去重累加，跨分页/压缩稳定），
+ * apply 侧只负责跟随主会话切换并转发该投影 face；组件只读取 useTokenUsage。
+ * 会话无计费记录或投影尚未就绪时为 undefined，由组件回退占位 “—”。
+ */
+function createTokenUsageSource(sessions: ISessions): HostObservable<TokenUsageProjection | undefined> {
+  let value: TokenUsageProjection | undefined
+  let listeners = new Set<() => void>()
+  let boundSessionId: SessionId | undefined
+  let unsubscribe: (() => void) | undefined
+
+  const emit = (): void => {
+    for (const listener of listeners) listener()
+  }
+
+  const rebind = (sessionId: SessionId | undefined): void => {
+    unsubscribe?.()
+    unsubscribe = undefined
+    boundSessionId = sessionId
+    if (sessionId === undefined) {
+      value = undefined
+      emit()
+      return
+    }
+    try {
+      // 主会话由 mainView 持有，binding 必然存在；其 projection store 按 sessionId 常驻，
+      // 重连后由 baseline 重新播种并通知旧订阅者，无需在此重绑。
+      const binding = sessions.binding(sessionId)
+      const face = binding?.session.projections.faceOf('tokenUsage')
+      if (face === undefined) {
+        value = undefined
+        emit()
+        return
+      }
+      value = face.getSnapshot() as TokenUsageProjection | undefined
+      unsubscribe = face.subscribe(() => {
+        value = face.getSnapshot() as TokenUsageProjection | undefined
+        emit()
+      })
+    } catch {
+      value = undefined
+    }
+    emit()
+  }
+
+  const onList = (): void => {
+    const list = sessions.list.getSnapshot()
+    const mainId = Object.values(list.byId).find(s => (s.retainedBy.mainView ?? 0) > 0)?.id
+    if (mainId !== boundSessionId) rebind(mainId)
+  }
+
+  sessions.list.subscribe(onList)
+  onList()
+
+  return {
+    getSnapshot: () => value,
+    subscribe: (listener) => {
+      listeners.add(listener)
+      return () => { listeners.delete(listener) }
+    },
+  }
+}
+
+/**
  * 注册顶部状态栏到 shell.statusbar 槽位。
  * @param ctx - client root context。
  */
@@ -115,6 +181,7 @@ export function apply(ctx: ClientContext): void {
     const uiWorkspace = scope.get('uiWorkspace') as { startSession: (workspaceId?: string) => void }
 
     const modelLabel = createModelLabelSource(sessions, modelDirectories)
+    const tokenUsage = createTokenUsageSource(sessions)
 
     // 主题在 浅色 → 深色 → 跟随系统 之间循环。
     const cycleTheme = (): void => {
@@ -129,6 +196,7 @@ export function apply(ctx: ClientContext): void {
       hooks: {
         modelLabel,
         connectionState: connection.state as HostObservable<ConnectionState | undefined>,
+        tokenUsage,
       },
       startSession: () => { uiWorkspace.startSession() },
       cycleTheme,
