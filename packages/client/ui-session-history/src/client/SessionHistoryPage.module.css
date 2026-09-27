@@ -160,3 +160,34 @@
   font-size: 13px;
   outline: none;
 }
+
+/* ── 窄屏适配：平板 <768px，手机 <480px ──────────────────────
+   会话历史在窄屏下作为主面板全屏呈现，收紧头部留白与搜索框宽度，
+   列表项高度更紧凑。 */
+@media (max-width: 768px) {
+  .header {
+    padding: 12px 14px 10px;
+    gap: 8px;
+  }
+  .search {
+    max-width: 100%;
+  }
+  .list {
+    padding: 6px 8px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 10px 12px 8px;
+  }
+  .title {
+    font-size: 14px;
+  }
+  .row {
+    padding: 7px 8px;
+  }
+  .empty {
+    padding: 32px 16px;
+  }
+}
