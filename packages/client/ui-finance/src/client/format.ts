@@ -25,7 +25,7 @@ export function fmtAmount(value: number, currency = 'CNY'): string {
   if (value >= 1e12) return `${(value / 1e12).toFixed(2)} 万亿${unit === '元' ? '元' : ''}`
   if (value >= 1e8) return `${(value / 1e8).toFixed(2)} 亿`
   if (value >= 1e4) return `${(value / 1e4).toFixed(1)} 万`
-  return `${value.toFixed(0)}`
+  return value.toFixed(0)
 }
 
 /** 成交量紧凑格式。 */
