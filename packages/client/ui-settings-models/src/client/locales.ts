@@ -114,6 +114,15 @@ export const en = {
   onboardingSave: 'Save and continue',
   onboardingSaving: 'Saving…',
   keyRequired: 'Enter an API key to continue.',
+  // Generation-parameter sliders (temperature / maxTokens).
+  paramsTitle: 'Generation parameters',
+  paramsIntro: 'Tune sampling defaults for new conversations.',
+  paramsTemperature: 'Temperature',
+  paramsTemperatureLow: 'Precise',
+  paramsTemperatureHigh: 'Creative',
+  paramsMaxTokens: 'Max output tokens',
+  paramsReset: 'Restore defaults',
+  paramsAppliedHint: 'Saved on this device; applies to the next new conversation.',
 }
 
 /** The settings.models namespace key union. */
@@ -233,4 +242,13 @@ export const zh: { [Key in keyof typeof en]: string } = {
   onboardingSave: '保存并继续',
   onboardingSaving: '保存中…',
   keyRequired: '请输入 API 密钥后继续。',
+  // 生成参数滑杆（temperature / maxTokens）。
+  paramsTitle: '生成参数',
+  paramsIntro: '调节新建会话默认使用的采样参数。',
+  paramsTemperature: '温度（Temperature）',
+  paramsTemperatureLow: '严谨',
+  paramsTemperatureHigh: '创意',
+  paramsMaxTokens: '最大输出 token 数',
+  paramsReset: '恢复默认',
+  paramsAppliedHint: '已保存在本机，将在下次新建会话时生效。',
 }
