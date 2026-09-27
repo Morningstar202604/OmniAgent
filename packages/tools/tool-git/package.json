@@ -1,0 +1,41 @@
+{
+  "name": "@deepseek-ai/dsh-tool-git",
+  "description": "OmniAgent git 工具包：git_status 查看工作区状态、git_diff 查看未暂存/已暂存差异、git_add 暂存文件、git_commit 提交更改。基于 node:child_process 直接调用 git，无第三方 git 依赖；写操作受 permission-rules 通配符（git.*）管控。",
+  "version": "0.1.7-rc.1",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "packages/tools/tool-git"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@deepseek-ai/schemastery": "workspace:~"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "workspace:~",
+    "@deepseek-ai/dsh-tools": "workspace:*"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "workspace:~",
+    "@deepseek-ai/schemastery": "workspace:~",
+    "@deepseek-ai/dsh-tools": "workspace:*"
+  }
+}
