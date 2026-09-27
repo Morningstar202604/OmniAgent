@@ -1,10 +1,9 @@
 /**
- * 报告导出 host 插件：将分析/会议/研究内容导出为 Markdown 或 HTML 专业报告。
+ * 报告导出 host 插件：将分析/会议/研究内容导出为 Markdown、HTML 或 PDF 专业报告。
  *
  * - Markdown：直接落盘 .md 文件。
  * - HTML：内置轻量 Markdown→HTML 转换（无第三方依赖），套用专业报告样式模板。
- * - PDF：最小可用版暂不接入真实 PDF 渲染引擎；选择 pdf 时输出「打印友好」的 HTML
- *   （含 @media print 样式），后续路线：接入 headless Chromium / wkhtmltopdf 出真正 PDF。
+ * - PDF：基于 pdfkit（纯 JS，无 Chromium 依赖）真实渲染 .pdf，嵌入系统中文字体。
  *
  * 输出目录：优先 $DSH_HOME/reports，其次 cwd/reports。
  *
@@ -17,6 +16,7 @@ import { defineTool, type ToolDefinition } from '@deepseek-ai/dsh-tools'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { join, resolve } from 'node:path'
+import { markdownToPdf } from './pdf'
 
 export const name = 'report-export'
 export const inject = ['tools']
@@ -179,11 +179,11 @@ export function apply(ctx: Context, config: Config): void {
 
   const tool: ToolDefinition = defineTool({
     name: 'report_export',
-    description: '把一段 Markdown 内容导出为报告文件，支持 Markdown(.md)、HTML(.html) 两种格式。模板可选分析报告/会议纪要/研究报告。选择 pdf 时会输出打印友好的 HTML（真正的 PDF 渲染为后续路线）。返回生成文件的绝对路径。',
+    description: '把一段 Markdown 内容导出为报告文件，支持 Markdown(.md)、HTML(.html)、PDF(.pdf) 三种格式。模板可选分析报告/会议纪要/研究报告。PDF 由 pdfkit 真实渲染（嵌入中文字体）。返回生成文件的绝对路径。',
     parameters: {
       title: { type: 'string', required: true, description: '报告标题' },
       content: { type: 'string', required: true, description: '报告正文（Markdown 格式，支持标题/列表/表格/代码块）' },
-      format: { type: 'string', enum: ['md', 'html', 'pdf'], description: '导出格式：md=纯 Markdown，html=带样式网页报告，pdf=打印友好 HTML（PDF 渲染待接入），默认 html' },
+      format: { type: 'string', enum: ['md', 'html', 'pdf'], description: '导出格式：md=纯 Markdown，html=带样式网页报告，pdf=真实 PDF 文档，默认 html' },
       template: { type: 'string', enum: ['analysis', 'meeting', 'research'], description: '报告模板：analysis=分析报告，meeting=会议纪要，research=研究报告，默认 analysis' },
     },
     output: {
@@ -225,14 +225,22 @@ export function apply(ctx: Context, config: Config): void {
         filePath = join(dir, `${safeName(title)}-${stamp}-${tag}.md`)
         body = `# ${title}\n\n> 模板：${TEMPLATE_META[template].label} · 导出时间 ${stamp}\n\n${md}\n`
         await writeFile(filePath, body, 'utf8')
-      } else {
-        // html 与 pdf 都输出 .html（pdf 为打印友好版本）。
+      } else if (format === 'html') {
+        // HTML：Markdown→HTML + 专业样式模板
         filePath = join(dir, `${safeName(title)}-${stamp}-${tag}.html`)
         body = wrapHtml(title, template, markdownToHtml(md))
         await writeFile(filePath, body, 'utf8')
-        if (format === 'pdf') {
-          pdfNote = 'PDF 渲染引擎尚未接入（最小可用版）：当前输出为打印友好 HTML，可在浏览器中「打印→另存为 PDF」。后续路线：接入 headless Chromium 直接出 PDF。'
-        }
+      } else {
+        // PDF：pdfkit 真实渲染，嵌入中文字体
+        filePath = join(dir, `${safeName(title)}-${stamp}-${tag}.pdf`)
+        const meta = TEMPLATE_META[template]
+        const pdfBuf = await markdownToPdf(md, {
+          title,
+          template,
+          accent: meta.accent,
+          templateLabel: meta.label,
+        })
+        await writeFile(filePath, pdfBuf)
       }
 
       const { stat } = await import('node:fs/promises')
