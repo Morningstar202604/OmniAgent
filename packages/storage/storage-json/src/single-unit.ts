@@ -11,9 +11,9 @@
 
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { writeFileAtomic } from '@deepseek-ai/dsh-atomic-write'
 import { StorageError } from '@deepseek-ai/dsh-storage'
 import type { KvUnit, KvUnitDescriptor } from '@deepseek-ai/dsh-storage'
-import { writeAtomic } from './atomic.ts'
 import { parse, serialize } from './format.ts'
 import type { UnitState } from './format.ts'
 
@@ -138,7 +138,8 @@ class SingleJsonUnit implements KvUnit {
   }
 
   private publish(): Promise<void> {
-    const write = writeAtomic(this.path, serialize(this.descriptor.name, this.state))
+    // 复用 dsh-atomic-write：mode 0o600 保持原文件权限，fsync:true 保持原有的崩溃持久化语义。
+    const write = writeFileAtomic(this.path, serialize(this.descriptor.name, this.state), { mode: 0o600, fsync: true })
     this.inFlight.add(write)
     // Swallow only on the tracking branch: the caller still awaits `write`
     // itself, so rejections stay observed exactly once.

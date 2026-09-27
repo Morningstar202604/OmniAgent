@@ -29,9 +29,9 @@
 import { mkdir, readFile, readdir, rename, rm } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import type { Dirent } from 'node:fs'
+import { writeFileAtomic } from '@deepseek-ai/dsh-atomic-write'
 import { StorageError } from '@deepseek-ai/dsh-storage'
 import type { KvUnit, KvUnitDescriptor } from '@deepseek-ai/dsh-storage'
-import { writeAtomic } from './atomic.ts'
 import { parseRecord, serializeRecord } from './format.ts'
 import type { UnitState } from './format.ts'
 
@@ -150,7 +150,8 @@ async function bootstrapLegacyUnit(descriptor: KvUnitDescriptor, dir: string, st
     for (const [key, value] of Object.entries(records)) {
       const path = join(dir, table, `${key}.json`)
       await mkdir(dirname(path), { recursive: true, mode: 0o700 })
-      await writeAtomic(path, serializeRecord(descriptor.version, value))
+      // 复用 dsh-atomic-write：mode 0o600 保持原文件权限，fsync:true 保持崩溃持久化语义。
+      await writeFileAtomic(path, serializeRecord(descriptor.version, value), { mode: 0o600, fsync: true })
       target.set(key, value)
     }
   }
@@ -284,7 +285,8 @@ export class PerRecordJsonUnit implements KvUnit {
   private writeDocument(path: string, value: unknown): Promise<void> {
     return (async () => {
       await mkdir(dirname(path), { recursive: true, mode: 0o700 })
-      await writeAtomic(path, serializeRecord(this.descriptor.version, value))
+      // 复用 dsh-atomic-write：mode 0o600 保持原文件权限，fsync:true 保持崩溃持久化语义。
+      await writeFileAtomic(path, serializeRecord(this.descriptor.version, value), { mode: 0o600, fsync: true })
     })()
   }
 
