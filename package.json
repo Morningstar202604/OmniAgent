@@ -1,12 +1,22 @@
 {
   "name": "@deepseek-ai/dsh-root",
-  "version": "0.1.7-rc.1",
+  "version": "0.1.7",
+  "description": "OmniAgent (`oa`) — a plugin-first universal agent platform: one base, N professions.",
   "license": "MIT",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.7.0",
   "engines": {
-    "node": "^22.19.0 || >=24.0.0"
+    "node": ">=22.19.0",
+    "pnpm": ">=11.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitcode.com/badhope/omniagent.git"
+  },
+  "homepage": "https://gitcode.com/badhope/omniagent#readme",
+  "bugs": {
+    "url": "https://gitcode.com/badhope/omniagent/issues"
   },
   "workspaces": [
     "vendor/*",
@@ -23,6 +33,8 @@
     "build:lib:host": "node --max-old-space-size=4096 ./node_modules/typescript/bin/tsc -b tsconfig.host.json && tsdown --env.DSH_BUILD_FACE host",
     "build:lib:client": "tsc -b tsconfig.client.json && tsdown --env.DSH_BUILD_FACE client",
     "build:web": "pnpm --filter @deepseek-ai/dsh-web-frontend run build",
+    "prepublishOnly": "tsc -b tsconfig.host.json && pnpm run build:lib:host && pnpm run build:lib:client && pnpm run build:web",
+    "release": "node scripts/release-guide.mjs",
     "build:desktop": "pnpm --filter @deepseek-ai/dsh-desktop run build",
     "dev:desktop": "pnpm --filter @deepseek-ai/dsh-desktop run dev",
     "start:desktop": "pnpm --filter @deepseek-ai/dsh-desktop run start",
