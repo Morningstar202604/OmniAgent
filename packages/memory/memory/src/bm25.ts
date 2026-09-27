@@ -172,6 +172,15 @@ export class Bm25Index {
     return [...this.docTerms.keys()]
   }
 
+  /**
+   * 取出某文档的 (term -> tf) 只读视图（本地 TF 稀疏向量召回用）。
+   * @param id - 文档 id。
+   * @returns 该文档的词项词频映射；未索引时返回 undefined。
+   */
+  docTermsOf(id: string): Map<string, number> | undefined {
+    return this.docTerms.get(id)
+  }
+
   /** 计算某文档的 token 总数 |D|。 */
   private docLength(id: string): number {
     const tf = this.docTerms.get(id)
