@@ -96,7 +96,7 @@ export class PermissionRulesService extends TypertRemoteService {
    */
   constructor(ctx: Context, config: Config) {
     super(ctx, 'permissionRules')
-    this.fallback = config.fallback as PermissionLevel
+    this.fallback = config.fallback
 
     // Resolve the home directory best-effort: app-boot profileContext first,
     // then DSH_HOME, then ~/.dsh. Persistence is best-effort and never throws
@@ -107,10 +107,10 @@ export class PermissionRulesService extends TypertRemoteService {
     const envPreset = process.env.DSH_PERMISSION_PRESET as PermissionPresetName | undefined
     this.presetName = envPreset !== undefined && findPreset(envPreset) !== undefined
       ? envPreset
-      : (config.preset as PermissionPresetName)
+      : config.preset
 
     // Seed from the boot config, then land the preset's rule set.
-    this.rules = [...(config.rules as PermissionRule[])]
+    this.rules = [...config.rules]
     this.applyPreset(this.presetName)
     // Overlay the on-disk document (user edits win); async and best-effort.
     void this.restore().catch(() => { /* best-effort */ })
@@ -184,7 +184,7 @@ export class PermissionRulesService extends TypertRemoteService {
         throw new Error(`permissionRules.setRules: 第 ${index + 1} 条规则 pattern 不能为空`)
       }
       if (!LEVELS.includes(r.level)) {
-        throw new Error(`permissionRules.setRules: 第 ${index + 1} 条规则等级 "${String(r.level)}" 非法`)
+        throw new Error(`permissionRules.setRules: 第 ${index + 1} 条规则等级 "${r.level}" 非法`)
       }
       cleaned.push({ pattern: r.pattern, level: r.level })
     }
@@ -223,8 +223,8 @@ export class PermissionRulesService extends TypertRemoteService {
     try {
       const parsed = JSON.parse(raw) as Partial<PersistedDocument>
       if (Array.isArray(parsed.rules)) {
-        this.rules = (parsed.rules as PermissionRule[]).filter(
-          r => typeof r?.pattern === 'string' && LEVELS.includes(r.level),
+        this.rules = parsed.rules.filter(
+          r => typeof r.pattern === 'string' && LEVELS.includes(r.level),
         )
         this.presetName = 'custom'
       }
@@ -243,9 +243,8 @@ export class PermissionRulesService extends TypertRemoteService {
 
   /** Register the model-visible permission_* tools. */
   private registerModelTools(ctx: Context): void {
-    // defineTool invokes execute() as a bare function (no receiver), so the
-    // service instance must be captured lexically rather than via `this`.
-    const self = this
+    // defineTool invokes execute() as a bare function (no receiver), so we
+    // capture the service instance via arrow-function lexical `this`.
     // permission_presets: list presets and the current one.
     ctx.tools.register(defineTool({
       name: 'permission_presets',
@@ -278,9 +277,10 @@ export class PermissionRulesService extends TypertRemoteService {
           return [{ type: 'text', text: lines.join('\n') }]
         },
       },
-      async execute() {
+      // oxlint-disable-next-line typescript/require-await -- 工具接口要求 async 签名
+      execute: async () => {
         return {
-          current: self.presetName,
+          current: this.presetName,
           presets: PERMISSION_PRESETS.map(p => ({
             name: p.name, label: p.label, description: p.description,
           })),
@@ -344,19 +344,20 @@ export class PermissionRulesService extends TypertRemoteService {
           return [{ type: 'text', text: lines.join('\n') }]
         },
       },
-      async execute(args: { tool_name?: string }) {
+      // oxlint-disable-next-line typescript/require-await -- 工具接口要求 async 签名
+      execute: async (args: { tool_name?: string }) => {
         const out: {
           preset: string
           fallback: string
           rules: { pattern: string; level: string }[]
           decision?: { tool: string; matchedPattern: string | null; level: string }
         } = {
-          preset: self.presetName,
-          fallback: self.fallback,
-          rules: self.rules.map(r => ({ pattern: r.pattern, level: r.level })),
+          preset: this.presetName,
+          fallback: this.fallback,
+          rules: this.rules.map(r => ({ pattern: r.pattern, level: r.level })),
         }
         if (typeof args.tool_name === 'string' && args.tool_name.length > 0) {
-          const d = decidePermission(args.tool_name, self.rules, self.fallback)
+          const d = decidePermission(args.tool_name, this.rules, this.fallback)
           out.decision = {
             tool: args.tool_name,
             matchedPattern: d.rule ? d.rule.pattern : null,
@@ -417,12 +418,13 @@ export class PermissionRulesService extends TypertRemoteService {
           return [{ type: 'text', text: lines.join('\n') }]
         },
       },
-      async execute(args: { preset?: PermissionPresetName; rules?: PermissionRule[] }) {
+      // oxlint-disable-next-line typescript/require-await -- 工具接口要求 async 签名
+      execute: async (args: { preset?: PermissionPresetName; rules?: PermissionRule[] }) => {
         if (typeof args.preset === 'string') {
           if (findPreset(args.preset) === undefined) {
             throw new Error(`permission_set: 未知预设 "${args.preset}"，可选 normal/full-auto/strict/custom`)
           }
-          self.applyPreset(args.preset)
+          this.applyPreset(args.preset)
         }
         if (Array.isArray(args.rules)) {
           for (const r of args.rules) {
@@ -430,17 +432,17 @@ export class PermissionRulesService extends TypertRemoteService {
               throw new Error('permission_set: 每条规则必须有非空 pattern')
             }
             if (!LEVELS.includes(r.level)) {
-              throw new Error(`permission_set: 非法等级 "${String(r.level)}"，可选 allow/auto/ask/deny`)
+              throw new Error(`permission_set: 非法等级 "${r.level}"，可选 allow/auto/ask/deny`)
             }
           }
-          self.rules = args.rules.map(r => ({ pattern: r.pattern, level: r.level }))
-          self.presetName = 'custom'
-          void self.persist().catch(() => { /* best-effort */ })
+          this.rules = args.rules.map(r => ({ pattern: r.pattern, level: r.level }))
+          this.presetName = 'custom'
+          void this.persist().catch(() => { /* best-effort */ })
         }
         return {
           ok: true,
-          preset: self.presetName,
-          rules: self.rules.map(r => ({ pattern: r.pattern, level: r.level })),
+          preset: this.presetName,
+          rules: this.rules.map(r => ({ pattern: r.pattern, level: r.level })),
         }
       },
     }))
