@@ -643,8 +643,20 @@ export async function markdownToPdf(md: string, opts: PdfRenderOptions): Promise
         resetBodyStyle()
         const cols = Math.max(b.head.length, ...b.rows.map((r) => r.length))
         const colW = CONTENT_W / Math.max(cols, 1)
-        const rowH = 20
-        const drawRow = (cells: string[], rowY: number, isHead: boolean) => {
+        const PAD_Y = 5
+        // 按每个单元格在本列宽度内的实际换行高度取最大值，避免长文本
+        // （如「计算口径」列）换行后与下一行边框/文字重叠。
+        const rowHeight = (cells: string[]): number => {
+          doc.font(FONT).fontSize(9.5)
+          let h = 20
+          cells.forEach((cell) => {
+            const w = colW - 10
+            const measured = doc.heightOfString(stripInline(cell), { width: w })
+            h = Math.max(h, measured + PAD_Y * 2)
+          })
+          return h
+        }
+        const drawRow = (cells: string[], rowY: number, rowH: number, isHead: boolean) => {
           if (isHead) {
             doc.save()
             doc.rect(MARGIN_X, rowY, CONTENT_W, rowH).fill('#f8fafc')
@@ -656,14 +668,18 @@ export async function markdownToPdf(md: string, opts: PdfRenderOptions): Promise
           doc.restore()
           doc.font(FONT).fontSize(9.5).fillColor(isHead ? DARK_COLOR : BODY_COLOR)
           cells.forEach((cell, i) => {
-            doc.text(stripInline(cell), MARGIN_X + 6 + i * colW, rowY + 5, { width: colW - 10 })
+            doc.text(stripInline(cell), MARGIN_X + 6 + i * colW, rowY + PAD_Y, { width: colW - 10 })
           })
         }
-        drawRow(b.head, y, true)
-        y += rowH
+        const headH = rowHeight(b.head)
+        drawRow(b.head, y, headH, true)
+        y += headH
         for (const r of b.rows) {
-          drawRow(r, y, false)
-          y += rowH
+          const rh = rowHeight(r)
+          // 行高可能超过页底剩余空间时翻页，避免单行表格被跨页截断。
+          if (y + rh > PAGE_H - MARGIN_BOTTOM) { doc.addPage(); y = MARGIN_TOP; resetBodyStyle() }
+          drawRow(r, y, rh, false)
+          y += rh
         }
         y += 10
         resetBodyStyle()
