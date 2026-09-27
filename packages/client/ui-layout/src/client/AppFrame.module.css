@@ -303,3 +303,25 @@
 .overlayLayer > * {
   pointer-events: auto;
 }
+
+/* ── 窄屏适配：平板 <768px，手机 <480px ──────────────────────
+   三栏几何由 columns.ts 的 JS 求解驱动：<1024px 侧栏自动折叠为 56px
+   图标栏，右栏 track 归零、面板以 overlay 形式悬挂。这里只补两条
+   纯 CSS 保险：窄屏下禁止整帧横向滚动条外溢，并隐藏拖拽手柄热区
+   （触屏上无 col-resize 手势）。 */
+@media (max-width: 768px) {
+  .frame {
+    overflow-x: hidden;
+  }
+  .handle {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .frame {
+    /* 手机端侧栏图标栏 56px + 中栏铺满；右栏 overlay 仍由 occupant
+       自绘，不占中栏宽度。 */
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+}
