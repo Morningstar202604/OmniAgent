@@ -37,7 +37,7 @@ function createModelLabelSource(
   modelDirectories: ModelDirectoryResolver,
 ): HostObservable<string> {
   let label = ''
-  let listeners = new Set<() => void>()
+  const listeners = new Set<() => void>()
   let boundSessionId: SessionId | undefined
   let unsubscribe: (() => void) | undefined
 
