@@ -30,7 +30,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Typecheck and build type graph (tsc -b) before lint
+      - name: Generate typert remote types (tsdown host) before tsc and lint
+        run: npx tsdown --env.DSH_BUILD_FACE host
+
+      - name: Typecheck (tsc -b)
         run: npx tsc -b
 
       - name: Lint (oxlint, single-thread for low-memory hosts)
