@@ -108,7 +108,7 @@
 
 | 项 | 状态 | 实现方案 | 验证结果 |
 |---|---|---|---|
-| **agent_team_run DAG 编排** | ✅ 已完成 | TeamRole 增加 `dependsOn`/`stage`；Kahn 拓扑排序+环检测，同阶段 `Promise.allSettled` 并行，跨阶段串行；上游输出纯文本注入下游 prompt（单段上限 4000 字）；无 dependsOn 时退化为原全并行 | 18/18 DAG 单测通过（拓扑分层/菱形并行/环/悬空依赖/自依赖/重名/stage 冲突/stage 顺延）；headless mock LLM 端到端验证父代理→研究员→分析师执行顺序；真实 Agnes 模型因 API 速率限制(429)未跑通，编排逻辑已确定性验证 |
+| **agent_team_run DAG 编排** | ✅ 已完成 | TeamRole 增加 `dependsOn`/`stage`；Kahn 拓扑排序+环检测，同阶段 `Promise.allSettled` 并行，跨阶段串行；上游输出纯文本注入下游 prompt（单段上限 4000 字）；无 dependsOn 时退化为原全并行 | 18/18 DAG 单测通过（拓扑分层/菱形并行/环/悬空依赖/自依赖/重名/stage 冲突/stage 顺延）；headless mock LLM 端到端验证父代理→研究员→分析师执行顺序；Agnes 真实模型端到端跑通：研究员先列三家 AI 公司营收 → 分析师基于数据判断 OpenAI 增长最快，依赖顺序与消息传递均正常 |
 | **记忆向量/embedding 召回** | ✅ 已完成 | `EmbeddingProvider` 可插拔接口 + `LocalTFEmbedding`（默认离线，稀疏词项向量+余弦）+ `OpenAICompatibleEmbedding`（智谱/阿里/百度 `/v1/embeddings`）；新增 `memory_vectors` 表；hybrid 融合 `final=alpha*bm25_norm+(1-alpha)*vector_norm`；未配 key 自动降级，网络失败不阻断 | 19/19 hybrid 断言通过（BM25 漏召对照、向量补召回、精确关键词回归、无 key 本地 TF、网络失败降级、请求形态验证、重启持久化）；12/12 BM25 回归通过；真 embedding 端点需提供 API key 后端到端验证，未假报完成 |
 | **PDF 复杂排版** | ✅ 已完成 | `![alt](src)` 图片嵌入（本地路径+远程 URL，5 秒超时，失败占位框降级）；`<!-- chart:bar|line -->` 标记表格渲染为矢量柱状图/折线图（纯 pdfkit 绘制坐标轴/网格/图例/数据标签，主题色系）；大块换页保护 | 测试 PDF 127KB，`%PDF-1.3` 合法，`pdfimages` 确认图片真实嵌入，`pdftotext` 可提取图注/图例/类别/数值；目检两页：图片居中带图注、柱状图与折线图矢量绘制正常、失败图占位框降级 |
 
