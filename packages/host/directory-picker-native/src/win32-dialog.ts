@@ -8,6 +8,7 @@
 
 import { closeThreadWindows as hostCloseThreadWindows, spawnDialogWorker } from './win32-dialog-host.ts'
 import type { Win32DialogWorkerData, Win32DialogWorkerMessage } from './win32-dialog-worker.ts'
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 
 /** The child-process surface the driver drives (satisfied by `node:child_process`). */
 export interface Win32DialogWorkerLike {
@@ -49,13 +50,6 @@ export const DIALOG_TITLE = 'Select Workspace Directory'
 const CLOSE_RETRY_MS = 150
 /** Abort-service attempts before force-terminating the worker. */
 const CLOSE_MAX_ATTEMPTS = 20
-
-/** Fail loudly if the closed worker-to-driver union gains an unhandled member. */
-/* v8 ignore start -- closed-union backstop; unreachable without a TypeScript contract violation */
-function assertNever(value: never): never {
-  throw new TypeError(`unknown win32 dialog worker message kind: ${String(value)}`)
-}
-/* v8 ignore stop */
 
 /**
  * Open the modern Win32 folder picker off the event loop.

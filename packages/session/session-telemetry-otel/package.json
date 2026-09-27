@@ -33,6 +33,7 @@
     "@opentelemetry/otlp-exporter-base": "^0.220.0",
     "@opentelemetry/resources": "^2.9.0",
     "@opentelemetry/sdk-logs": "^0.220.0",
+    "@deepseek-ai/dsh-util-values": "workspace:*",
     "@deepseek-ai/schemastery": "workspace:~"
   },
   "peerDependencies": {

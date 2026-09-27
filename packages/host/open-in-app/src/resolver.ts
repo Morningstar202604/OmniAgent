@@ -20,6 +20,7 @@ import {
   canOpenNativePath, openNativePath, runNativeCommand, desktopEntryFields, desktopDataDirectories, type NativeCommandRunner,
 } from '@deepseek-ai/dsh-native-command'
 import { scrubbedParentEnv } from '@deepseek-ai/dsh-subprocess'
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import {
   OPEN_IN_APP_CATALOG, PATH_TOKEN,
   type OpenInAppApp, type OpenInAppLaunch, type OpenInAppLocator, type OpenInAppPlatformSpec,
@@ -148,12 +149,6 @@ export function resolveInternals(internals: OpenInAppInternals): ResolvedInterna
     launch: internals.launch ?? launchDetachedApp,
     resolveExecutable,
   }
-}
-
-/** Closed-union exhaustiveness fence for the catalog's locator kinds. */
-/* v8 ignore next 3 -- closed catalog union; only reached if an entry is forged */
-function assertNever(value: never): never {
-  throw new Error(`unhandled open-in-app catalog kind: ${JSON.stringify(value)}`)
 }
 
 /**

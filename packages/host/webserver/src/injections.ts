@@ -7,6 +7,7 @@
  * for a page-side interpreter. Anything not expressible as a row stays on
  * `tapIndex`, which runs after row rendering.
  */
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 
 /** Document region a rendered row lands in: after the opening head or body tag. */
 export type IndexInjectionPlacement = 'head' | 'body'
@@ -37,10 +38,6 @@ function escapeHtmlAttribute(value: string): string {
     .replaceAll('"', '&quot;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
-}
-
-function assertNever(row: never): never {
-  throw new Error(`webserver: unknown index injection row ${JSON.stringify(row)}`)
 }
 
 /** Render one row to markup with its placement. */

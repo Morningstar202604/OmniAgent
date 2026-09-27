@@ -7,18 +7,12 @@ import type { Context } from '@deepseek-ai/cordis'
 import { CommandDefinitionId } from '@deepseek-ai/dsh-commands/brand'
 import { ManualCompactionError } from '@deepseek-ai/dsh-compaction'
 import type { CommandInvocation, CommandResult } from '@deepseek-ai/dsh-commands'
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 
 export const name = 'command-compact'
 export const inject = ['commands', 'compaction']
 
 const USAGE = 'Usage: /compact (no arguments)'
-
-/** Fail loudly if a locally closed union gains an unhandled member. */
-/* v8 ignore start -- closed-union backstop is unreachable without violating the TypeScript contract */
-function assertNever(value: never): never {
-  throw new TypeError(`unknown manual compaction error code: ${String(value)}`)
-}
-/* v8 ignore stop */
 
 /** Convert expected capability failures into concise human-only outcomes. */
 function expectedFailure(error: ManualCompactionError): CommandResult {

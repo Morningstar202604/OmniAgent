@@ -3,6 +3,7 @@
  * objects are extraction inputs only; emitters consume this graph.
  * @module @deepseek-ai/dsh-typert-generator/model
  */
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 
 /** One independently compiled side of the workspace. */
 export type TypertFace = 'host' | 'client'
@@ -435,8 +436,4 @@ export function childTypeNodeIds(node: TypeNodeModel): TypeNodeId[] {
 export interface TypeGraph {
   readonly declarations: readonly TypeDeclarationModel[]
   readonly nodes: readonly TypeNodeModel[]
-}
-
-function assertNever(value: never): never {
-  throw new Error(`unsupported model variant ${JSON.stringify(value)}`)
 }

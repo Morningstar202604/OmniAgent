@@ -28,6 +28,7 @@ import {
 } from '@deepseek-ai/dsh-session-telemetry'
 import { APP_IDENTITY } from '@deepseek-ai/dsh-llm'
 import { getOrCreateAnonymousUserId } from '@deepseek-ai/dsh-anonymous-user-id'
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import {
   BatchLogRecordProcessor,
   LoggerProvider,
@@ -75,11 +76,6 @@ function resolveMode(mode: SessionTelemetryMode | undefined): SessionTelemetryMo
     default:
       return assertNever(resolved)
   }
-}
-
-/** Fail closed when direct construction bypasses the runtime config schema. */
-function assertNever(value: never): never {
-  throw new Error(`session-telemetry-otel: unsupported mode ${JSON.stringify(value)}`)
 }
 
 /** Map the serialized mode onto the seam's backend-independent sharing vocabulary. */

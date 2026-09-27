@@ -30,6 +30,7 @@
     "@deepseek-ai/cordis": "workspace:~"
   },
   "dependencies": {
+    "@deepseek-ai/dsh-util-values": "workspace:*",
     "@deepseek-ai/schemastery": "workspace:~",
     "compression": "^1.8.1",
     "negotiator": "^1.0.0"
