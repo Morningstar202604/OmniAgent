@@ -43,6 +43,13 @@ import { PerformanceUsagePolicy } from './performance-usage.ts'
 import { useTurnDataValue } from './chat/use-turn-data.ts'
 import { bindDisclosure } from './chat/use-disclosure.ts'
 
+declare module '@deepseek-ai/dsh-api-session-controller/client' {
+  interface SessionReferenceSourceMap {
+    /** 消息编辑重跑时短暂持有的子会话引用，用于发送编辑后的 prompt。 */
+    chatMessageEdit: unknown
+  }
+}
+
 const CHAT_NODE_INJECT: ChatNodeInjected = {
   hooks: {
     turnData: (_standard, { turnData }) => function useTurnData(key) {
@@ -219,6 +226,37 @@ export function apply(ctx: Context): void {
               .catch(() => {
                 // Fork or child-title failure leaves the source view unchanged.
               })
+          },
+          // 编辑重跑：在“被编辑轮次的前一个已完成轮次结束处”切出子会话，
+          // 继承此前全部上下文，再把编辑后的文本作为新 prompt 发送——
+          // 等价于 rewind 截断该轮及其后内容后重新生成。首轮无历史可继承时新建空会话。
+          editRerun: (turn, newText) => {
+            const trimmed = newText.trim()
+            if (trimmed === '') return
+            const snap = chat.getSnapshot()
+            const order = snap.timeline.turnOrder
+            const idx = order.indexOf(turn)
+            const prevTurnNum = idx > 0 ? order[idx - 1] : undefined
+            const atSeq = prevTurnNum === undefined
+              ? undefined
+              : snap.timeline.turns.get(prevTurnNum)?.end?.seq
+            const cwd = ctx.sessions.list.getSnapshot().byId[sessionId]?.cwd
+            const seeded = atSeq === undefined
+              ? ctx.sessions.create(cwd === undefined ? {} : { cwd })
+              : ctx.sessions.fork({ sessionId, atSeq, increaseTitle: true })
+            seeded.then(async (childId) => {
+              ctx.uiWorkspace.openSession(childId)
+              await ctx.sessions.using(
+                childId,
+                { source: 'chatMessageEdit' },
+                async (reference) => {
+                  const binding = await reference.ready
+                  await binding.session.prompt([{ type: 'text', text: trimmed }], 'queue')
+                },
+              )
+            }).catch(() => {
+              // 分叉/发送失败时保持源会话视图不变。
+            })
           },
         }
       },

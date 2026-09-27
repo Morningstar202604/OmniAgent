@@ -1,4 +1,4 @@
-import { Fragment, memo, useEffect, useMemo, useState } from 'react'
+import { Fragment, memo, useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { PendingSubmission } from '@deepseek-ai/dsh-api-session-controller/client'
 import type { MessageImageSource } from '@deepseek-ai/dsh-client-ui-conversation/client'
@@ -311,11 +311,80 @@ export function PendingSubmissionBubble({ submission, renderMessageImages, t }: 
   )
 }
 
+/** Durable user message with inline edit-and-rerun support. */
+const UserMessageEditPanel = memo(function UserMessageEditPanel({
+  initial, onCancel, onConfirm, t,
+}: {
+  initial: string
+  onCancel: () => void
+  onConfirm: (text: string) => void
+  t: ChatViewSlotProps['t']
+}) {
+  const [draft, setDraft] = useState(initial)
+  const submit = useCallback(() => {
+    if (draft.trim() === '') return
+    onConfirm(draft)
+  }, [draft, onConfirm])
+  return (
+    <div className={css.userRow} data-editing-user-message>
+      <div className={css.editBox}>
+        <textarea
+          className={css.editTextarea}
+          value={draft}
+          autoFocus
+          rows={Math.min(12, Math.max(3, draft.split('\n').length))}
+          placeholder={t('message.edit.placeholder')}
+          onChange={(event) => { setDraft(event.target.value) }}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) submit()
+            else if (event.key === 'Escape') onCancel()
+          }}
+        />
+        <div className={css.editActions}>
+          <button type="button" className={css.editButton} onClick={onCancel}>
+            {t('message.edit.cancel')}
+          </button>
+          <button
+            type="button"
+            className={css.editButtonPrimary}
+            disabled={draft.trim() === ''}
+            onClick={submit}
+          >
+            {t('message.edit.confirm')}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+})
+
 /** User and admitted-steering keyed Chat renderer. */
 export const UserMessageNodeView = memo(function UserMessageNodeView({
-  node, renderMessageImages, openFile, openSkill, t,
+  node, renderMessageImages, openFile, openSkill, editRerun, t,
 }: ChatNodeViewProps<'user' | 'steering'>) {
+  const [editing, setEditing] = useState(false)
   const data = node.data
+  const { text } = contentParts(data.content)
+  // Only durable user messages can be rewritten; steering and pending echoes stay read-only.
+  const editable = node.kind === 'user'
+  const turn = node.location.kind === 'turn' || node.location.kind === 'step'
+    ? node.location.turn.turn
+    : undefined
+  const confirmEdit = useCallback((next: string) => {
+    setEditing(false)
+    if (turn === undefined) return
+    editRerun(turn, next)
+  }, [editRerun, turn])
+  if (editing) {
+    return (
+      <UserMessageEditPanel
+        initial={text}
+        onCancel={() => { setEditing(false) }}
+        onConfirm={confirmEdit}
+        t={t}
+      />
+    )
+  }
   return (
     <UserStyleBubble
       content={data.content}
@@ -324,12 +393,13 @@ export const UserMessageNodeView = memo(function UserMessageNodeView({
       {...data.referenceLabels === undefined ? {} : { referenceLabels: data.referenceLabels }}
       {...data.skillNames === undefined ? {} : { skillNames: data.skillNames }}
       t={t}
-      actions={text => (
+      actions={actionsText => (
         <MessageIconActions
-          text={text}
+          text={actionsText}
           time={data.time}
           clock="start"
           className={css.actions}
+          {...editable ? { onEdit: () => { setEditing(true) } } : {}}
           t={t}
         />
       )}

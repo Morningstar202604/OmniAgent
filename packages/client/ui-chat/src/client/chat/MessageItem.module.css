@@ -385,3 +385,68 @@
   font-size: 12px;
   line-height: 15px;
 }
+
+/* Inline edit panel for a durable user message: right-aligned, bubble-shaped. */
+.editBox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: min(calc(var(--dsh-chat-content-width, 748px) * 0.702), 82%);
+}
+
+.editTextarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  border: 1px solid var(--dsw-alias-border-strong, rgba(0, 0, 0, 0.15));
+  border-radius: 16px;
+  background: var(--dsw-specific-bubble, rgba(0, 0, 0, 0.04));
+  padding: 10px 16px;
+  font: inherit;
+  font-size: var(--dsh-content-font-size, 14px);
+  line-height: calc(22px + var(--dsh-content-font-delta, 0px));
+  color: var(--dsw-alias-label-primary);
+  outline: none;
+}
+
+.editTextarea:focus {
+  border-color: var(--dsw-alias-interactive, #3370ff);
+}
+
+.editActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.editButton {
+  border: none;
+  border-radius: 16px;
+  padding: 6px 14px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--dsh-content-font-size-secondary, 13px);
+}
+
+.editButton:hover {
+  background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, 0.05));
+}
+
+.editButtonPrimary {
+  border: none;
+  border-radius: 16px;
+  padding: 6px 14px;
+  background: var(--dsw-alias-interactive, #3370ff);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--dsh-content-font-size-secondary, 13px);
+}
+
+.editButtonPrimary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

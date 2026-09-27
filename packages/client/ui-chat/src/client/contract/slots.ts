@@ -117,6 +117,12 @@ export interface ChatNodeOwnerProps {
   inspectCall: ((callId: ToolCallId) => void) | undefined
   forkAt: (seq: number) => void
   /**
+   * Rewind-style edit of one durable user message: open a child session that
+   * inherits everything before this turn, then send the edited text. Only
+   * durable user messages expose this control.
+   */
+  editRerun: (turn: number, newText: string) => void
+  /**
    * Session-authorized image loader, down-threaded from the Chat view so a
    * chat-node renderer can render the attachment presentation slot directly
    * with only the durable references plus this loader, instead of receiving a
@@ -206,6 +212,8 @@ export interface ChatViewInjected {
     read: () => ChatScrollPosition | null
   }
   forkAt: (seq: number) => void
+  /** Rewind-style edit of one durable user message; see {@link ChatNodeOwnerProps.editRerun}. */
+  editRerun: (turn: number, newText: string) => void
   fileMentions: (owner: TurnTailOwnerProps) => MarkdownFileMentions | undefined
 }
 
