@@ -69,7 +69,5 @@ export function setPluginEnabled(map: InstallMap, id: string, enabled: boolean):
 
 /** 卸载插件（移除状态记录），返回新的状态表。 */
 export function uninstallPlugin(map: InstallMap, id: string): InstallMap {
-  const next = { ...map }
-  delete next[id]
-  return next
+  return Object.fromEntries(Object.entries(map).filter(([key]) => key !== id))
 }
