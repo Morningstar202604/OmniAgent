@@ -38,6 +38,7 @@
     "@deepseek-ai/dsh-app-boot": "workspace:*",
     "@deepseek-ai/cordis-plugin-loader": "workspace:~",
     "@deepseek-ai/dsh-typert-registry": "workspace:*",
-    "@deepseek-ai/cordis": "workspace:~"
+    "@deepseek-ai/cordis": "workspace:~",
+    "zod": "^4.4.3"
   }
 }
