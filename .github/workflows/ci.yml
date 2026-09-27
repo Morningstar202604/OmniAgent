@@ -54,7 +54,14 @@ jobs:
         run: pnpm run build:web
 
       - name: Smoke — official site
-        run: curl -sf -o /dev/null -w "official site HTTP %{http_code}\n" https://x33834.github.io/OmniAgent/ || echo "site not yet reachable (Pages build may lag)"
+        run: |
+          # Each mirror hosts the same content on its own GitHub Pages URL
+          # (<owner>.github.io/<repo>/); resolve it from the running repository
+          # so a fork or mirror never checks the wrong site.
+          owner=$(printf '%s' "${GITHUB_REPOSITORY%%/*}" | tr '[:upper:]' '[:lower:]')
+          repo=${GITHUB_REPOSITORY##*/}
+          url="https://${owner}.github.io/${repo}/"
+          curl -sf -o /dev/null -w "official site HTTP %{http_code} (${url})\n" "$url" || echo "site not yet reachable (${url}; Pages build may lag)"
 
   site:
     runs-on: ubuntu-latest
@@ -64,9 +71,12 @@ jobs:
       - uses: actions/checkout@v4
       - name: 官网 smoke（Pages 内置自动构建，此步仅确认 200）
         run: |
+          owner=$(printf '%s' "${GITHUB_REPOSITORY%%/*}" | tr '[:upper:]' '[:lower:]')
+          repo=${GITHUB_REPOSITORY##*/}
+          url="https://${owner}.github.io/${repo}/"
           for i in $(seq 1 12); do
-            code=$(curl -s -o /dev/null -w "%{http_code}" -L https://x33834.github.io/OmniAgent/ || echo 000)
-            echo "attempt $i: HTTP $code"
+            code=$(curl -s -o /dev/null -w "%{http_code}" -L "$url" || echo 000)
+            echo "attempt $i: HTTP $code (${url})"
             [ "$code" = "200" ] && exit 0
             sleep 10
           done
