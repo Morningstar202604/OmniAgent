@@ -90,6 +90,7 @@ External packages installed for runtime use or distributed inside the prebuilt b
 | [`execa`](https://github.com/sindresorhus/execa) | MIT |
 | [`fast-xml-parser`](https://github.com/NaturalIntelligence/fast-xml-parser) | MIT |
 | [`fflate`](https://github.com/101arrowz/fflate) | MIT |
+| [`fontkit`](https://github.com/foliojs/fontkit) | MIT |
 | [`immer`](https://github.com/immerjs/immer) | MIT |
 | [`ipaddr.js`](https://github.com/whitequark/ipaddr.js) | MIT |
 | [`js-yaml`](https://github.com/nodeca/js-yaml) | MIT |
@@ -114,6 +115,7 @@ External packages installed for runtime use or distributed inside the prebuilt b
 | [`open`](https://github.com/sindresorhus/open) | MIT |
 | [`papaparse`](https://github.com/mholt/PapaParse) | MIT |
 | [`pdfjs-dist`](https://github.com/mozilla/pdf.js) | Apache-2.0 |
+| [`pdfkit`](https://github.com/foliojs/pdfkit) | MIT |
 | [`picomatch`](https://github.com/micromatch/picomatch) | MIT |
 | [`react`](https://github.com/facebook/react) | MIT |
 | [`react-dom`](https://github.com/facebook/react) | MIT |
@@ -177,7 +179,6 @@ External packages **directly declared** for development, tests, types, or toolin
 
 | Package | License |
 | --- | --- |
-| [`@braintree/sanitize-url`](https://github.com/braintree/sanitize-url) | MIT |
 | [`@electron/get`](https://github.com/electron/get) | MIT |
 | [`@electron/notarize`](https://github.com/electron/notarize) | MIT |
 | [`@lexical/headless`](https://github.com/facebook/lexical) | MIT |
@@ -185,13 +186,13 @@ External packages **directly declared** for development, tests, types, or toolin
 | [`@modelcontextprotocol/server`](https://github.com/modelcontextprotocol/typescript-sdk) | MIT |
 | [`@modelcontextprotocol/server-everything`](https://github.com/modelcontextprotocol/servers) | MIT / Apache-2.0 |
 | [`@modelcontextprotocol/server-filesystem`](https://github.com/modelcontextprotocol/servers) | MIT / Apache-2.0 |
-| [`@panzoom/panzoom`](https://github.com/timmywil/panzoom) | MIT |
 | [`@stylistic/eslint-plugin`](https://github.com/eslint-stylistic/eslint-stylistic) | MIT |
 | [`@testing-library/dom`](https://github.com/testing-library/dom-testing-library) | MIT |
 | [`@testing-library/react`](https://github.com/testing-library/react-testing-library) | MIT |
 | [`@types/babel__code-frame`](https://github.com/DefinitelyTyped/DefinitelyTyped) | MIT |
 | [`@types/big.js`](https://github.com/DefinitelyTyped/DefinitelyTyped) | MIT |
 | [`@types/compression`](https://github.com/DefinitelyTyped/DefinitelyTyped) | MIT |
+| [`@types/fontkit`](https://github.com/DefinitelyTyped/DefinitelyTyped) | MIT |
 | [`@types/js-yaml`](https://github.com/DefinitelyTyped/DefinitelyTyped) | MIT |
 | [`@types/jsdom`](https://github.com/DefinitelyTyped/DefinitelyTyped) | MIT |
 | [`@types/mdast`](https://github.com/DefinitelyTyped/DefinitelyTyped) | MIT |
@@ -199,6 +200,7 @@ External packages **directly declared** for development, tests, types, or toolin
 | [`@types/negotiator`](https://github.com/DefinitelyTyped/DefinitelyTyped) | MIT |
 | [`@types/node`](https://github.com/DefinitelyTyped/DefinitelyTyped) | MIT |
 | [`@types/papaparse`](https://github.com/DefinitelyTyped/DefinitelyTyped) | MIT |
+| [`@types/pdfkit`](https://github.com/DefinitelyTyped/DefinitelyTyped) | MIT |
 | [`@types/picomatch`](https://github.com/DefinitelyTyped/DefinitelyTyped) | MIT |
 | [`@types/react`](https://github.com/DefinitelyTyped/DefinitelyTyped) | MIT |
 | [`@types/react-dom`](https://github.com/DefinitelyTyped/DefinitelyTyped) | MIT |
@@ -215,10 +217,6 @@ External packages **directly declared** for development, tests, types, or toolin
 | [`@yarnpkg/cli-dist`](https://github.com/yarnpkg/berry) | BSD-2-Clause |
 | [`app-builder-lib`](https://github.com/electron-userland/electron-builder) | MIT |
 | [`cos-nodejs-sdk-v5`](https://github.com/tencentyun/cos-nodejs-sdk-v5) | ISC |
-| [`cytoscape`](https://github.com/cytoscape/cytoscape.js) | MIT |
-| [`cytoscape-cose-bilkent`](https://github.com/cytoscape/cytoscape.js-cose-bilkent) | MIT |
-| [`dayjs`](https://github.com/iamkun/dayjs) | MIT |
-| [`debug`](https://github.com/debug-js/debug) | MIT |
 | [`electron`](https://github.com/electron/electron) | MIT |
 | [`electron-builder`](https://github.com/electron-userland/electron-builder) | MIT |
 | [`esbuild`](https://github.com/evanw/esbuild) | MIT |
@@ -229,7 +227,6 @@ External packages **directly declared** for development, tests, types, or toolin
 | [`istanbul-lib-report`](https://github.com/istanbuljs/istanbuljs) | BSD-3-Clause |
 | [`jscpd`](https://github.com/kucherenko/jscpd) | MIT |
 | [`jsdom`](https://github.com/jsdom/jsdom) | MIT |
-| [`lefthook`](https://github.com/evilmartians/lefthook) | MIT |
 | [`lightningcss`](https://github.com/parcel-bundler/lightningcss) | MPL-2.0 |
 | [`mermaid`](https://github.com/mermaid-js/mermaid) | MIT |
 | [`micromark-util-types`](https://github.com/micromark/micromark/tree/main/packages/micromark-util-types) | MIT |
@@ -245,10 +242,7 @@ External packages **directly declared** for development, tests, types, or toolin
 | [`typescript-language-server`](https://github.com/typescript-language-server/typescript-language-server) | Apache-2.0 |
 | [`vite`](https://github.com/vitejs/vite) | MIT |
 | [`vite-tsconfig-paths`](https://github.com/aleclarson/vite-tsconfig-paths) | MIT |
-| [`vitepress`](https://github.com/vuejs/vitepress) | MIT |
-| [`vitepress-plugin-mermaid`](https://github.com/emersonbottero/vitepress-plugin-mermaid) | MIT |
 | [`vitest`](https://github.com/vitest-dev/vitest) | MIT |
-| [`vue`](https://github.com/vuejs/core) | MIT |
 
 `eslint-plugin-sonarjs` (LGPL-3.0-only) and `lightningcss` (MPL-2.0) run only as development tooling; their code is not linked into or distributed with any OmniAgent artifact.
 
