@@ -141,7 +141,7 @@ export function apply(ctx: Context, config: Config): void {
     hybridAlpha: emb.alpha ?? 0.5,
   })
   // 宿主停止时关闭数据库。
-  ctx.effect(() => () => store.close(), 'memory.close')
+  ctx.effect(() => () => { store.close() }, 'memory.close')
 
   const injectMaxEntries = config.injectMaxEntries as number
   const injectMaxChars = config.injectMaxChars as number
@@ -283,6 +283,7 @@ export function apply(ctx: Context, config: Config): void {
       },
       render: (_a, v) => [{ type: 'text', text: v.ok ? '已删除该记忆。' : '未找到该记忆。' }],
     },
+    // oxlint-disable-next-line typescript/require-await -- 工具接口要求 async 签名
     async execute(args: { id: string }) {
       return { ok: store.deleteMemory(args.id) }
     },

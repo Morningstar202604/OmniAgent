@@ -131,7 +131,7 @@ export class OpenAICompatibleEmbedding implements EmbeddingProvider {
       throw new Error(`embedding 提供方 ${this.name} 未配置 apiKey`)
     }
     const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), this.timeoutMs)
+    const timer = setTimeout(() => { controller.abort() }, this.timeoutMs)
     try {
       const res = await this.fetchImpl(`${this.baseURL}/embeddings`, {
         method: 'POST',
