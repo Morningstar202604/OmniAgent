@@ -40,6 +40,7 @@
     "upload:mac:x64": "pnpm --filter @deepseek-ai/dsh-desktop run upload:mac:x64",
     "upload:win:x64": "pnpm --filter @deepseek-ai/dsh-desktop run upload:win:x64",
     "clean": "tsx scripts/clean.ts",
+    "rebrand": "node scripts/rebrand.mjs",
     "change-scope": "tsx scripts/change-scope.ts",
     "typecheck": "pnpm run build:lib:host && pnpm run typecheck:contracts-ready",
     "typecheck:contracts-ready": "tsc -b tsconfig.client.json",
