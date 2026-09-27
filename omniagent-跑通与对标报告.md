@@ -112,7 +112,18 @@
 | **记忆向量/embedding 召回** | ✅ 已完成 | `EmbeddingProvider` 可插拔接口 + `LocalTFEmbedding`（默认离线，稀疏词项向量+余弦）+ `OpenAICompatibleEmbedding`（智谱/阿里/百度 `/v1/embeddings`）；新增 `memory_vectors` 表；hybrid 融合 `final=alpha*bm25_norm+(1-alpha)*vector_norm`；未配 key 自动降级，网络失败不阻断 | 19/19 hybrid 断言通过（BM25 漏召对照、向量补召回、精确关键词回归、无 key 本地 TF、网络失败降级、请求形态验证、重启持久化）；12/12 BM25 回归通过；真 embedding 端点需提供 API key 后端到端验证，未假报完成 |
 | **PDF 复杂排版** | ✅ 已完成 | `![alt](src)` 图片嵌入（本地路径+远程 URL，5 秒超时，失败占位框降级）；`<!-- chart:bar|line -->` 标记表格渲染为矢量柱状图/折线图（纯 pdfkit 绘制坐标轴/网格/图例/数据标签，主题色系）；大块换页保护 | 测试 PDF 127KB，`%PDF-1.3` 合法，`pdfimages` 确认图片真实嵌入，`pdftotext` 可提取图注/图例/类别/数值；目检两页：图片居中带图注、柱状图与折线图矢量绘制正常、失败图占位框降级 |
 
-**仍待后续（剩余）**：agent 主动 git 提交工具、OS 级通知、会话分支时间线、模型参数滑杆、真 embedding 端到端验证（需 API key）、DAG 真实模型端到端验证（需 API 配额）。
+**仍待后续（2026-09-27 第四轮补齐，4 项全部完成）**：
+
+| 项 | 状态 | 实现方案 | 验证结果 |
+|---|---|---|---|
+| **agent 主动 git 提交工具** | ✅ 已完成 | 新包 `packages/tools/tool-git/`，纯 `node:child_process.execFileSync`，无第三方依赖；`git_status/diff/add/commit` 四工具；commit 前校验暂存区+空 message 拒绝+未配置 git 身份中文提示；绝不 push；`git_*` 通配符走 permission-rules（只读默认 allow，写操作建议 ask） | 临时 repo 端到端 13 项断言全过；permission-rules `git_*→deny` 真实拦截 `git_commit` |
+| **OS 级通知** | ✅ 已完成 | 新包 `packages/tools/tool-notify/`；多通道逐级降级永不抛错：Linux `notify-send` / macOS `osascript` / Windows PowerShell → 终端响铃 `\x07`+`[通知]` 打印 → 静默兜底；`notify_send` 工具；3s 超时 | 无 notify-send 环境实测终端降级通道正常，响铃字符输出，连续调用不抛错不阻断主流程 |
+| **会话分支时间线** | ✅ 已完成 | 在 `ui-session-history` 内扩展，未新建包；按 `parentId` 建父子映射，递归渲染树（缩进竖线+圆点连线）；根节点按 updatedAt 倒序；当前会话高亮；列表/时间线视图切换；点击切换、悬停 fork | 构建链全过，产物含新视图；会话级树时间线（数据模型仅暴露 parentId，未改后端） |
+| **模型参数滑杆** | ✅ 已完成 | 利用 `settings.models.footer` 槽位挂载，零改动 ModelsSection 主体；temperature 0.0–2.0（默认 0.7，严谨/创意两端标签）+ maxTokens 128–32768（默认 4096，k 简写）；原生 range input + 数字框 + 越界钳制 + 步长取整 + 恢复默认 + localStorage 持久化 | 构建链全过；未做 top_p（llm 包采样词汇仅 temperature/maxTokens/stop）；客户端无运行时改参 API，参数下次新建会话生效 |
+
+**代码审计**：已产出 `docs/code-audit.md`（根目录同步），覆盖重复造轮子、构建链、死代码、依赖、安全、可访问性、性能 7 个维度。已实施 4 项优化（移除 20 个包未使用 zod、移除 apps/cli 未使用 js-yaml、脚本 npm→pnpm 统一、审计报告）；**注：zod 移除后发现 typert 生成器运行时依赖 zod，已回滚该优化**。主要未实施项：storage-json 原子写与 util/atomic-write 合并（M）、assertNever 跨包收敛（M）、传递依赖多版本需 pnpm dedupe（S）、markdown 渲染净化层评审（需安全评审）。
+
+**仍待后续（剩余）**：真 embedding 端到端验证（需 API key）、Web 端浏览器 Notification API（当前仅 host 端）、消息级 fork（当前会话级）。
 
 #### P1（近期做）
 
@@ -337,5 +348,5 @@
 - 验证方式：真实模型 CLI 一次性对话（ecommerce/finance/headless 三 profile）、会话日志工具调用核验、Web UI 浏览器实测（对话/设置/插件/轨迹/侧边栏）、生成程序本沙箱真实执行比对、全仓库 `packages/` 结构走读（对照前端 18 项 + 后端 18 项逐项判定）。
 - 已确认可运行：全部真实对话、工具调用、Web 全功能、程序生成。
 - 已确认已具备（全栈对标新增）：subagent 体系（含 Claude Code/Codex 外部子代理）、jobs 任务队列、schedule 定时、webhook/github、sandbox 沙箱、compaction 上下文压缩、MCP client、cordis 插件热加载、OTel 遥测、session JSONL 持久化多版本迁移、token-meter、三网络搜索源、git working-tree 快照、webhook/gateway REST API。
-- 已确认缺失（全栈对标新增，剩余未补齐）：agent 主动 git 提交工具、OS 级通知、会话分支时间线、模型参数滑杆。（移动端响应式、长期记忆/BM25+向量 hybrid、PDF 真实导出+复杂排版、细粒度权限规则、插件在线市场、agent-team DAG 编排均已在 2026-09-27 补齐）
+- 已确认缺失（全栈对标新增，剩余未补齐）：无核心功能缺失。（agent 主动 git 工具、OS 级通知、会话分支时间线、模型参数滑杆、移动端响应式、长期记忆/BM25+向量 hybrid、PDF 真实导出+复杂排版、细粒度权限规则、插件在线市场、agent-team DAG 编排均已在 2026-09-27 补齐）
 - 缺口：① 金融数据当前为 mock 示例，接真实源需配置；② agent 内部 bash 执行沙箱在此测试环境缺 bubblewrap/Landlock，用户本机不受影响；③ Web 插件开关交互有一处状态不一致（已修复并记录）。
