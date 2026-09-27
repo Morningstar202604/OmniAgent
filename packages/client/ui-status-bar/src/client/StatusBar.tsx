@@ -139,5 +139,4 @@ export function StatusBar({
   )
 }
 
-// eslint-disable-next-line -- 类型仅为编译期契约
 export type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
