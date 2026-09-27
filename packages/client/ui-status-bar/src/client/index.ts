@@ -110,7 +110,7 @@ function createModelLabelSource(
  */
 function createTokenUsageSource(sessions: ISessions): HostObservable<TokenUsageProjection | undefined> {
   let value: TokenUsageProjection | undefined
-  let listeners = new Set<() => void>()
+  const listeners = new Set<() => void>()
   let boundSessionId: SessionId | undefined
   let unsubscribe: (() => void) | undefined
 

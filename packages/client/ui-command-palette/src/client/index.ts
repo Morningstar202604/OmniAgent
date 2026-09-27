@@ -41,7 +41,7 @@ export function apply(ctx: ClientContext): void {
       locale: NS,
       inject: () => ({
         startSession: (): void => { workspace.startSession() },
-        selectPanel: (panelId: string | null): void => { layout.selectPanel(panelId as never) },
+        selectPanel: (panelId: string | null): void => { layout.selectPanel(panelId) },
         setTheme: (id: 'light' | 'dark' | 'system'): void => { theme.setTheme(id) },
       }),
     }, CommandPalette))

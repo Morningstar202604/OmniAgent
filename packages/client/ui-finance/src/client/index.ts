@@ -8,7 +8,7 @@
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type { SlotRegistry } from '@deepseek-ai/dsh-client-ui-renderer/client'
-import type { ILayout, MainPanelId } from '@deepseek-ai/dsh-client-ui-layout/client'
+import type { MainPanelId } from '@deepseek-ai/dsh-client-ui-layout/client'
 import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
 import type {} from '@deepseek-ai/dsh-client-ui-slots'
 import { FinancePanel } from './FinancePanel.tsx'
@@ -39,7 +39,7 @@ export function apply(ctx: ClientContext): void {
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-finance: dictionaries')
 
   const slots = (ctx as unknown as { slots: SlotRegistry }).slots
-  const layout = ctx.layout as ILayout
+  const layout = ctx.layout
 
   slots.inject('main', () => slots.register({
     name: 'main',

@@ -64,7 +64,7 @@ export function PermissionRulesSection({ load, save, useRules, t }: PermissionRu
   }, [load])
 
   const busy = state.status === 'loading' || state.status === 'saving'
-  const levelLabel = (lvl: PermissionLevel): string => t(`level.${lvl}` as RulesKey)
+  const levelLabel = (lvl: PermissionLevel): string => t(`level.${lvl}`)
 
   const commit = (next: EditableRule[]): void => {
     setRows(next)
