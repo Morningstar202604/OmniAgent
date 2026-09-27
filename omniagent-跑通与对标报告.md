@@ -123,7 +123,25 @@
 
 **代码审计**：已产出 `docs/code-audit.md`（根目录同步），覆盖重复造轮子、构建链、死代码、依赖、安全、可访问性、性能 7 个维度。已实施 4 项优化（移除 20 个包未使用 zod、移除 apps/cli 未使用 js-yaml、脚本 npm→pnpm 统一、审计报告）；**注：zod 移除后发现 typert 生成器运行时依赖 zod，已回滚该优化**。主要未实施项：storage-json 原子写与 util/atomic-write 合并（M）、assertNever 跨包收敛（M）、传递依赖多版本需 pnpm dedupe（S）、markdown 渲染净化层评审（需安全评审）。
 
-**仍待后续（剩余）**：真 embedding 端到端验证（需 API key）、Web 端浏览器 Notification API（当前仅 host 端）、消息级 fork（当前会话级）。
+**代码审计路线图 4 项优化（2026-09-27 全部实施）**：①storage-json 原子写合并到 util/atomic-write（新增 fsync 选项，删除重复实现，11项行为验证）②assertNever 跨包收敛到 dsh-util-values（21+包，全量构建通过）③pnpm dedupe（减少23个包实例，零新增错误）④markdown 渲染 XSS 评审（结论：mdast→React 元素自动转义，已安全，补9/9回归测试）。
+
+**仍待后续（2026-09-27 第五轮补齐，7 项全部完成）**：
+
+| 项 | 状态 | 实现方案 | 验证结果 |
+|---|---|---|---|
+| **rebrand 脚本别名** | ✅ | package.json 新增 `"rebrand": "node scripts/rebrand.mjs"` | 别名可用 |
+| **消息级 fork + 单条消息操作** | ✅ | 消息操作栏新增导出 .md 下载（Blob+a[download]）；用户消息编辑后重跑（fork 到前轮边界+发送编辑文本，rewind 语义）；消息级 fork 已存在（forkAt→sessions.fork atSeq） | 浏览器实测：导出内容正确、编辑重跑上下文保留、分叉时间线子节点 |
+| **Web 端浏览器 Notification** | ✅ | tool-notify 新增 client 半：原生 Notification API+权限管理+点击聚焦，不可用降级 Toast/控制台；监听会话完成/审批请求触发 | 浏览器实测：Toast 降级渲染正常，通知 onclick 内置 window.focus() |
+| **真 embedding 端到端验证** | ✅ | Agnes 探测：**不支持** embeddings（chat 模型 400「not an embedding model」，无 embedding 渠道）；智谱/阿里/百度三家国产端点可达且 OpenAI 兼容，代码侧已就绪 | 带 key 实时复核 21/21 通过；需用户提供国产 key 后可真召回 |
+| **金融补齐** | ✅ | 选股 screener（PE/PB/ROE/涨跌幅多因子，30只股票池，可复核表格）+ 产业链图谱（三列布局纯CSS）+ 实时行情轮询（15s 模拟漂移，红涨绿跌） | CLI 6组用例全过；浏览器实测选股 9/30、行情漂移、产业链节点可点击 |
+| **客户端性能专项** | ✅ | SessionHistoryPage 行组件 memo 化+now 稳定化+回调稳定化；列表窗口化虚拟滚动（DOM 500→31行） | 500条实测：DOM节点 -95%，搜索响应 -63%，视觉无回归 |
+| **代码编辑器集成评估** | ✅ | 三方案评估：Monaco(~2MB不推荐)/CodeMirror(~300KB备选)/轻量增强(0KB本期落地)；CodeBlock 新增"新标签打开"按钮（Blob URL，零依赖） | 浏览器实测：新按钮渲染、blob 新标签页打开、tooltip 正确 |
+
+**全面可用性验收（QA）**：已产出 `docs/acceptance-report.md`，设置页 8+ 项、通用智能体 11 项、金融智能体 10 项、复杂场景 2 个全部实测通过；发现并修复 2 个缺陷（专业功能 dock 死按钮、PDF 表格行高重叠）；构建链四步全绿。
+
+**产品化文档**：README.md（中文重写）、docs/architecture.md、docs/plugin-dev.md（614行完整指南）、docs/usage-guide.md、CHANGELOG.md（八阶段104 commit）、THIRD_PARTY_NOTICES 更新（收录 pdfkit/fontkit）、LICENSE 已存在（MIT）。
+
+**仍待后续（剩余）**：权限 deny 规则 UI（后端已就绪，前端仅三档预设）、Monaco/CodeMirror 真编辑器（待真实就地编辑诉求）、国产 embedding 真召回（需用户提供 key）。
 
 #### P1（近期做）
 
