@@ -35,11 +35,6 @@ const CONTENT_W = PAGE_W - MARGIN_X * 2
 const FONT = 'body'
 const FONT_BOLD = 'bold'
 
-/** 单张图片最大高度（pt），超出则按宽度等比缩放后仍限高。 */
-const IMAGE_MAX_H = 320
-/** 远程图片下载超时（毫秒）。 */
-const IMAGE_FETCH_TIMEOUT = 5000
-
 /** 正文字号 / 颜色（与 HTML 模板一致）。 */
 const BODY_SIZE = 11
 const BODY_COLOR = '#1f2937'
@@ -49,6 +44,22 @@ const DARK_COLOR = '#111827'
 const CODE_BG = '#0f172a'
 const CODE_FG = '#e2e8f0'
 const BORDER_COLOR = '#e5e7eb'
+
+/** 图表/图片相关常量。 */
+/** 图表默认高度（pt）。 */
+const CHART_H = 200
+/** 单张图片最大高度（pt），超出则按宽度等比缩放后仍限高。 */
+const IMAGE_MAX_H = 320
+/** 远程图片下载超时（毫秒）。 */
+const IMAGE_FETCH_TIMEOUT = 5000
+/** 图表网格线颜色（浅灰虚线）。 */
+const GRID_COLOR = '#e5e7eb'
+/** 坐标轴颜色。 */
+const AXIS_COLOR = '#9ca3af'
+/** 图表数据标签/刻度字号。 */
+const CHART_FONT_SIZE = 8
+/** 多数据系列配色（首系列使用主题色 accent，其余为互补色相）。 */
+const SERIES_PALETTE = ['#0f766e', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#db2777']
 
 /** 一组可用字体：常规体与粗体（粗体缺失时退化为常规体）。 */
 interface CJKFontSet {
@@ -136,6 +147,7 @@ type Block =
   | { t: 'code'; text: string }
   | { t: 'table'; head: string[]; rows: string[][] }
   | { t: 'image'; alt: string; src: string }
+  | { t: 'chart'; chartType: 'bar' | 'line'; head: string[]; rows: string[][] }
   | { t: 'hr' }
 
 /** 去除行内 markdown 标记（**加粗**、`代码`），保留纯文本内容。 */
@@ -153,6 +165,8 @@ function parseBlocks(md: string): Block[] {
   let inCode = false
   let codeBuf: string[] = []
   let tableBuf: string[] = []
+  /** 待生效的图表标记（来自表格前一行 <!-- chart:bar|line -->）。 */
+  let pendingChart: 'bar' | 'line' | null = null
 
   const flushTable = () => {
     if (tableBuf.length === 0) return
@@ -161,7 +175,13 @@ function parseBlocks(md: string): Block[] {
     if (rows.length >= 2) {
       const head = (rows[0] ?? []) as string[]
       const body = rows.slice(2)
-      blocks.push({ t: 'table', head, rows: body })
+      // 若表格前紧跟图表标记，则输出 chart 块而非 table 块
+      if (pendingChart !== null) {
+        blocks.push({ t: 'chart', chartType: pendingChart, head, rows: body })
+        pendingChart = null
+      } else {
+        blocks.push({ t: 'table', head, rows: body })
+      }
     }
     tableBuf = []
   }
@@ -175,8 +195,16 @@ function parseBlocks(md: string): Block[] {
     }
     if (inCode) { codeBuf.push(line); continue }
 
+    // 表格行累积
     if (/^\s*\|.*\|\s*$/.test(line)) { tableBuf.push(line); continue }
     flushTable()
+
+    // HTML 注释形式的图表标记：<!-- chart:bar --> 或 <!-- chart:line -->
+    const chartMark = /^\s*<!--\s*chart:\s*(bar|line)\s*-->\s*$/.exec(line)
+    if (chartMark !== null) {
+      pendingChart = (chartMark[1] as 'bar' | 'line')
+      continue
+    }
 
     if (line.trim() === '---' || line.trim() === '***') { blocks.push({ t: 'hr' }); continue }
 
@@ -247,6 +275,218 @@ function loadLocalImage(p: string): Buffer | null {
 async function loadImageBuffer(src: string): Promise<Buffer | null> {
   if (/^https?:\/\//i.test(src)) return loadRemoteImage(src)
   return loadLocalImage(src)
+}
+
+// ─────────── 纯 pdfkit 矢量图表绘制（柱状图 / 折线图） ───────────
+
+/** 从表格单元格文本解析数值，非数字返回 0。 */
+function toNum(s: string): number {
+  const n = parseFloat(String(s).replace(/,/g, ''))
+  return Number.isFinite(n) ? n : 0
+}
+
+/**
+ * 计算系列配色：首系列用主题色，其余从调色板取。
+ * @param accent 主题色（hex）
+ * @param count  系列数量
+ */
+function seriesColors(accent: string, count: number): string[] {
+  const out: string[] = [accent]
+  for (let i = 0; i < count - 1; i++) out.push(SERIES_PALETTE[i % SERIES_PALETTE.length] ?? accent)
+  return out
+}
+
+/**
+ * 绘制图例（图表顶部横向排列：颜色方块 + 系列名）。
+ * @param doc    pdfkit 文档
+ * @param x      图例起始 x
+ * @param y      图例 y
+ * @param names  系列名数组
+ * @param colors 系列颜色数组
+ */
+function drawLegend(doc: PDFKit.PDFDocument, x: number, y: number, names: string[], colors: string[]): void {
+  let cx = x
+  doc.save()
+  doc.fontSize(CHART_FONT_SIZE).fillColor(BODY_COLOR)
+  names.forEach((name, i) => {
+    const color = colors[i] ?? colors[0] ?? '#333333'
+    // 颜色方块
+    doc.rect(cx, y + 1, 8, 8).fill(color)
+    cx += 12
+    const w = doc.widthOfString(name)
+    doc.text(name, cx, y, { width: w + 2 })
+    cx += w + 14
+  })
+  doc.restore()
+}
+
+/**
+ * 绘制坐标轴与网格线（柱状/折线共用）。
+ * @returns 返回绘图区（plot）的几何参数，供具体图表使用。
+ */
+function setupAxes(
+  doc: PDFKit.PDFDocument,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  labels: string[],
+  maxVal: number,
+): { plotX: number; plotY: number; plotW: number; plotH: number; catW: number } {
+  // 内边距：左留 Y 轴刻度，下留 X 轴类别名，上留给图例
+  const leftPad = 36
+  const rightPad = 8
+  const topPad = 18
+  const bottomPad = 18
+  const plotX = x + leftPad
+  const plotY = y + topPad
+  const plotW = w - leftPad - rightPad
+  const plotH = h - topPad - bottomPad
+  const catW = plotW / Math.max(labels.length, 1)
+
+  doc.save()
+  doc.lineWidth(0.6)
+  // 横向网格线 + Y 轴刻度（0 / 25% / 50% / 75% / 100%）
+  for (let i = 0; i <= 4; i++) {
+    const gy = plotY + plotH - (plotH * i) / 4
+    doc.strokeColor(GRID_COLOR).dash(2, { gap: 2 })
+    doc.moveTo(plotX, gy).lineTo(plotX + plotW, gy).stroke()
+    doc.undash()
+    // 刻度文字
+    const val = (maxVal * i) / 4
+    doc.font(FONT).fontSize(CHART_FONT_SIZE).fillColor(MUTED_COLOR)
+    doc.text(String(Math.round(val)), x + 2, gy - 4, { width: leftPad - 6, align: 'right' })
+  }
+  // 坐标轴（X / Y 实线）
+  doc.strokeColor(AXIS_COLOR).lineWidth(0.8)
+  doc.moveTo(plotX, plotY).lineTo(plotX, plotY + plotH).lineTo(plotX + plotW, plotY + plotH).stroke()
+  doc.restore()
+
+  return { plotX, plotY, plotW, plotH, catW }
+}
+
+/**
+ * 绘制柱状图：第一列为类别标签，其余列为数据系列。
+ * @param doc     pdfkit 文档
+ * @param x       图表区左上角 x
+ * @param y       图表区左上角 y
+ * @param w       图表区宽度（=CONTENT_W）
+ * @param h       图表区高度
+ * @param accent  主题色
+ * @param head    表头（[类别名, 系列1, 系列2, ...]）
+ * @param rows    数据行
+ */
+function drawBarChart(
+  doc: PDFKit.PDFDocument,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  accent: string,
+  head: string[],
+  rows: string[][],
+): void {
+  const cats = rows.map((r) => stripInline(r[0] ?? ''))
+  const seriesCount = Math.max(head.length - 1, 1)
+  // 计算最大值
+  let maxVal = 0
+  for (const r of rows) {
+    for (let c = 1; c < r.length; c++) maxVal = Math.max(maxVal, toNum(r[c] ?? ''))
+  }
+  if (maxVal <= 0) maxVal = 1
+  const colors = seriesColors(accent, seriesCount)
+
+  // 图例（系列名 = 表头第 2 列起）
+  drawLegend(doc, x, y, head.slice(1).map((s) => stripInline(s)), colors)
+
+  const { plotX, plotY, plotH, catW } = setupAxes(doc, x, y, w, h, cats, maxVal)
+
+  doc.save()
+  // 逐类别、逐系列画柱
+  rows.forEach((r, ci) => {
+    const groupX = plotX + ci * catW
+    const groupInnerW = catW * 0.7
+    const barW = groupInnerW / seriesCount
+    for (let s = 0; s < seriesCount; s++) {
+      const v = toNum(r[s + 1] ?? '')
+      const bh = (v / maxVal) * plotH
+      const bx = groupX + (catW - groupInnerW) / 2 + s * barW
+      const by = plotY + plotH - bh
+      doc.rect(bx, by, Math.max(barW - 1.5, 1), bh).fill(colors[s] ?? colors[0] ?? accent)
+      // 柱顶数值标签
+      if (v > 0) {
+        doc.font(FONT).fontSize(CHART_FONT_SIZE).fillColor(MUTED_COLOR)
+        doc.text(String(v), bx - 2, by - 10, { width: barW + 4, align: 'center' })
+      }
+    }
+    // X 轴类别标签
+    doc.font(FONT).fontSize(CHART_FONT_SIZE).fillColor(BODY_COLOR)
+    doc.text(cats[ci] ?? '', groupX, plotY + plotH + 3, { width: catW, align: 'center' })
+  })
+  doc.restore()
+}
+
+/**
+ * 绘制折线图：第一列为 X 轴类别，其余列为数据系列。
+ * @param doc     pdfkit 文档
+ * @param x       图表区左上角 x
+ * @param y       图表区左上角 y
+ * @param w       图表区宽度
+ * @param h       图表区高度
+ * @param accent  主题色
+ * @param head    表头
+ * @param rows    数据行
+ */
+function drawLineChart(
+  doc: PDFKit.PDFDocument,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  accent: string,
+  head: string[],
+  rows: string[][],
+): void {
+  const cats = rows.map((r) => stripInline(r[0] ?? ''))
+  const seriesCount = Math.max(head.length - 1, 1)
+  let maxVal = 0
+  for (const r of rows) {
+    for (let c = 1; c < r.length; c++) maxVal = Math.max(maxVal, toNum(r[c] ?? ''))
+  }
+  if (maxVal <= 0) maxVal = 1
+  const colors = seriesColors(accent, seriesCount)
+
+  drawLegend(doc, x, y, head.slice(1).map((s) => stripInline(s)), colors)
+
+  const { plotX, plotY, plotH, catW } = setupAxes(doc, x, y, w, h, cats, maxVal)
+
+  doc.save()
+  // 逐系列画折线 + 数据点
+  for (let s = 0; s < seriesCount; s++) {
+    const c = colors[s] ?? colors[0] ?? accent
+    doc.strokeColor(c).lineWidth(1.4)
+    doc.moveTo(plotX + (catW / 2), plotY + plotH - (toNum(rows[0]?.[s + 1] ?? '') / maxVal) * plotH)
+    rows.forEach((r, ci) => {
+      const v = toNum(r[s + 1] ?? '')
+      const px = plotX + ci * catW + catW / 2
+      const py = plotY + plotH - (v / maxVal) * plotH
+      doc.lineTo(px, py)
+    })
+    doc.stroke()
+    // 数据点（小圆点）
+    rows.forEach((r, ci) => {
+      const v = toNum(r[s + 1] ?? '')
+      const px = plotX + ci * catW + catW / 2
+      const py = plotY + plotH - (v / maxVal) * plotH
+      doc.circle(px, py, 2.2).fill(c)
+    })
+  }
+  // X 轴类别标签
+  cats.forEach((cat, ci) => {
+    doc.font(FONT).fontSize(CHART_FONT_SIZE).fillColor(BODY_COLOR)
+    doc.text(cat, plotX + ci * catW, plotY + plotH + 3, { width: catW, align: 'center' })
+  })
+  doc.restore()
 }
 
 // ─────────── 渲染 ───────────
@@ -335,8 +575,8 @@ export async function markdownToPdf(md: string, opts: PdfRenderOptions): Promise
   // ── 逐块渲染 ──
   const blocks = parseBlocks(md)
   for (const b of blocks) {
-    // 换页保护：图片约需 350pt，表格按行数估算，其余 80pt
-    const reserve = b.t === 'image' ? IMAGE_MAX_H + 40
+    // 换页保护：大块（图片/图表约需 220pt，表格按行数估算）需要更多页底空间
+    const reserve = b.t === 'image' || b.t === 'chart' ? CHART_H + 30
       : b.t === 'table' ? (b.rows.length + 1) * 20 + 20
       : 80
     if (y > PAGE_H - MARGIN_BOTTOM - reserve) {
@@ -468,6 +708,14 @@ export async function markdownToPdf(md: string, opts: PdfRenderOptions): Promise
             y += 8
           }
         }
+        resetBodyStyle()
+        break
+      }
+      case 'chart': {
+        resetBodyStyle()
+        if (b.chartType === 'bar') drawBarChart(doc, MARGIN_X, y, CONTENT_W, CHART_H, opts.accent, b.head, b.rows)
+        else drawLineChart(doc, MARGIN_X, y, CONTENT_W, CHART_H, opts.accent, b.head, b.rows)
+        y += CHART_H + 12
         resetBodyStyle()
         break
       }
