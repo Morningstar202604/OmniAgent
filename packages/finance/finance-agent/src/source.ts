@@ -881,9 +881,6 @@ export class MockFinanceSource implements FinanceDataSource {
 
   async rates(category: FinanceRateCategory): Promise<FinanceRateQuote[]> {
     const rows = MOCK_RATES[category]
-    if (rows === undefined) {
-      throw new Error(`mock 数据源未收录利率类别 ${category}（可选 deposit/lpr/bond）`)
-    }
     return rows.map((row) => ({ ...row, mock: true }))
   }
 
@@ -990,9 +987,6 @@ export class MockFinanceSource implements FinanceDataSource {
 
   async macro(indicator: FinanceMacroIndicator, period?: string): Promise<FinanceMacro> {
     const row = MOCK_MACRO[indicator]
-    if (row === undefined) {
-      throw new Error(`mock 数据源未收录宏观指标 ${indicator}`)
-    }
     return period === undefined ? { ...row, mock: true } : { ...row, period, mock: true }
   }
 
@@ -1076,9 +1070,6 @@ export class MockFinanceSource implements FinanceDataSource {
       convertible: MOCK_CONVERTIBLES,
     }
     const rows = table[category]
-    if (rows === undefined) {
-      throw new Error(`mock 数据源未收录固收资产类别 ${category}（可选 fund/bond/convertible）`)
-    }
     let items: FinanceFundItem[] = rows.map((row) => ({ ...row, category, updatedAt: FUND_UPDATED_AT }))
     if (symbol !== undefined && symbol.length > 0) {
       items = items.filter((item) => item.code === symbol)

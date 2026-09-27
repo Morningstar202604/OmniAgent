@@ -7,13 +7,11 @@
 import { defineTool, type ToolDefinition } from '@deepseek-ai/dsh-tools'
 import type {
   FinanceDataSource,
-  FinanceMarket,
   FinanceKlinePeriod,
   FinanceAnnouncementCategory,
   FinanceNewsCategory,
   FinanceMacroIndicator,
   FinanceSectorCategory,
-  FinanceFundCategory,
 } from './source.ts'
 import { parseMarket } from './source.ts'
 import { compoundFutureValue, compoundPresentValue, loanPayment, annualizedReturn, dividendDiscountValue, computeIndicator } from './calc.ts'
@@ -267,7 +265,7 @@ export function buildFinanceTools(source: FinanceDataSource): ToolDefinition[] {
         if (num(args.minChangePct) !== undefined) criteria.minChangePct = num(args.minChangePct) as number
         if (num(args.maxChangePct) !== undefined) criteria.maxChangePct = num(args.maxChangePct) as number
         const result = await source.screener({
-          ...(args.market === undefined ? {} : { market: parseMarket(args.market) as FinanceMarket }),
+          ...(args.market === undefined ? {} : { market: parseMarket(args.market) }),
           ...(args.industry === undefined ? {} : { industry: args.industry }),
           ...(num(args.minMarketCap) === undefined ? {} : { minMarketCap: num(args.minMarketCap) as number }),
           ...(num(args.maxMarketCap) === undefined ? {} : { maxMarketCap: num(args.maxMarketCap) as number }),
@@ -869,7 +867,7 @@ export function buildFinanceTools(source: FinanceDataSource): ToolDefinition[] {
       render: (_args, value) => [{
         type: 'text',
         text: [
-          `${value.symbol} ${value.name} 风险指标（基准：${value.benchmarkName}，回溯${_args?.period ?? 60}日）`,
+          `${value.symbol} ${value.name} 风险指标（基准：${value.benchmarkName}，回溯${_args.period ?? 60}日）`,
           `Beta ${value.beta}，夏普 ${value.sharpe}，最大回撤 ${value.maxDrawdown}%`,
           `年化波动率 ${value.annualVolatility}%，VaR(95%) ${value.var95}%，VaR(99%) ${value.var99}%`,
           `公式：${value.formula}`,
@@ -973,7 +971,7 @@ export function buildFinanceTools(source: FinanceDataSource): ToolDefinition[] {
         if (args.category !== 'fund' && args.category !== 'bond' && args.category !== 'convertible') {
           throw new Error(`finance_fund: category 必须是 fund/bond/convertible 之一，收到 "${args.category}"`)
         }
-        const category = args.category as FinanceFundCategory
+        const category = args.category
         const limit = Math.min(num(args.limit) ?? 10, 50)
         const r = await source.fund(category, args.symbol, limit)
         return { ...r, mock: r.mock === true ? true : null }
@@ -1105,7 +1103,7 @@ export function buildFinanceTools(source: FinanceDataSource): ToolDefinition[] {
         text: [
           `回测结果（${value.strategy === 'dual_ma' ? '双均线交叉' : '定投'}）区间 ${value.startDate} ~ ${value.endDate}，共 ${value.tradingDays} 个交易日`,
           `累计收益率 ${value.totalReturnPct}%，年化 ${value.annualizedReturnPct}%，最大回撤 ${value.maxDrawdownPct}%，夏普 ${value.sharpeRatio}`,
-          `胜率 ${value.winRatePct === null ? '—（无平仓回合）' : value.winRatePct + '%'}，交易次数 ${value.tradeCount}，盈亏比 ${value.profitFactor === null ? '—' : value.profitFactor}`,
+          `胜率 ${value.winRatePct === null ? '—（无平仓回合）' : `${value.winRatePct}%`}，交易次数 ${value.tradeCount}，盈亏比 ${value.profitFactor === null ? '—' : value.profitFactor}`,
           `初始资金 ${value.initialCash} → 期末权益 ${value.finalEquity}`,
           ...value.perSymbol.map((s: { symbol: string; name: string; totalReturnPct: number; finalEquity: number; tradeCount: number }) =>
             `  ${s.symbol} ${s.name}：收益 ${s.totalReturnPct}%，期末 ${s.finalEquity}，交易 ${s.tradeCount} 笔`),
@@ -1119,7 +1117,7 @@ export function buildFinanceTools(source: FinanceDataSource): ToolDefinition[] {
     async execute(args: { symbols: string[]; market?: string; strategy?: string; shortWindow?: number; longWindow?: number; period?: number; initialCash?: number; feeRatePct?: number; positionPct?: number; dcaInterval?: number }) {
       try {
         const market = parseMarket(args.market)
-        const symbols = (args.symbols ?? []).map((s) => String(s).trim()).filter((s) => s.length > 0)
+        const symbols = args.symbols.map((s) => s.trim()).filter((s) => s.length > 0)
         if (symbols.length === 0) throw new Error('finance_backtest: symbols 至少需要 1 个标的代码')
         const strategy = args.strategy === 'dca' ? 'dca' as const : 'dual_ma' as const
         const longWindow = Math.max(2, Math.round(num(args.longWindow) ?? 20))

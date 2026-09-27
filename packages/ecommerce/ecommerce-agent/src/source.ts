@@ -125,7 +125,7 @@ export function parseCategory(category: string): EcommerceCategory {
 
 /** 校验平台参数。 */
 export function parsePlatform(platform: string | undefined): EcommercePlatform {
-  const value = (platform ?? 'douyin') as EcommercePlatform
+  const value = platform ?? 'douyin'
   if (value !== 'douyin' && value !== 'kuaishou' && value !== 'taobao' && value !== 'jd') {
     throw new Error(`未知平台 ${JSON.stringify(platform)}，可选：douyin、kuaishou、taobao、jd`)
   }
