@@ -453,9 +453,6 @@ importers:
       commander:
         specifier: ^15.0.0
         version: 15.0.0
-      js-yaml:
-        specifier: 4.3.2
-        version: 4.3.2
       node-addon-require-builtin:
         specifier: ^0.1.6
         version: 0.1.6
@@ -577,9 +574,6 @@ importers:
       '@deepseek-ai/dsh-user-approval':
         specifier: workspace:*
         version: link:../../packages/interaction/user-approval
-      '@types/js-yaml':
-        specifier: ^4.0.9
-        version: 4.0.9
       '@types/ws':
         specifier: 8.18.1
         version: 8.18.1
