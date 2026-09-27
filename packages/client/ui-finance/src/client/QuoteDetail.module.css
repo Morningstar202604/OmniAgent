@@ -63,3 +63,25 @@
   background: var(--dsw-alias-bg-layer-1);
 }
 .chartAxis { font-size: 9px; fill: var(--dsw-alias-label-tertiary); }
+
+/* ── 手机 <480px ──────────────────────────────────────────
+   详情区在窄屏下上下堆叠（FinancePanel.body 的 900px 媒体查询已处理），
+   这里收紧内边距、缩小行情数字与 K 线高度，保证一屏可读。 */
+@media (max-width: 480px) {
+  .root {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .price {
+    font-size: 22px;
+  }
+  .symbol {
+    font-size: 16px;
+  }
+  .chart {
+    height: 140px;
+  }
+  .stats {
+    gap: 4px 10px;
+  }
+}
