@@ -1,0 +1,65 @@
+✅ quote 600519
+✅ quote 币种
+✅ financials 600519
+✅ financials 缺年数据置零
+✅ metrics AAPL
+✅ screener cn PE<=20
+✅ screener 返回公式与池大小
+✅ screener 结果按市值降序
+✅ screener ROE>=20 全部达标
+✅ screener PB<=1.5 且 PE<=10（低估值）
+✅ 非法 market 拒绝
+✅ 未知标的提示
+✅ screener 空结果
+✅ http 缺 baseURL 拒绝
+✅ fx USD/CNY
+✅ fx 未知货币对拒绝
+✅ rates lpr
+✅ rates bond
+✅ calc 复利终值 100万×1.03^5
+✅ calc 房贷月供 100万/3.6%/30年
+✅ calc 年化收益 (2)^(1/5)-1
+✅ calc DDM 2/(8%-3%)
+✅ kline 600519 30根
+✅ kline 末根收盘锚定现价
+✅ kline 确定性可复现
+✅ kline AAPL 周K
+✅ kline 未知标的拒绝
+✅ moneyflow 600519 主力净流入
+✅ moneyflow 主力≈超大+大单
+✅ moneyflow 000858 主力为负
+✅ announcements 600519
+✅ announcements 分红过滤
+✅ news 默认全部
+✅ news 宏观过滤
+✅ news 关联个股 600519
+✅ macro CPI
+✅ macro 制造业PMI
+✅ macro GDP 自定义期
+✅ sector 行业板块
+✅ sector limit=5
+✅ sector 字段完整
+✅ risk 默认参数字段为数字
+✅ risk beta 合理区间 0.5-2.0
+✅ risk 最大回撤为负数
+✅ risk var95 > var99（99%更极端）
+✅ risk 未知标的拒绝
+✅ risk formula 非空含 Beta
+✅ fund 基金默认列表
+✅ fund 基金字段完整
+✅ fund 债券列表含国债与企业债
+✅ fund 可转债字段
+✅ fund 可转债负溢价勾稽（赣锋折价）
+✅ fund symbol 过滤单只
+✅ fund 未知 symbol 返回空
+✅ fund 非法 category 拒绝
+✅ quote 上证指数
+✅ quote 标普500
+✅ quote 恒生指数
+✅ research 600519
+✅ research 评级合法
+✅ research 目标价自洽(>1600)
+✅ research 未知标的返回空
+✅ research limit 截断
+
+结果: 63 通过 / 0 失败
