@@ -55,6 +55,8 @@ export const zh = {
   functionsTitle: '专业功能',
   fnScreener: '选股器',
   fnScreenerDesc: '多条件筛选 A 股 / 港股 / 美股',
+  fnChain: '产业链图谱',
+  fnChainDesc: '上中下游结构与代表公司',
   fnFinancials: '财务分析',
   fnFinancialsDesc: '营收 / 净利 / ROE / 毛利率',
   fnRisk: '风险分析',
@@ -65,7 +67,9 @@ export const zh = {
   fnSectorDesc: '行业与概念板块资金动向',
   fnMoneyflow: '资金流向',
   fnMoneyflowDesc: '主力 / 超大单 / 大单净额',
-  hintTools: '在对话框输入金融问题，助手将调用 17 个金融工具为你分析',
+  hintTools: '在对话框输入金融问题，助手将调用 19 个金融工具为你分析',
+  liveTicking: '实时刷新（模拟行情）',
+  demoRefresh: '行情每 15 秒模拟波动一次',
 } satisfies Record<string, string>
 
 /** The finance namespace key union. */
@@ -119,6 +123,8 @@ export const en: Record<FinanceKey, string> = {
   functionsTitle: 'Pro Tools',
   fnScreener: 'Screener',
   fnScreenerDesc: 'Screen CN / HK / US equities',
+  fnChain: 'Industry Chain',
+  fnChainDesc: 'Upstream/midstream/downstream map',
   fnFinancials: 'Financials',
   fnFinancialsDesc: 'Revenue / Profit / ROE / Margin',
   fnRisk: 'Risk',
@@ -129,5 +135,7 @@ export const en: Record<FinanceKey, string> = {
   fnSectorDesc: 'Industry & concept flows',
   fnMoneyflow: 'Money Flow',
   fnMoneyflowDesc: 'Main / super-large / large order net',
-  hintTools: 'Ask the chat — the assistant has 17 finance tools',
+  hintTools: 'Ask the chat — the assistant has 19 finance tools',
+  liveTicking: 'Live (simulated quotes)',
+  demoRefresh: 'Quotes tick every 15s with simulated drift',
 }
