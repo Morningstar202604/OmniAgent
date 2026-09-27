@@ -22,6 +22,11 @@ export const zh = {
   branchBadge: '分支',
   running: '运行中',
   renamePlaceholder: '输入会话标题…',
+  viewList: '列表',
+  viewTimeline: '时间线',
+  timelineEmpty: '暂无会话分支，从任意会话「从这里分支」即可创建新分支。',
+  timelineEmptySearch: '没有匹配的会话分支。',
+  branchedFrom: '从「{title}」分叉',
 } satisfies Record<string, string>
 
 /** The sessionHistory namespace key union. */
@@ -46,4 +51,9 @@ export const en: Record<SessionHistoryKey, string> = {
   branchBadge: 'Branch',
   running: 'Running',
   renamePlaceholder: 'Type a session title…',
+  viewList: 'List',
+  viewTimeline: 'Timeline',
+  timelineEmpty: 'No session branches yet. Use "Branch from here" on any session to start one.',
+  timelineEmptySearch: 'No matching branches.',
+  branchedFrom: 'Branched from "{title}"',
 }
