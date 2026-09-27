@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-report-export",
-  "description": "OmniAgent 报告导出插件：将对话/分析结果导出为 Markdown / HTML（打印友好，PDF 渲染为后续路线）专业报告",
+  "description": "OmniAgent 报告导出插件：将对话/分析结果导出为 Markdown / HTML / PDF（pdfkit 真实渲染，嵌入中文字体）专业报告",
   "version": "0.1.7-rc.1",
   "publishConfig": {
     "access": "public"
@@ -23,7 +23,9 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:~"
+    "@deepseek-ai/schemastery": "workspace:~",
+    "fontkit": "^2.0.4",
+    "pdfkit": "^0.20.2"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:~",
@@ -31,7 +33,9 @@
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:~",
+    "@deepseek-ai/dsh-tools": "workspace:*",
     "@deepseek-ai/schemastery": "workspace:~",
-    "@deepseek-ai/dsh-tools": "workspace:*"
+    "@types/fontkit": "^2.0.9",
+    "@types/pdfkit": "^0.17.6"
   }
 }
