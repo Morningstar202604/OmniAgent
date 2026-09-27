@@ -104,7 +104,15 @@
 | **记忆语义检索** | ✅ 已完成 | 纯 TypeScript BM25（k1=1.5, b=0.75），中文 bigram 分词+英文单词分词+中英文停用词表；SQLite `memory_terms`/`knowledge_terms` 持久化倒排索引，启动时恢复并一致性校验；BM25 排序优先，无命中退化为 LIKE | 12/12 用例通过："用户职业"→命中前端记忆、"做饭"→不误召、更新/删除索引同步、重启持久化、知识库语义召回 |
 | **移动端响应式** | ✅ 已完成 | 断点 768px/480px 纯 CSS 媒体查询；布局本就由 columns.js 驱动（<1024px 侧栏折叠 56px、右栏变 overlay），在此基础上补各组件窄屏适配（状态栏收起 token/时钟、Hero 缩标题、插件市场单列、命令面板收紧、金融面板堆叠） | CDP 模拟 375×812：首页单栏三卡纵向、状态栏单行、插件市场单列可滚动、命令面板不超视口；桌面 1280px 不受影响 |
 
-**仍待后续**：agent_team_run 角色间消息传递与 DAG 编排、记忆向量/embedding 召回（当前 BM25 已覆盖语义召回基础）、PDF 复杂排版（图表/图片嵌入）。
+**仍待后续（2026-09-27 第三轮补齐，3 项全部完成）**：
+
+| 项 | 状态 | 实现方案 | 验证结果 |
+|---|---|---|---|
+| **agent_team_run DAG 编排** | ✅ 已完成 | TeamRole 增加 `dependsOn`/`stage`；Kahn 拓扑排序+环检测，同阶段 `Promise.allSettled` 并行，跨阶段串行；上游输出纯文本注入下游 prompt（单段上限 4000 字）；无 dependsOn 时退化为原全并行 | 18/18 DAG 单测通过（拓扑分层/菱形并行/环/悬空依赖/自依赖/重名/stage 冲突/stage 顺延）；headless mock LLM 端到端验证父代理→研究员→分析师执行顺序；真实 Agnes 模型因 API 速率限制(429)未跑通，编排逻辑已确定性验证 |
+| **记忆向量/embedding 召回** | ✅ 已完成 | `EmbeddingProvider` 可插拔接口 + `LocalTFEmbedding`（默认离线，稀疏词项向量+余弦）+ `OpenAICompatibleEmbedding`（智谱/阿里/百度 `/v1/embeddings`）；新增 `memory_vectors` 表；hybrid 融合 `final=alpha*bm25_norm+(1-alpha)*vector_norm`；未配 key 自动降级，网络失败不阻断 | 19/19 hybrid 断言通过（BM25 漏召对照、向量补召回、精确关键词回归、无 key 本地 TF、网络失败降级、请求形态验证、重启持久化）；12/12 BM25 回归通过；真 embedding 端点需提供 API key 后端到端验证，未假报完成 |
+| **PDF 复杂排版** | ✅ 已完成 | `![alt](src)` 图片嵌入（本地路径+远程 URL，5 秒超时，失败占位框降级）；`<!-- chart:bar|line -->` 标记表格渲染为矢量柱状图/折线图（纯 pdfkit 绘制坐标轴/网格/图例/数据标签，主题色系）；大块换页保护 | 测试 PDF 127KB，`%PDF-1.3` 合法，`pdfimages` 确认图片真实嵌入，`pdftotext` 可提取图注/图例/类别/数值；目检两页：图片居中带图注、柱状图与折线图矢量绘制正常、失败图占位框降级 |
+
+**仍待后续（剩余）**：agent 主动 git 提交工具、OS 级通知、会话分支时间线、模型参数滑杆、真 embedding 端到端验证（需 API key）、DAG 真实模型端到端验证（需 API 配额）。
 
 #### P1（近期做）
 
@@ -329,5 +337,5 @@
 - 验证方式：真实模型 CLI 一次性对话（ecommerce/finance/headless 三 profile）、会话日志工具调用核验、Web UI 浏览器实测（对话/设置/插件/轨迹/侧边栏）、生成程序本沙箱真实执行比对、全仓库 `packages/` 结构走读（对照前端 18 项 + 后端 18 项逐项判定）。
 - 已确认可运行：全部真实对话、工具调用、Web 全功能、程序生成。
 - 已确认已具备（全栈对标新增）：subagent 体系（含 Claude Code/Codex 外部子代理）、jobs 任务队列、schedule 定时、webhook/github、sandbox 沙箱、compaction 上下文压缩、MCP client、cordis 插件热加载、OTel 遥测、session JSONL 持久化多版本迁移、token-meter、三网络搜索源、git working-tree 快照、webhook/gateway REST API。
-- 已确认缺失（全栈对标新增，剩余未补齐）：agent 主动 git 提交工具、向量/embedding 语义搜索（BM25 已覆盖基础语义召回）、OS 级通知、会话分支时间线、模型参数滑杆。（移动端响应式、长期记忆/BM25、PDF 真实导出、细粒度权限规则、插件在线市场均已在 2026-09-27 补齐）
+- 已确认缺失（全栈对标新增，剩余未补齐）：agent 主动 git 提交工具、OS 级通知、会话分支时间线、模型参数滑杆。（移动端响应式、长期记忆/BM25+向量 hybrid、PDF 真实导出+复杂排版、细粒度权限规则、插件在线市场、agent-team DAG 编排均已在 2026-09-27 补齐）
 - 缺口：① 金融数据当前为 mock 示例，接真实源需配置；② agent 内部 bash 执行沙箱在此测试环境缺 bubblewrap/Landlock，用户本机不受影响；③ Web 插件开关交互有一处状态不一致（已修复并记录）。
