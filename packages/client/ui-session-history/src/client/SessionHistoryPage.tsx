@@ -1,5 +1,6 @@
 /** 会话历史主面板：按时间分组（今天/昨天/7天内/更早）展示会话，支持切换、新建、重命名、分支与归档。 */
-import { memo, useCallback, useMemo, useState } from 'react'
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
 import clsx from 'clsx'
 import {
   IconArchiveOutlineRegular, IconBranchOutlineRegular, IconChevronRightOutlineRegular,
@@ -38,6 +39,14 @@ type GroupKey = 'today' | 'yesterday' | 'week' | 'earlier'
 type HistoryView = 'list' | 'timeline'
 
 const DAY = 86_400_000
+
+/** 窗口化时上下各多渲染的条目数，避免快速滚动时露白。 */
+const OVERSCAN = 6
+
+/** 扁平化后的列表条目：分组标题或会话行（混合后便于按固定高度计算偏移）。 */
+type FlatItem =
+  | { readonly type: 'header'; readonly key: GroupKey; readonly title: string }
+  | { readonly type: 'row'; readonly row: SessionSummary }
 
 function dayStart(t: number): number {
   const d = new Date(t)
@@ -231,6 +240,114 @@ export function SessionHistoryPage({
     onCommitRename: handleCommitRename,
   }
 
+  // ── 列表窗口化（虚拟滚动）──────────────────────────────────────────────
+  // 非编辑态下标题恒为单行、meta 恒为单行，行高一致；分组标题高度也恒定。
+  // 先离屏探针量出真实行高/标题高，再只渲染可视窗口 + overscan。
+  const listRef = useRef<HTMLDivElement>(null)
+  const probeRowRef = useRef<HTMLDivElement>(null)
+  const probeHeaderRef = useRef<HTMLDivElement>(null)
+  const [rowHeight, setRowHeight] = useState(0)
+  const [headerHeight, setHeaderHeight] = useState(0)
+  const [scrollTop, setScrollTop] = useState(0)
+  const [viewportH, setViewportH] = useState(0)
+
+  useLayoutEffect(() => {
+    if (probeRowRef.current) setRowHeight(probeRowRef.current.offsetHeight)
+    if (probeHeaderRef.current) setHeaderHeight(probeHeaderRef.current.offsetHeight)
+  }, [])
+
+  useLayoutEffect(() => {
+    const el = listRef.current
+    if (!el) return
+    setViewportH(el.clientHeight)
+    const ro = new ResizeObserver(() => setViewportH(el.clientHeight))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const onListScroll = useCallback(() => {
+    const el = listRef.current
+    if (el) setScrollTop(el.scrollTop)
+  }, [])
+
+  // 搜索词变化后回到列表顶部，避免窗口区间停留在已不存在的滚动位置。
+  useEffect(() => {
+    if (listRef.current) listRef.current.scrollTop = 0
+    setScrollTop(0)
+  }, [query])
+
+  // 扁平化为 [标题, 行, 行, 标题, 行, ...] 序列。
+  const flatItems = useMemo<readonly FlatItem[]>(() => {
+    const out: FlatItem[] = []
+    for (const group of groups) {
+      out.push({ type: 'header', key: group.key, title: groupTitle(group.key) })
+      for (const row of group.rows) out.push({ type: 'row', row })
+    }
+    return out
+  }, [groups, groupTitle])
+
+  // 每条目起始 y 偏移与总高（末位为总高）。
+  const offsets = useMemo(() => {
+    const arr = new Array<number>(flatItems.length + 1).fill(0)
+    let y = 0
+    for (let i = 0; i < flatItems.length; i += 1) {
+      arr[i] = y
+      y += flatItems[i].type === 'header' ? headerHeight : rowHeight
+    }
+    arr[flatItems.length] = y
+    return arr
+  }, [flatItems, headerHeight, rowHeight])
+
+  // 测量完成且非编辑态才启用窗口化；编辑态/首帧回退为全量渲染，避免单行高度差导致错位。
+  const virtualized = rowHeight > 0 && headerHeight > 0 && viewportH > 0 && editingId === undefined
+
+  // 二分查找可视窗口区间。
+  const [startIdx, endIdx] = useMemo<readonly [number, number]>(() => {
+    const n = flatItems.length
+    if (n === 0 || !virtualized) return [0, Math.max(0, n - 1)]
+    const bottom = scrollTop + viewportH
+    // 第一条 bottom > scrollTop 的条目。
+    let lo = 0
+    let hi = n - 1
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1
+      if (offsets[mid + 1] <= scrollTop) lo = mid + 1
+      else hi = mid
+    }
+    const first = Math.max(0, lo - OVERSCAN)
+    // 最后一条 top < bottom 的条目。
+    lo = 0
+    hi = n - 1
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1
+      if (offsets[mid] < bottom) lo = mid
+      else hi = mid - 1
+    }
+    const last = Math.min(n - 1, lo + OVERSCAN)
+    return [first, last]
+  }, [flatItems.length, offsets, scrollTop, viewportH, virtualized])
+
+  const renderItem = useCallback((item: FlatItem): ReactNode => {
+    if (item.type === 'header') {
+      return (
+        <div key={`h:${item.key}`} className={css.groupTitle}>{item.title}</div>
+      )
+    }
+    const row = item.row
+    return (
+      <SessionHistoryRow
+        key={row.id}
+        row={row}
+        active={row.id === currentId}
+        now={now}
+        editing={editingId === row.id}
+        draft={editingId === row.id ? draft : undefined}
+        t={t}
+        {...handlers}
+      />
+    )
+  }, [currentId, now, editingId, draft, t, handlers])
+
   return (
     <div className={css.page}>
       <div className={css.header}>
@@ -277,29 +394,32 @@ export function SessionHistoryPage({
           t={t}
         />
       ) : (
-      <div className={css.list}>
+      <div ref={listRef} className={css.list} onScroll={onListScroll}>
         {groups.length === 0 && (
           <div className={css.empty}>{query.trim() ? t('emptySearch') : t('empty')}</div>
         )}
-        {groups.map(group => (
-          <div key={group.key}>
-            <div className={css.groupTitle}>{groupTitle(group.key)}</div>
-            {group.rows.map(row => (
-              <SessionHistoryRow
-                key={row.id}
-                row={row}
-                active={row.id === currentId}
-                now={now}
-                editing={editingId === row.id}
-                draft={editingId === row.id ? draft : undefined}
-                t={t}
-                {...handlers}
-              />
-            ))}
+        {virtualized ? (
+          <div style={{ height: offsets[flatItems.length] }}>
+            <div style={{ paddingTop: offsets[startIdx] }}>
+              {flatItems.slice(startIdx, endIdx + 1).map(renderItem)}
+            </div>
           </div>
-        ))}
+        ) : (
+          flatItems.map(renderItem)
+        )}
       </div>
       )}
+
+      {/* 离屏探针：量出恒定的行高与分组标题高，供窗口化偏移计算（不参与布局）。 */}
+      <div aria-hidden style={{ position: 'absolute', left: -9999, top: 0, visibility: 'hidden' }}>
+        <div ref={probeHeaderRef} className={css.groupTitle}>{t('groupToday')}</div>
+        <div ref={probeRowRef} className={css.row}>
+          <div className={css.rowMain}>
+            <span className={css.rowTitle}>probe</span>
+            <span className={css.rowMeta}><span>00:00</span></span>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
