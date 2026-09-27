@@ -161,3 +161,39 @@ Agnes 新端点连通性：`GET /v1/models` 返回 11 个模型（agnes-2.0/2.5/
 ## 七、结论
 
 **全面可用性验收通过**。设置页 8+ 项、通用智能体 11 项、金融智能体 10 项、复杂场景 2 个全部实测通过；发现 2 个真实缺陷已修复并回归验证；构建链四步全绿；Agnes 新端点连通正常。剩余为已知产品差距（权限 UI）和外部环境限制（API 限流/沙箱后端），不影响核心可用性。
+
+---
+
+## 八、巡检补充（2026-09-27 移动端响应式 + 自由巡检）
+
+### 8.1 移动端响应式截图归档
+
+用 CDP `Emulation.setDeviceMetricsOverride` 设置 375×812（iPhone X，dpr=3）实测 6 个场景，截图归档于 `frontend-screens/`：
+
+| 文件 | 场景 | 结果 |
+|---|---|---|
+| `mobile-01-home.png` | 首页（欢迎弹窗态） | ✅ 弹窗窄屏自适应，文案清晰 |
+| `mobile-01b-home-hero.png` | 首页 Hero（纯态） | ✅ 三能力卡单列堆叠，顶栏可读 |
+| `mobile-02-history-empty.png` | 历史会话列表（窄屏） | ✅ 列表/时间线 tab 正常，空态提示清晰 |
+| `mobile-03-plugin-market.png` | 插件市场（窄屏） | ✅ 单列卡片，分类标签换行正常 |
+| `mobile-04-command-palette.png` | 命令面板 Ctrl+K | ✅ 弹窗全宽，命令列表清晰 |
+| `mobile-05-finance-panel.png` | 金融面板（修复前） | ❌ 标题/徽章竖排——见 8.2 修复 |
+| `mobile-05c-finance-fixed.png` | 金融面板（修复后） | ✅ 标题横排，徽章换行，代码完整 |
+| `mobile-06-settings.png` | 设置页（修复前） | ❌ 表单内容逐字竖排——见 8.2 修复 |
+| `mobile-06b-settings-fixed.png` | 设置页（修复后） | ✅ 导航收为顶部水平条，表单横排 |
+
+### 8.2 巡检发现与修复
+
+| # | 问题 | 根因 | 修复 | Commit |
+|---|---|---|---|---|
+| 3 | 金融终端 header 在 375px 下「金融终端」「演示数据」「实时刷新」全部竖排 | `.titleBlock` 无 `min-width:0`/`flex-wrap`，header `space-between` 把内容列压到单字宽 | titleBlock 加 `min-width:0`+`flex-wrap:wrap`，title/badge 禁止换行；`<480px` 时 header 允许换行、副标题收起 | `f3b4592` |
+| 4 | 设置面板在 375px 下权限/语言/外观等标签与控件全部逐字竖排 | 固定 188px 导航栏占掉 327px 面板一半，内容列仅 ~140px | `<480px` 时 panel 改纵向堆叠，导航收为顶部水平可滚动条 | `3008964` |
+| 5 | `tsc -b` 增量构建报 `TS2339: Property 'slots' does not exist on type 'Context'` | plugin-template 的 client 半边直接访问 `scope.slots` 未做类型断言（与 ui-plugin-market 同款写法遗漏） | 与 ui-plugin-market 一致加 `as unknown as { slots: SlotRegistry }` 断言 | （随 plugin-template 包提交） |
+
+### 8.3 巡检结论
+
+- **Agnes 429 限流体验**：llm-retry 插件在 step 详情面板（开发者工具）展示"已计划 N/M"重试计数与延迟，但普通对话视图只把 step 标红为 error，不显示"正在重试第 N 次"。**方案记录**：若需在普通视图显示重试计数，需在 step 列表渲染层增加 retry badge，成本中等；当前靠 step 详情可查，不强行实现。429 自动切备用模型涉及 provider 路由改造，成本较高，记录在案不实现。
+- **README/usage-guide 一致性**：启动命令（`oa web` / `oa finance` / `oa headless`）、`--patch` 叠加配置、插件安装命令均与实际一致；`pnpm run start:web` 指向源码（tsx），`node apps/cli/lib/bin.js` 指向产物，两者用途不同均正确。
+- **首启动/欢迎流程**：WelcomeNotice 弹窗在 web 和 finance 首次启动均弹出，文案中英文双语，"继续"按钮可关闭且状态持久化；窄屏下弹窗宽度自适应，无溢出。
+- **构建链验证**：`npx tsc -b` → `build:lib:client` → `build:lib:host` → `build:web` 四步全绿（exit 0）。
+- **隔离 DSH_HOME**：web 与 finance 分别用 `/tmp/dsh-home-web` 与 `/tmp/dsh-home-finance`，并行启动无互删。
