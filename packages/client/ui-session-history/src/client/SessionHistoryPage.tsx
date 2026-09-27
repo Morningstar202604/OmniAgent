@@ -2,13 +2,14 @@
 import { useMemo, useState } from 'react'
 import clsx from 'clsx'
 import {
-  IconArchiveOutlineRegular, IconChevronRightOutlineRegular, IconEditOutlineRegular,
-  IconFlatListOutlineRegular, IconPlusOutlineRegular, IconSearchOutlineRegular,
+  IconArchiveOutlineRegular, IconBranchOutlineRegular, IconChevronRightOutlineRegular,
+  IconEditOutlineRegular, IconFlatListOutlineRegular, IconPlusOutlineRegular, IconSearchOutlineRegular,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { SessionSummary } from '@deepseek-ai/dsh-api-session-controller/client'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import css from './SessionHistoryPage.module.css'
+import { SessionTimeline } from './SessionTimeline.tsx'
 
 /** 注入到组件的纯动作回调（apply 闭包内通过 uiWorkspace / sessions 服务实现）。 */
 export interface SessionHistoryInjected {
@@ -31,6 +32,9 @@ export type SessionHistoryPageProps =
   & PropsLocale<'sessionHistory'>
 
 type GroupKey = 'today' | 'yesterday' | 'week' | 'earlier'
+
+/** 会话历史面板内的两种视图：分组列表 / 分支时间线。 */
+type HistoryView = 'list' | 'timeline'
 
 const DAY = 86_400_000
 
@@ -72,6 +76,7 @@ export function SessionHistoryPage({
   const [query, setQuery] = useState('')
   const [editingId, setEditingId] = useState<SessionId | undefined>(undefined)
   const [draft, setDraft] = useState('')
+  const [view, setView] = useState<HistoryView>('list')
   const now = Date.now()
 
   const currentId = Object.values(list.byId).find(s => (s.retainedBy.mainView ?? 0) > 0)?.id
@@ -115,6 +120,26 @@ export function SessionHistoryPage({
     <div className={css.page}>
       <div className={css.header}>
         <span className={css.title}>{t('panel')}</span>
+        <div className={css.viewTabs} role="tablist" aria-label={t('panel')}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === 'list'}
+            className={clsx(css.viewTab, view === 'list' && css.viewTabActive)}
+            onClick={() => setView('list')}
+          >
+            <IconFlatListOutlineRegular size={13} /> {t('viewList')}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === 'timeline'}
+            className={clsx(css.viewTab, view === 'timeline' && css.viewTabActive)}
+            onClick={() => setView('timeline')}
+          >
+            <IconBranchOutlineRegular size={13} /> {t('viewTimeline')}
+          </button>
+        </div>
         <IconSearchOutlineRegular size={14} className={css.muted} />
         <input
           className={css.search}
@@ -127,6 +152,16 @@ export function SessionHistoryPage({
         </button>
       </div>
 
+      {view === 'timeline' ? (
+        <SessionTimeline
+          rows={rows}
+          currentId={currentId}
+          now={now}
+          openSession={openSession}
+          forkSession={forkSession}
+          t={t}
+        />
+      ) : (
       <div className={css.list}>
         {groups.length === 0 && (
           <div className={css.empty}>{query.trim() ? t('emptySearch') : t('empty')}</div>
@@ -203,6 +238,7 @@ export function SessionHistoryPage({
           </div>
         ))}
       </div>
+      )}
     </div>
   )
 }
