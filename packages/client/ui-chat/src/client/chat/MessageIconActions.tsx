@@ -3,12 +3,35 @@
 
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import {
-  IconBranchOutlineRegular, IconCheckOutlineRegular, IconCopyOutlineRegular, Tooltip, writeClipboard,
+  IconBranchOutlineRegular, IconCheckOutlineRegular, IconCopyOutlineRegular, IconDownloadOutlineRegular,
+  IconEditOutlineRegular, Tooltip, writeClipboard,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ChatViewSlotProps } from '../contract/slots.ts'
 import { formatMessageClock } from './message-chrome.ts'
 import { useCalendarDay } from './use-calendar-day.ts'
 import css from './MessageIconActions.module.css'
+
+/**
+ * Download plain markdown text as a `.md` file via a transient anchor.
+ * No extra dependency: the browser owns the blob URL and the click.
+ * @param text - markdown body.
+ * @param time - optional epoch ms used to label the file.
+ */
+function downloadMarkdown(text: string, time?: number | undefined): void {
+  const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const stamp = time === undefined
+    ? 'message'
+    : new Date(time).toISOString().replace(/[:.]/g, '-').slice(0, 19)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = `message-${stamp}.md`
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  // Revoke on the next tick so the download has a chance to start.
+  window.setTimeout(() => URL.revokeObjectURL(url), 0)
+}
 
 export interface MessageIconActionsProps {
   /** Plain text the copy action writes. */
@@ -21,6 +44,8 @@ export interface MessageIconActionsProps {
   onBranch?: (() => void) | undefined
   /** The message is not a completed transcript tail, so branch stays visible but unavailable. */
   branchUnavailable?: boolean | undefined
+  /** Enter inline edit mode for this user message; omission hides the edit action. */
+  onEdit?: (() => void) | undefined
   /** Parent layout class composed onto the actions row. */
   className?: string | undefined
   /**
@@ -43,7 +68,7 @@ export interface MessageIconActionsProps {
  * @returns The actions row element.
  */
 export function MessageIconActions({
-  text, time, clock, onBranch, branchUnavailable = false, className,
+  text, time, clock, onBranch, branchUnavailable = false, onEdit, className,
   extraActions, usageAction, t,
 }: MessageIconActionsProps) {
   const day = useCalendarDay()
@@ -74,6 +99,9 @@ export function MessageIconActions({
       }, 1000)
     })
   }, [copied, text])
+  const onExport = useCallback(() => {
+    downloadMarkdown(text, time)
+  }, [text, time])
   const clockEl = time === undefined ? null : (
     <span className={clock === 'start' ? css.timeStart : css.timeEnd}>
       {formatMessageClock(time, t, day)}
@@ -87,6 +115,18 @@ export function MessageIconActions({
           {copied ? <IconCheckOutlineRegular /> : <IconCopyOutlineRegular />}
         </button>
       </Tooltip>
+      <Tooltip label={t('message.export')} side="bottom">
+        <button type="button" className={css.action} aria-label={t('message.export')} onClick={onExport}>
+          <IconDownloadOutlineRegular />
+        </button>
+      </Tooltip>
+      {onEdit !== undefined && (
+        <Tooltip label={t('message.edit')} side="bottom">
+          <button type="button" className={css.action} aria-label={t('message.edit')} onClick={onEdit}>
+            <IconEditOutlineRegular />
+          </button>
+        </Tooltip>
+      )}
       {extraActions}
       {onBranch !== undefined && (
         <Tooltip label={branchUnavailable ? t('message.branchUnavailable') : t('message.branch')} side="bottom">
