@@ -9,8 +9,10 @@
 import { spawnSync } from 'node:child_process'
 
 const steps = [
-  ['lint',        ['pnpm', 'exec', 'oxlint', '--threads', '1', '.']],
   ['typecheck',   ['npx', 'tsc', '-b']],
+  // lint 必须在 tsc 之后：oxlint typeAware 规则通过 tsconfig references 解析类型，
+  // 依赖 tsc -b 产出的 lib 类型文件；干净 checkout 无 lib 会导致类型解析失败降级为 all-any 大量误报。
+  ['lint',        ['pnpm', 'exec', 'oxlint', '--threads', '1', '.']],
   ['build:host',  ['pnpm', 'run', 'build:lib:host']],
   ['build:client',['pnpm', 'run', 'build:lib:client']],
   ['build:web',   ['pnpm', 'run', 'build:web']],

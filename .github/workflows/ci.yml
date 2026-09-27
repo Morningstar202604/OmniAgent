@@ -30,11 +30,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Typecheck + build type graph (tsc -b) — must precede lint: oxlint typeAware rules resolve types through tsconfig references which require lib/ outputs
+        run: npx tsc -b
+
       - name: Lint (oxlint, single-thread for low-memory hosts)
         run: pnpm exec oxlint --threads 1 .
-
-      - name: Typecheck (tsc -b)
-        run: npx tsc -b
 
       - name: Build host lib
         run: pnpm run build:lib:host
