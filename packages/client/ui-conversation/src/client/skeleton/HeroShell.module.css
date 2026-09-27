@@ -363,3 +363,43 @@
   line-height: 18px;
   color: var(--dsw-alias-state-error-primary);
 }
+
+/* ── 窄屏适配：平板 <768px，手机 <480px ──────────────────────
+   能力卡网格本身用 auto-fit minmax(200px,1fr)，窄屏自动单列；
+   这里只收紧两侧留白与标题字号，避免标题/光晕溢出。 */
+@media (max-width: 768px) {
+  .root {
+    padding: 0 16px;
+  }
+  .headline {
+    font-size: 22px;
+    line-height: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .root {
+    padding: 0 12px;
+  }
+  .headline {
+    font-size: 20px;
+    line-height: 26px;
+    column-gap: 8px;
+    row-gap: 8px;
+  }
+  .stack {
+    gap: 10px;
+  }
+  .showcase {
+    gap: 10px;
+  }
+  .cardGrid {
+    gap: 8px;
+  }
+  .card {
+    padding: 10px 12px;
+  }
+  .paletteButton {
+    max-width: 100%;
+  }
+}
