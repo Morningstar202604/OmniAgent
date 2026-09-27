@@ -97,8 +97,8 @@ export function loadParams(): ModelGenerationParams {
   try {
     const parsed = JSON.parse(raw) as Partial<ModelGenerationParams>
     return {
-      temperature: normalizeTemperature(Number(parsed.temperature ?? fallback.temperature)),
-      maxTokens: normalizeMaxTokens(Number(parsed.maxTokens ?? fallback.maxTokens)),
+      temperature: normalizeTemperature(parsed.temperature ?? fallback.temperature),
+      maxTokens: normalizeMaxTokens(parsed.maxTokens ?? fallback.maxTokens),
     }
   } catch {
     return fallback
