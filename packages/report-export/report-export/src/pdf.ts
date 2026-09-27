@@ -16,7 +16,8 @@
 
 import PDFDocument from 'pdfkit'
 import { createRequire } from 'node:module'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
+import { resolve, isAbsolute } from 'node:path'
 
 // fontkit 为 CJS 模块，用 createRequire 显式加载以保证 ESM 构建后可用。
 const fontkit = createRequire(import.meta.url)('fontkit') as typeof import('fontkit')
@@ -29,6 +30,15 @@ const MARGIN_X = 56
 const MARGIN_TOP = 60
 const MARGIN_BOTTOM = 60
 const CONTENT_W = PAGE_W - MARGIN_X * 2
+
+/** 注册到 pdfkit 的字体别名（常规 / 粗体）。 */
+const FONT = 'body'
+const FONT_BOLD = 'bold'
+
+/** 单张图片最大高度（pt），超出则按宽度等比缩放后仍限高。 */
+const IMAGE_MAX_H = 320
+/** 远程图片下载超时（毫秒）。 */
+const IMAGE_FETCH_TIMEOUT = 5000
 
 /** 正文字号 / 颜色（与 HTML 模板一致）。 */
 const BODY_SIZE = 11
@@ -125,6 +135,7 @@ type Block =
   | { t: 'li'; text: string }
   | { t: 'code'; text: string }
   | { t: 'table'; head: string[]; rows: string[][] }
+  | { t: 'image'; alt: string; src: string }
   | { t: 'hr' }
 
 /** 去除行内 markdown 标记（**加粗**、`代码`），保留纯文本内容。 */
@@ -174,6 +185,12 @@ function parseBlocks(md: string): Block[] {
       blocks.push({ t: 'h', level: heading[1]?.length ?? 1, text: stripInline(heading[2] ?? '') })
       continue
     }
+    // 独立成行的 Markdown 图片：![alt](src)
+    const imageLine = /^\s*!\[([^\]]*)\]\(([^)\s]+)\)\s*$/.exec(line)
+    if (imageLine !== null) {
+      blocks.push({ t: 'image', alt: imageLine[1] ?? '', src: imageLine[2] ?? '' })
+      continue
+    }
     const listItem = /^\s*[-*]\s+(.*)$/.exec(line)
     if (listItem !== null) {
       blocks.push({ t: 'li', text: stripInline(listItem[1] ?? '') })
@@ -185,6 +202,51 @@ function parseBlocks(md: string): Block[] {
   flushTable()
   if (inCode) blocks.push({ t: 'code', text: codeBuf.join('\n') })
   return blocks
+}
+
+// ─────────── 图片加载（本地路径 / 远程 URL，失败优雅降级） ───────────
+
+/**
+ * 加载远程图片为 Buffer，带 5 秒超时。
+ * @param url  http(s) 图片地址
+ * @returns 图片 Buffer；失败返回 null
+ */
+async function loadRemoteImage(url: string): Promise<Buffer | null> {
+  try {
+    const ctrl = new AbortController()
+    const timer = setTimeout(() => ctrl.abort(), IMAGE_FETCH_TIMEOUT)
+    const res = await fetch(url, { signal: ctrl.signal, redirect: 'follow' })
+    clearTimeout(timer)
+    if (!res.ok) return null
+    const ab = await res.arrayBuffer()
+    return Buffer.from(ab)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * 加载本地图片为 Buffer（相对路径基于 process.cwd()）。
+ * @param p 本地路径
+ * @returns 图片 Buffer；失败返回 null
+ */
+function loadLocalImage(p: string): Buffer | null {
+  try {
+    const abs = isAbsolute(p) ? p : resolve(process.cwd(), p)
+    return readFileSync(abs)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * 统一加载图片：自动判断远程 URL 或本地路径。
+ * @param src Markdown 图片地址（http(s):// 或本地相对/绝对路径）
+ * @returns 图片 Buffer；失败返回 null
+ */
+async function loadImageBuffer(src: string): Promise<Buffer | null> {
+  if (/^https?:\/\//i.test(src)) return loadRemoteImage(src)
+  return loadLocalImage(src)
 }
 
 // ─────────── 渲染 ───────────
@@ -216,8 +278,6 @@ export async function markdownToPdf(md: string, opts: PdfRenderOptions): Promise
 
   // 注册字体：中文用嵌入字体（常规 + 粗体）；没有则降级标准 Helvetica
   const hasCJK = cjk !== null
-  const FONT = 'body'
-  const FONT_BOLD = 'bold'
   if (hasCJK) {
     doc.registerFont(FONT, cjk.regular as never)
     doc.registerFont(FONT_BOLD, cjk.bold as never)
@@ -275,8 +335,11 @@ export async function markdownToPdf(md: string, opts: PdfRenderOptions): Promise
   // ── 逐块渲染 ──
   const blocks = parseBlocks(md)
   for (const b of blocks) {
-    // 换页保护：若当前 y 距页底不足 80pt 则先换页
-    if (y > PAGE_H - MARGIN_BOTTOM - 80) {
+    // 换页保护：图片约需 350pt，表格按行数估算，其余 80pt
+    const reserve = b.t === 'image' ? IMAGE_MAX_H + 40
+      : b.t === 'table' ? (b.rows.length + 1) * 20 + 20
+      : 80
+    if (y > PAGE_H - MARGIN_BOTTOM - reserve) {
       doc.addPage()
       y = MARGIN_TOP
       resetBodyStyle()
@@ -363,6 +426,48 @@ export async function markdownToPdf(md: string, opts: PdfRenderOptions): Promise
           y += rowH
         }
         y += 10
+        resetBodyStyle()
+        break
+      }
+      case 'image': {
+        resetBodyStyle()
+        const buf = await loadImageBuffer(b.src)
+        if (buf === null) {
+          // 加载失败：绘制占位框 + 提示文字，不中断 PDF 生成
+          doc.save()
+          doc.roundedRect(MARGIN_X, y, CONTENT_W, 60, 4).lineWidth(0.8).strokeColor(FAINT_COLOR).dash(3, { gap: 3 }).stroke()
+          doc.undash()
+          doc.restore()
+          doc.font(FONT).fontSize(9.5).fillColor(MUTED_COLOR)
+          doc.text(`[图片加载失败] ${b.alt || b.src}`, MARGIN_X, y + 24, { width: CONTENT_W, align: 'center' })
+          y += 70
+        } else {
+          // 读取图片原始宽高，按内容区宽度等比缩放，限高
+          let dispW = CONTENT_W
+          let dispH = IMAGE_MAX_H
+          try {
+            const im = (doc as unknown as { openImage(s: Buffer): { width: number; height: number } }).openImage(buf)
+            const natW = im.width || CONTENT_W
+            const natH = im.height || IMAGE_MAX_H
+            dispW = Math.min(CONTENT_W, natW)
+            dispH = (natH * dispW) / natW
+            if (dispH > IMAGE_MAX_H) { dispH = IMAGE_MAX_H; dispW = (natW * dispH) / natH }
+          } catch {
+            // 读不到尺寸则按内容区宽、默认高度绘制
+          }
+          // 水平居中绘制图片
+          const imgX = MARGIN_X + (CONTENT_W - dispW) / 2
+          doc.image(buf, imgX, y, { width: dispW, height: dispH })
+          y += dispH + 4
+          // 图注（alt 文本，小字号灰色居中）
+          if (b.alt.trim().length > 0) {
+            doc.font(FONT).fontSize(9).fillColor(MUTED_COLOR)
+            doc.text(b.alt.trim(), MARGIN_X, y, { width: CONTENT_W, align: 'center' })
+            y = doc.y + 8
+          } else {
+            y += 8
+          }
+        }
         resetBodyStyle()
         break
       }
