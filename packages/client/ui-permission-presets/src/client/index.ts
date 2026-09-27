@@ -40,13 +40,17 @@ import { PermissionSelect } from './PermissionSelect.tsx'
 import type { PermissionSelectInjected } from './PermissionSelect.tsx'
 import { PermissionRow } from './PermissionRow.tsx'
 import type { PermissionRowInjected } from './PermissionRow.tsx'
+import { PermissionRulesSection } from './PermissionRulesSection.tsx'
+import type { RulesSectionInjected } from './PermissionRulesSection.tsx'
 import {
   accessEn, accessZh, en, PERMISSION_ACCESS_NS, zh,
 } from './locales.ts'
+import { rulesEn, rulesZh, RULES_NS } from './rules-locales.ts'
 import {
   AUTO_REVIEW_PRESET, displayPermissionPreset, FULL_ACCESS_PRESET,
 } from './presentation.ts'
 import { PermissionPresetSettingsController } from './settings-store.ts'
+import { RulesEditorController } from './rules-store.ts'
 
 export type { PermissionRowInjected, PermissionRowProps } from './PermissionRow.tsx'
 export type { PermissionCatalogState } from './catalog.ts'
@@ -58,7 +62,7 @@ export type {
 /** Required services (cordis fiber inject). */
 export const inject = [
   'commandUi', 'connection', 'sessions', 'slots', 'locale', 'remote',
-  'remote.permissionPresets', 'remote.settings',
+  'remote.permissionPresets', 'remote.permissionRules', 'remote.settings',
   'configForms', 'settingsSchema',
 ]
 
@@ -163,6 +167,26 @@ export function apply(ctx: ClientContext): void {
     locale: 'settings.permission',
     inject: injected,
   }, PermissionRow))
+
+  // ---- Fine-grained rule editor (its own settings section) -------------
+  ctx.effect(() => ctx.locale.register(RULES_NS, { zh: rulesZh, en: rulesEn }), 'ui-permission: rule editor dictionaries')
+
+  const rulesController = new RulesEditorController(ctx)
+  ctx.effect(() => () => { rulesController.dispose() }, 'ui-permission: rule editor controller')
+  const rulesInjected = (): RulesSectionInjected => ({
+    hooks: { rules: rulesController.store },
+    load: () => rulesController.load(),
+    save: (rules) => rulesController.save(rules),
+  })
+
+  ctx.slots.inject('settings.section', () => ctx.slots.register({
+    name: 'settings.section',
+    id: 'permission-rules',
+    order: 25,
+    label: () => ctx.locale.bind(RULES_NS)('nav'),
+    locale: RULES_NS,
+    inject: rulesInjected,
+  }, PermissionRulesSection))
 
   ctx.slots.inject('conversation.input.permission', () => ctx.slots.register({
     name: 'conversation.input.permission',
