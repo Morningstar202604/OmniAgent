@@ -141,7 +141,15 @@
 
 **产品化文档**：README.md（中文重写）、docs/architecture.md、docs/plugin-dev.md（614行完整指南）、docs/usage-guide.md、CHANGELOG.md（八阶段104 commit）、THIRD_PARTY_NOTICES 更新（收录 pdfkit/fontkit）、LICENSE 已存在（MIT）。
 
-**仍待后续（剩余）**：权限 deny 规则 UI（后端已就绪，前端仅三档预设）、Monaco/CodeMirror 真编辑器（待真实就地编辑诉求）、国产 embedding 真召回（需用户提供 key）。
+**仍待后续（2026-09-27 第六轮收尾，3 项全部完成）**：
+
+| 项 | 状态 | 实现方案 | 验证结果 |
+|---|---|---|---|
+| **权限 deny 规则编辑器 UI** | ✅ | permission-rules 重构为 TypertRemoteService（RPC 暴露 getState/setRules+持久化）；ui-permission-presets 新增 settings.section 规则编辑器（四档彩色Tag+启用开关+删除确认+严格/宽松预设），与原预设三档并存 | 浏览器实测闭环：添加 `memory_*→deny` → 对话中 memory_add 被拦截提示 → 删除规则 → 恢复执行 |
+| **示例插件模板** | ✅ | 新增 `packages/bundle/plugin-template/`（host+client双半，template_hello示例工具+状态栏槽位，逐行中文注释），private不进默认profile；plugin-dev.md 新增「从模板开始」章节 | 模板包独立构建通过（host 4.41kB/client 1.93kB），purity门禁无报错 |
+| **移动端截图+巡检修复** | ✅ | 375×812 CDP 实测归档10张；巡检修复金融终端header窄屏竖排、设置面板窄屏竖排2个问题 | 窄屏修复前后对比截图，构建链全绿 |
+
+**仍待后续（剩余）**：Monaco/CodeMirror 真编辑器（待真实就地编辑诉求，当前轻量增强已落地）、国产 embedding 真召回（需用户提供智谱/阿里/百度 key，代码侧 OpenAICompatibleEmbedding 已就绪）、429 自动切备用模型（成本较高，记录方案不实现）。
 
 #### P1（近期做）
 
