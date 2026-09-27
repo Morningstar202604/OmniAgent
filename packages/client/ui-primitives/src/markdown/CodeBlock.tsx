@@ -169,6 +169,41 @@ export function CodeBlock({
     })
   }, [copied, trimmed])
 
+  // Open the settled source in a new browser tab as a standalone read-only
+  // document. No new dependency: a Blob URL of a tiny escaped HTML page. The
+  // source is model/user-generated, so every dynamic byte is HTML-escaped
+  // before it lands in the document; the blob URL is revoked shortly after the
+  // new tab picks it up.
+  const onOpenInNewTab = useCallback(() => {
+    const escaped = trimmed
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+    const langLabel = lang === undefined ? '' : ` · ${lang}`
+    const doc = `<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>代码块${langLabel}</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; height: 100%; }
+  body { background: #1e1e1e; color: #d4d4d4; }
+  pre { margin: 0; padding: 20px; font: 13px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; tab-size: 2; white-space: pre; }
+</style>
+</head>
+<body><pre>${escaped}</pre></body>
+</html>`
+    const blob = new Blob([doc], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const win = window.open(url, '_blank', 'noopener')
+    /* Give the new tab a tick to navigate before revoking; opener is excluded
+       via noopener, so the window handle is deliberately unused. */
+    window.setTimeout(() => { URL.revokeObjectURL(url) }, 1000)
+    void win
+  }, [trimmed, lang])
+
   // shiki's HTML output is a static span tree it generated from `code` (no
   // user HTML passes through), the sanctioned innerHTML consumption path per
   // shiki's own docs.
@@ -197,6 +232,7 @@ export function CodeBlock({
           lang={lang} labels={toolbarLabels} copyLabel={copyLabel} copiedLabel={copiedLabel}
           copied={copied} wrapped={wrapped} onCopy={onCopy}
           onWrap={wrap === undefined ? () => { setWrapped(value => !value) } : undefined}
+          onOpenInNewTab={onOpenInNewTab}
         /> : <div className={css.banner} data-code-block-banner>
           <div className={css.infostring}>{lang ?? ''}</div>
           <div className={css.action}>

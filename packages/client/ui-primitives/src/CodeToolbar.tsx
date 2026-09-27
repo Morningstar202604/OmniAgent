@@ -1,6 +1,7 @@
 /** Shared language, wrapping, and clipboard controls for code cards. */
 import {
-  IconCheckOutlineRegular, IconCopyOutlineRegular, IconNowrapFillRegular, IconWrapFillRegular,
+  IconCheckOutlineRegular, IconCopyOutlineRegular, IconNowrapFillRegular, IconRightUpOutlineRegular,
+  IconWrapFillRegular,
 } from './icons/index.tsx'
 import { Tooltip } from './Tooltip.tsx'
 import { supportsHighlighting } from './markdown/highlight.ts'
@@ -14,6 +15,8 @@ export interface CodeToolbarLabels {
   wrapLabel: string
   /** Action that preserves source columns with horizontal scrolling. */
   unwrapLabel: string
+  /** Action that opens the full source in a new browser tab; omitted to hide the button. */
+  openInNewTabLabel?: string | undefined
 }
 
 /** Display state and callbacks for a code card's toolbar. */
@@ -28,6 +31,7 @@ interface CodeToolbarProps {
   wrapped: boolean
   onCopy?: (() => void) | undefined
   onWrap?: (() => void) | undefined
+  onOpenInNewTab?: (() => void) | undefined
 }
 
 /**
@@ -35,7 +39,7 @@ interface CodeToolbarProps {
  * @param props - Localized labels, current state, and card-owned actions.
  * @returns The shared code-card header.
  */
-export function CodeToolbar({ lang, title, status, labels, copyLabel, copiedLabel, copied, wrapped, onCopy, onWrap }: CodeToolbarProps) {
+export function CodeToolbar({ lang, title, status, labels, copyLabel, copiedLabel, copied, wrapped, onCopy, onWrap, onOpenInNewTab }: CodeToolbarProps) {
   const wrapLabel = wrapped ? labels.unwrapLabel : labels.wrapLabel
   const clipboardLabel = copied ? copiedLabel : copyLabel
   return (
@@ -49,6 +53,11 @@ export function CodeToolbar({ lang, title, status, labels, copyLabel, copiedLabe
         {onWrap !== undefined && <Tooltip label={wrapLabel} side="top" portal>
           <button type="button" className={css.action} aria-label={labels.wrapLabel} aria-pressed={wrapped} onClick={onWrap}>
             {wrapped ? <IconNowrapFillRegular size={14} /> : <IconWrapFillRegular size={14} />}
+          </button>
+        </Tooltip>}
+        {onOpenInNewTab !== undefined && labels.openInNewTabLabel !== undefined && <Tooltip label={labels.openInNewTabLabel} side="top" portal>
+          <button type="button" className={css.action} aria-label={labels.openInNewTabLabel} onClick={onOpenInNewTab}>
+            <IconRightUpOutlineRegular size={14} />
           </button>
         </Tooltip>}
         {onCopy !== undefined && <Tooltip label={clipboardLabel} side="top" portal>
