@@ -326,6 +326,10 @@
     - id: tool-jobs
       name: '@deepseek-ai/dsh-tool-jobs'
 
+    # OS 级通知：notify_send 发送系统通知，失败静默降级为终端响铃打印，不阻断主流程。
+    - id: tool-notify
+      name: '@deepseek-ai/dsh-tool-notify'
+
     - id: fs-observation-policy
       name: '@deepseek-ai/dsh-fs-observation-policy'
 
