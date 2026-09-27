@@ -64,7 +64,9 @@ export function FinancePanel({ t, backToChat }: FinancePanelProps) {
   const pickFunction = (id: string): void => {
     if (id === 'screener') setView('screener')
     else if (id === 'chain') setView('chain')
-    // 其余功能（财务/风险/宏观/板块/资金流向）引导用户在对话框调用对应工具。
+    // 财务/风险/宏观/板块/资金流向：由 Agent 在对话中调用对应工具，
+    // 切回对话区让用户直接提问（不再静默无响应）。
+    else backToChat()
   }
 
   if (view === 'screener') {
