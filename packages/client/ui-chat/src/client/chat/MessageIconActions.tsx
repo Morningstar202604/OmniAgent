@@ -17,7 +17,7 @@ import css from './MessageIconActions.module.css'
  * @param text - markdown body.
  * @param time - optional epoch ms used to label the file.
  */
-function downloadMarkdown(text: string, time?: number | undefined): void {
+function downloadMarkdown(text: string, time?: number): void {
   const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const stamp = time === undefined
