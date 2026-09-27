@@ -1,5 +1,5 @@
 /** 会话历史主面板：按时间分组（今天/昨天/7天内/更早）展示会话，支持切换、新建、重命名、分支与归档。 */
-import { useMemo, useState } from 'react'
+import { memo, useCallback, useMemo, useState } from 'react'
 import clsx from 'clsx'
 import {
   IconArchiveOutlineRegular, IconBranchOutlineRegular, IconChevronRightOutlineRegular,
@@ -8,6 +8,7 @@ import {
 import type { SessionSummary } from '@deepseek-ai/dsh-api-session-controller/client'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
+import type { TranslateNS } from '@deepseek-ai/dsh-client-ui-slots'
 import css from './SessionHistoryPage.module.css'
 import { SessionTimeline } from './SessionTimeline.tsx'
 
@@ -68,6 +69,99 @@ function relativeTime(updatedAt: number, now: number): string {
   return `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
+/** 列表行所需的稳定回调集合（父组件用 useCallback 包成同一引用后下发）。 */
+interface SessionHistoryRowHandlers {
+  onOpen: (id: SessionId) => void
+  onFork: (id: SessionId) => void
+  onArchive: (id: SessionId) => void
+  onStartRename: (id: SessionId, title: string) => void
+  onCancelRename: () => void
+  onDraftChange: (text: string) => void
+  onCommitRename: (id: SessionId, title: string) => void
+}
+
+/**
+ * 单条会话行：memo 包裹后，搜索打字 / store 更新时，未变化的行（props 引用不变）跳过重渲染。
+ * draft 仅在 editing 行传入，其余行恒为 undefined，避免输入草稿抖动触发全表重渲染。
+ */
+const SessionHistoryRow = memo(function SessionHistoryRow({
+  row, active, now, editing, draft, t,
+  onOpen, onFork, onArchive, onStartRename, onCancelRename, onDraftChange, onCommitRename,
+}: {
+  row: SessionSummary
+  active: boolean
+  now: number
+  editing: boolean
+  draft: string | undefined
+  t: TranslateNS<'sessionHistory'>
+} & SessionHistoryRowHandlers) {
+  return (
+    <div
+      className={clsx(css.row, active && css.rowActive)}
+      onClick={() => { if (!editing) onOpen(row.id) }}
+    >
+      <div className={css.rowMain}>
+        {editing ? (
+          <input
+            className={css.renameInput}
+            value={draft}
+            autoFocus
+            placeholder={t('renamePlaceholder')}
+            onChange={e => onDraftChange(e.target.value)}
+            onClick={e => e.stopPropagation()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') onCommitRename(row.id, draft ?? '')
+              else if (e.key === 'Escape') onCancelRename()
+            }}
+            onBlur={() => onCommitRename(row.id, draft ?? '')}
+          />
+        ) : (
+          <>
+            <span className={css.rowTitle}>{row.displayTitle}</span>
+            <span className={css.rowMeta}>
+              <span>{relativeTime(row.updatedAt, now)}</span>
+              {row.parentId !== undefined && <span className={css.badge}>{t('branchBadge')}</span>}
+              {row.running && <span className={css.badge}>{t('running')}</span>}
+            </span>
+          </>
+        )}
+      </div>
+      {!editing && (
+        <span className={css.actions}>
+          <button
+            type="button"
+            className={css.actionBtn}
+            title={t('actionRename')}
+            aria-label={t('actionRename')}
+            onClick={(e) => { e.stopPropagation(); onStartRename(row.id, row.displayTitle) }}
+          >
+            <IconEditOutlineRegular size={13} />
+          </button>
+          <button
+            type="button"
+            className={css.actionBtn}
+            title={t('actionFork')}
+            aria-label={t('actionFork')}
+            onClick={(e) => { e.stopPropagation(); onFork(row.id) }}
+          >
+            <IconFlatListOutlineRegular size={13} />
+          </button>
+          <button
+            type="button"
+            className={css.actionBtn}
+            title={t('actionDelete')}
+            aria-label={t('actionDelete')}
+            onClick={(e) => { e.stopPropagation(); onArchive(row.id) }}
+          >
+            <IconArchiveOutlineRegular size={13} />
+          </button>
+          <IconChevronRightOutlineRegular size={13} className={css.muted} />
+        </span>
+      )}
+    </div>
+  )
+})
+
 /** 会话历史主面板组件。 */
 export function SessionHistoryPage({
   useSessions, openSession, startSession, forkSession, renameSession, archiveSession, t,
@@ -77,7 +171,8 @@ export function SessionHistoryPage({
   const [editingId, setEditingId] = useState<SessionId | undefined>(undefined)
   const [draft, setDraft] = useState('')
   const [view, setView] = useState<HistoryView>('list')
-  const now = Date.now()
+  // now 在挂载期内保持稳定：行 memo 依赖它做 props 比对；跨天边界属可忽略的边缘情况。
+  const [now] = useState(() => Date.now())
 
   const currentId = Object.values(list.byId).find(s => (s.retainedBy.mainView ?? 0) > 0)?.id
 
@@ -100,20 +195,40 @@ export function SessionHistoryPage({
     return order.map(key => ({ key, rows: buckets[key] })).filter(g => g.rows.length > 0)
   }, [rows, now])
 
-  const groupTitle = (key: GroupKey): string => {
+  const groupTitle = useCallback((key: GroupKey): string => {
     if (key === 'today') return t('groupToday')
     if (key === 'yesterday') return t('groupYesterday')
     if (key === 'week') return t('groupWeek')
     return t('groupEarlier')
-  }
+  }, [t])
 
-  const commitRename = (sessionId: SessionId): void => {
-    const title = draft.trim()
+  // 下发给 memo 行的稳定回调：注入动作一旦变化才重建，否则保持同一引用。
+  const handleOpen = useCallback((id: SessionId) => openSession(id), [openSession])
+  const handleFork = useCallback((id: SessionId) => { void forkSession(id) }, [forkSession])
+  const handleArchive = useCallback((id: SessionId) => archiveSession(id), [archiveSession])
+  const handleStartRename = useCallback((id: SessionId, title: string) => {
+    setEditingId(id)
+    setDraft(title)
+  }, [])
+  const handleCancelRename = useCallback(() => setEditingId(undefined), [])
+  const handleDraftChange = useCallback((text: string) => setDraft(text), [])
+  const handleCommitRename = useCallback((id: SessionId, title: string) => {
     setEditingId(undefined)
-    if (title === '') return
-    renameSession(sessionId, title).catch((reason: unknown) => {
+    const trimmed = title.trim()
+    if (trimmed === '') return
+    renameSession(id, trimmed).catch((reason: unknown) => {
       console.warn('rename session rejected:', reason)
     })
+  }, [renameSession])
+
+  const handlers: SessionHistoryRowHandlers = {
+    onOpen: handleOpen,
+    onFork: handleFork,
+    onArchive: handleArchive,
+    onStartRename: handleStartRename,
+    onCancelRename: handleCancelRename,
+    onDraftChange: handleDraftChange,
+    onCommitRename: handleCommitRename,
   }
 
   return (
@@ -170,70 +285,16 @@ export function SessionHistoryPage({
           <div key={group.key}>
             <div className={css.groupTitle}>{groupTitle(group.key)}</div>
             {group.rows.map(row => (
-              <div
+              <SessionHistoryRow
                 key={row.id}
-                className={clsx(css.row, row.id === currentId && css.rowActive)}
-                onClick={() => { if (editingId !== row.id) openSession(row.id) }}
-              >
-                <div className={css.rowMain}>
-                  {editingId === row.id ? (
-                    <input
-                      className={css.renameInput}
-                      value={draft}
-                      autoFocus
-                      placeholder={t('renamePlaceholder')}
-                      onChange={e => setDraft(e.target.value)}
-                      onClick={e => e.stopPropagation()}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') commitRename(row.id)
-                        else if (e.key === 'Escape') setEditingId(undefined)
-                      }}
-                      onBlur={() => commitRename(row.id)}
-                    />
-                  ) : (
-                    <>
-                      <span className={css.rowTitle}>{row.displayTitle}</span>
-                      <span className={css.rowMeta}>
-                        <span>{relativeTime(row.updatedAt, now)}</span>
-                        {row.parentId !== undefined && <span className={css.badge}>{t('branchBadge')}</span>}
-                        {row.running && <span className={css.badge}>{t('running')}</span>}
-                      </span>
-                    </>
-                  )}
-                </div>
-                {editingId !== row.id && (
-                  <span className={css.actions}>
-                    <button
-                      type="button"
-                      className={css.actionBtn}
-                      title={t('actionRename')}
-                      aria-label={t('actionRename')}
-                      onClick={(e) => { e.stopPropagation(); setEditingId(row.id); setDraft(row.displayTitle) }}
-                    >
-                      <IconEditOutlineRegular size={13} />
-                    </button>
-                    <button
-                      type="button"
-                      className={css.actionBtn}
-                      title={t('actionFork')}
-                      aria-label={t('actionFork')}
-                      onClick={(e) => { e.stopPropagation(); void forkSession(row.id) }}
-                    >
-                      <IconFlatListOutlineRegular size={13} />
-                    </button>
-                    <button
-                      type="button"
-                      className={css.actionBtn}
-                      title={t('actionDelete')}
-                      aria-label={t('actionDelete')}
-                      onClick={(e) => { e.stopPropagation(); archiveSession(row.id) }}
-                    >
-                      <IconArchiveOutlineRegular size={13} />
-                    </button>
-                    <IconChevronRightOutlineRegular size={13} className={css.muted} />
-                  </span>
-                )}
-              </div>
+                row={row}
+                active={row.id === currentId}
+                now={now}
+                editing={editingId === row.id}
+                draft={editingId === row.id ? draft : undefined}
+                t={t}
+                {...handlers}
+              />
             ))}
           </div>
         ))}
