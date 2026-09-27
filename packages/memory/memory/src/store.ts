@@ -566,7 +566,9 @@ export class MemoryStore {
     this.indexMemoryDoc(id, content, tags)
     // 内容变了才重算稠密向量（标签变化不影响向量文本）。
     if (patch.content !== undefined) await this.syncMemoryVector(id, content)
-    return this.getMemory(id)!
+    const updated = this.getMemory(id)
+    if (updated === undefined) throw new Error(`memory_update: 记忆 "${id}" 不存在`)
+    return updated
   }
 
   /** 删除记忆（同时清理 BM25 索引词项与稠密向量）。 */
@@ -608,7 +610,9 @@ export class MemoryStore {
     )
     let n = 0
     for (let i = 0; i < chunks.length; i += 1) {
-      const text = chunks[i]!.trim()
+      const chunk = chunks[i]
+      if (chunk === undefined) continue
+      const text = chunk.trim()
       if (text.length === 0) continue
       const id = makeId('know')
       insert.run(id, source, i, text, now)

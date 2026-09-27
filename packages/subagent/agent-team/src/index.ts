@@ -179,7 +179,8 @@ export function buildExecutionPlan(roles: readonly TeamRole[]): TeamRole[][] {
   // 这样显式 stage 把上游往后推时，下游会自动跟着顺延，不会先于上游运行。
   const finalStage = new Map<string, number>()
   for (const name of topoOrder) {
-    const role = byName.get(name)!
+    const role = byName.get(name)
+    if (role === undefined) throw new Error(`agent_team_run：未找到角色「${name}」`)
     const depStage = (role.dependsOn ?? []).reduce((max, dep) => {
       const s = finalStage.get(dep) ?? 0
       return Math.max(max, s + 1)
