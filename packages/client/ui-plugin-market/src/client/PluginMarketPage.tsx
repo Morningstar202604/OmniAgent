@@ -201,7 +201,7 @@ export function PluginMarketPage({ t }: PluginMarketPageProps) {
                 {installed && (
                   <div className={css.switchRow}>
                     <Switch
-                      checked={state?.enabled === true}
+                      checked={state.enabled}
                       onChange={(next) => { handleToggle(selected, next) }}
                       label={t('enable')}
                     />

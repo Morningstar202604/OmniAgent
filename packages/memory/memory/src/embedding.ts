@@ -62,8 +62,8 @@ export class LocalTFEmbedding implements EmbeddingProvider {
   }
 
   /** 稀疏方案不走此路径，返回空数组占位。 */
-  async embed(_text: string): Promise<number[]> {
-    return []
+  embed(_text: string): Promise<number[]> {
+    return Promise.resolve([])
   }
 }
 

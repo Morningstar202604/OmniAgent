@@ -89,7 +89,7 @@ export function loadParams(): ModelGenerationParams {
   const fallback = defaultParams()
   let raw: string | null = null
   try {
-    raw = globalThis.localStorage?.getItem(STORAGE_KEY) ?? null
+    raw = globalThis.localStorage.getItem(STORAGE_KEY) ?? null
   } catch {
     return fallback
   }
@@ -112,7 +112,7 @@ export function loadParams(): ModelGenerationParams {
  */
 export function saveParams(params: ModelGenerationParams): void {
   try {
-    globalThis.localStorage?.setItem(STORAGE_KEY, JSON.stringify(params))
+    globalThis.localStorage.setItem(STORAGE_KEY, JSON.stringify(params))
   } catch {
     /* persistence is best-effort; the in-memory values still drive the UI */
   }

@@ -19,7 +19,7 @@ const STORAGE_KEY = 'dsh:plugin-market:installs:v1'
 
 /** 读取本地状态（容错：损坏时回退为空）。 */
 export function loadInstallMap(): InstallMap {
-  if (typeof window === 'undefined' || window.localStorage === undefined) return {}
+  if (typeof window === 'undefined') return {}
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     if (raw === null) return {}
@@ -47,7 +47,7 @@ export function loadInstallMap(): InstallMap {
 
 /** 持久化状态。 */
 export function saveInstallMap(map: InstallMap): void {
-  if (typeof window === 'undefined' || window.localStorage === undefined) return
+  if (typeof window === 'undefined') return
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(map))
   }

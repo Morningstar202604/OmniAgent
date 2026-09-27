@@ -83,7 +83,6 @@ export class RulesEditorController {
         state.rules = toEditable(rules)
       })
     } catch (error) {
-      if (this.disposed) return
       this.store.update(state => {
         state.status = 'error'
         state.error = error instanceof Error ? error.message : String(error)
@@ -117,7 +116,6 @@ export class RulesEditorController {
         state.rules = toEditable(value.rules)
       })
     } catch (error) {
-      if (this.disposed) return
       this.store.update(state => {
         state.status = 'error'
         state.error = error instanceof Error ? error.message : String(error)
