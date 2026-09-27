@@ -2,6 +2,13 @@
 
 > 一个底座，N 种职业。不装插件，它是一个开箱即用的通用全能 Agent；装上某个插件，同一个 Agent 立刻变成那个垂直领域的专业应用；卸下插件，立刻回归通用——**通用能力永远不被削弱**。
 
+
+[![version](https://img.shields.io/badge/version-0.1.7-6366f1)](https://gitcode.com/badhope/omniagent)
+[![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![node](https://img.shields.io/badge/node-%3E%3D22.19-339933)](package.json)
+[![pnpm](https://img.shields.io/badge/pnpm-%3E%3D11.0-F69220)](package.json)
+[![platform](https://img.shields.io/badge/platform-Web%20%7C%20CLI%20%7C%20Desktop-0ea5e9)](#quick-start)
+
 ## Screenshots
 
 | Desktop home — universal base (light) | Finance terminal |
