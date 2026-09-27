@@ -4,6 +4,41 @@
 
 ---
 
+## 0. 从模板开始（5 分钟快速入门）
+
+不想先读完整篇？直接复制现成模板，照五步走：
+
+**模板位置**：[`packages/bundle/plugin-template/`](../packages/bundle/plugin-template/)
+它是一个**自包含**的最小垂直插件——一个目录里同时放好了 host 半边（示例工具 `template_hello` + 领域 persona）、client 半边（往 `shell.statusbar` 槽位挂一个加载标记），以及把自己挂进启动树的 `cordis.patch.yml`。包已 `private: true`，不会被任何默认 profile 加载。
+
+```bash
+# 1) 复制模板，改成你的领域
+cp -r packages/bundle/plugin-template packages/bundle/my-domain
+cd packages/bundle/my-domain
+
+# 2) 全局重命名：把 @deepseek-ai/dsh-plugin-template 换成你的新包名
+#    （package.json 的 name、tsdown.config.ts 第一个参数、cordis.patch.yml 的 name 字段）
+#    同时把 cordis.patch.yml 与 src/index.ts 里的 id/name "plugin-template" 改掉
+
+# 3) 打开 src/index.ts，把 template_hello 换成你自己的领域工具
+#    （defineTool + ValueSchemaSpec DSL 的写法见文件内中文注释 / 本文第 5.1 节）
+
+# 4) 在 packages/boot/app-boot/src/profile.ts 的 PROFILE_TEMPLATES 里加一条：
+#    myDomain: { bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-general-full',
+#                         '@deepseek-ai/dsh-my-domain', '@deepseek-ai/dsh-web-app'] },
+#    并把新包路径加进 tsconfig.host.json 与 tsconfig.client.json 的 references
+
+# 5) 构建验证
+npx tsc -b
+pnpm run build:lib:host
+pnpm run build:lib:client
+pnpm oa --profile myDomain --dump-config   # 确认你的插件出现在启动树
+```
+
+模板里每个文件都有逐行中文注释解释「为什么这么写」。复制走之后，再回来读本文第 1～8 节了解每一处的设计理由与边界规则。下面是完整指南。
+
+---
+
 ## 1. 定位与理念
 
 OmniAgent 的底座是一个**通用全能 Agent**（文件、执行、搜索、推理、工具链、Web UI 全部开箱可用）。垂直领域的专业知识、专业工具、乃至专业界面，全部以**插件**形式打包：
@@ -549,6 +584,7 @@ persona 文案的写法约定（参考 finance/ecommerce）：
 
 | 插件 | 路径 | 形态 | 学什么 |
 |---|---|---|---|
+| **plugin-template**（最小模板） | `packages/bundle/plugin-template` | 自包含：host 工具 + client 槽位 + bundle patch | 5 分钟起步：defineTool + persona + slots 注册 + cordis.patch.yml 自举，逐行中文注释。新插件先复制它 |
 | **dsh-finance**（金融） | `packages/finance/finance-agent` + `packages/client/ui-finance` + `packages/bundle/finance` | 工具 + UI 面板 + profile 接入 | 完整范式：host 工具集 + persona、client main 面板瞬变终端、bundle patch、profile 模板 |
 | **dsh-ecommerce**（电商） | `packages/ecommerce/ecommerce-agent` + `packages/bundle/ecommerce` | host 工具 + persona（无独立 UI） | 第二个领域插件，证明"任意垂直领域皆可打包"；mock 数据源契约 |
 | **dsh-general-full**（通用增强组合包） | `packages/bundle/general-full` | bundle 组合 | 一个 bundle 串联 LSP/定时任务/产物/桌面自动化注册表等通用增强的 patch 写法 |

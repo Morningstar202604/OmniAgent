@@ -1,0 +1,25 @@
+{
+  // 本包是「双面孔」：src/index.ts 跑在 Node（host），src/client/index.ts 跑在浏览器。
+  // 因此继承 host 基座，再补 DOM lib（浏览器半边要用 window/document/React）。
+  // 与 packages/tools/tool-notify 同款写法。
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types",
+    "lib": ["ES2024", "DOM", "DOM.Iterable"]
+  },
+  "include": ["src"],
+  "references": [
+    // cordis 插件框架（vendor 三方，按需引用）
+    { "path": "../../../vendor/cordis" },
+    // schemastery：Config 的 schema 声明
+    { "path": "../../../vendor/schemastery" },
+    // host 半边依赖：工具注册表 + 系统提示词服务
+    { "path": "../../core/tools" },
+    { "path": "../../core/system-prompt" },
+    // client 半边依赖：槽位注册表（类型层）
+    { "path": "../../client/ui-slots" },
+    { "path": "../../client/ui-renderer" },
+    { "path": "../../client/ui-layout" }
+  ]
+}

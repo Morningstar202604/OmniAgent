@@ -126,7 +126,7 @@ omniagent/
 
 一个领域插件 = 一个 Agent 插件包（host 半边：数据契约 + 纯逻辑 + 工具 + 人设注入）+ 一个 profile 组合包（声明 `dsh.bundle.patch` 的 `cordis.patch.yml`，可选挂载 client 半边 UI 槽位）。工具只依赖数据契约，与具体数据源解耦；示例数据须带 `mock` 标记并向用户明示。
 
-插件开发完整指南见 **[`docs/plugin-dev.md`](docs/plugin-dev.md)**；随包两个范例：`packages/finance/finance-agent/` 与 `packages/ecommerce/ecommerce-agent/`。
+插件开发完整指南见 **[`docs/plugin-dev.md`](docs/plugin-dev.md)**。**想自己做一个插件？从最小模板起步**：复制 [`packages/bundle/plugin-template/`](packages/bundle/plugin-template/) → 改个包名 → 写自己的工具，5 分钟跑通（详见指南开头「从模板开始」）。完整范例可参考 `packages/finance/finance-agent/` 与 `packages/ecommerce/ecommerce-agent/`。
 
 ### 从哪里获得插件
 
