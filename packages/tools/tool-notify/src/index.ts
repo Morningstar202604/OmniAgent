@@ -87,7 +87,7 @@ function runCommand(command: string, args: readonly string[], timeoutMs = 3000):
         done(error === null)
       })
       // 命令不存在等启动期错误走 'error' 事件。
-      child.on('error', () => done(false))
+      child.on('error', () => { done(false) })
     } catch {
       done(false)
     }

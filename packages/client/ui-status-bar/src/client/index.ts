@@ -2,7 +2,7 @@
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type { ISessions } from '@deepseek-ai/dsh-api-session-controller/client'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
-import type { ConnectionState, ConnectionStateSource } from '@deepseek-ai/dsh-client-connection/client'
+import type { ConnectionStateSource } from '@deepseek-ai/dsh-client-connection/client'
 import type { HostObservable } from '@deepseek-ai/dsh-client-ui-slots'
 import type { ModelDirectoryState, ModelDirectoryResolver } from '@deepseek-ai/dsh-client-ui-model-selection/client'
 // 仅类型：token 用量投影形状；运行时经 sessions.binding().session.projections.faceOf('tokenUsage') 读取。
@@ -195,7 +195,7 @@ export function apply(ctx: ClientContext): void {
     const injected: StatusBarInjected = {
       hooks: {
         modelLabel,
-        connectionState: connection.state as HostObservable<ConnectionState | undefined>,
+        connectionState: connection.state,
         tokenUsage,
       },
       startSession: () => { uiWorkspace.startSession() },
