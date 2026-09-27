@@ -15,7 +15,7 @@
       agnes-ai:
         displayName: Agnes AI（OpenAI 兼容）
         api: openai-completions
-        baseURL: https://apihub.agnes-ai.com/v1
+        baseURL: https://api.agnes-ai.cn/v1
         apiKeyEnv: AGNES_API_KEY
         models:
           - id: agnes-3.0-flash
