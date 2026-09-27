@@ -20,15 +20,19 @@ jobs:
           git config user.email "${{ secrets.GIT_USER_EMAIL || 'badhope@users.noreply.gitcode.com' }}"
 
       - name: 镜像到 GitCode
-        if: ${{ secrets.GITCODE_TOKEN != '' }}
+        env:
+          GITCODE_TOKEN: ${{ secrets.GITCODE_TOKEN }}
         run: |
+          if [ -z "$GITCODE_TOKEN" ]; then echo "skip: GITCODE_TOKEN 未配置"; exit 0; fi
           git push --force \
-            "https://oauth2:${{ secrets.GITCODE_TOKEN }}@gitcode.com/badhope/OmniAgent.git" \
+            "https://oauth2:${GITCODE_TOKEN}@gitcode.com/badhope/OmniAgent.git" \
             main:main
 
       - name: 镜像到 Gitee
-        if: ${{ secrets.GITEE_TOKEN != '' }}
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
         run: |
+          if [ -z "$GITEE_TOKEN" ]; then echo "skip: GITEE_TOKEN 未配置"; exit 0; fi
           git push --force \
-            "https://badhope:${{ secrets.GITEE_TOKEN }}@gitee.com/badhope/omniagent.git" \
+            "https://badhope:${GITEE_TOKEN}@gitee.com/badhope/omniagent.git" \
             main:main
