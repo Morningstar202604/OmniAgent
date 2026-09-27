@@ -10,6 +10,7 @@ export const en = {
   'codeBlock.title': 'Code block',
   'codeBlock.wrap': 'Wrap lines',
   'codeBlock.unwrap': 'Do not wrap lines',
+  'codeBlock.openInNewTab': 'Open in new tab',
   'copy.failed': 'Copy failed',
   'copy.value': 'Copy value',
   'copy.json': 'Copy JSON',

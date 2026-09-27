@@ -18,7 +18,7 @@ type T = TranslateNS<'conversation'>
  * @returns Language fallback and wrapping actions.
  */
 export function codeToolbarLabels(t: T): CodeToolbarLabels {
-  return { codeLabel: t('codeBlock.title'), wrapLabel: t('codeBlock.wrap'), unwrapLabel: t('codeBlock.unwrap') }
+  return { codeLabel: t('codeBlock.title'), wrapLabel: t('codeBlock.wrap'), unwrapLabel: t('codeBlock.unwrap'), openInNewTabLabel: t('codeBlock.openInNewTab') }
 }
 
 /**

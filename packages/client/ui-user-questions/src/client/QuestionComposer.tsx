@@ -131,7 +131,7 @@ type QuestionFlowProps =
 function QuestionFlow({ pending, t, useStore, actions }: QuestionFlowProps) {
   const questions = pending.questions
   const markdownLabels = useMemo(() => ({
-    code: { copyLabel: t('copy'), copiedLabel: t('copied'), toolbarLabels: { codeLabel: t('codeBlock.title'), wrapLabel: t('codeBlock.wrap'), unwrapLabel: t('codeBlock.unwrap') } },
+    code: { copyLabel: t('copy'), copiedLabel: t('copied'), toolbarLabels: { codeLabel: t('codeBlock.title'), wrapLabel: t('codeBlock.wrap'), unwrapLabel: t('codeBlock.unwrap'), openInNewTabLabel: t('codeBlock.openInNewTab') } },
     footnotes: t('markdown.footnotes'),
   }), [t])
   const initialProgress = useMemo<QuestionDraftProgress>(() => ({

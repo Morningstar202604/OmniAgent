@@ -27,9 +27,10 @@ export function MarkdownBody({ content, resourceAddress, useResource, t }: Markd
   const codeLabel = t('codeBlock.title')
   const wrapLabel = t('codeBlock.wrap')
   const unwrapLabel = t('codeBlock.unwrap')
+  const openInNewTabLabel = t('codeBlock.openInNewTab')
   const labels = useMemo<MarkdownLabels>(() => ({
-    code: { copyLabel, copiedLabel, toolbarLabels: { codeLabel, wrapLabel, unwrapLabel } }, footnotes,
-  }), [copyLabel, copiedLabel, footnotes, codeLabel, wrapLabel, unwrapLabel])
+    code: { copyLabel, copiedLabel, toolbarLabels: { codeLabel, wrapLabel, unwrapLabel, openInNewTabLabel } }, footnotes,
+  }), [copyLabel, copiedLabel, footnotes, codeLabel, wrapLabel, unwrapLabel, openInNewTabLabel])
   if (content.kind !== 'text') return null
   return (
     <div className={css.document} data-document-markdown>

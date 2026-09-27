@@ -8,6 +8,7 @@ export const zh = {
   'codeBlock.title': '代码块',
   'codeBlock.wrap': '自动换行',
   'codeBlock.unwrap': '取消自动换行',
+  'codeBlock.openInNewTab': '新标签打开',
   'copy.failed': '复制失败',
   'copy.value': '复制值',
   'copy.json': '复制 JSON',

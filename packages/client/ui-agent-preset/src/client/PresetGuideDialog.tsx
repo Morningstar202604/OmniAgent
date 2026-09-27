@@ -58,7 +58,7 @@ function GuideUsage({ text, t }: {
   t: TranslateNS<'settings.agentPreset'>
 }): ReactNode {
   const labels = {
-    code: { copyLabel: t('guideCopy'), copiedLabel: t('guideCopied'), toolbarLabels: { codeLabel: t('codeBlock.title'), wrapLabel: t('codeBlock.wrap'), unwrapLabel: t('codeBlock.unwrap') } },
+    code: { copyLabel: t('guideCopy'), copiedLabel: t('guideCopied'), toolbarLabels: { codeLabel: t('codeBlock.title'), wrapLabel: t('codeBlock.wrap'), unwrapLabel: t('codeBlock.unwrap'), openInNewTabLabel: t('codeBlock.openInNewTab') } },
     footnotes: t('guideFootnotes'),
   }
   return text.split(/(?=^### )/m).map((section) => {
@@ -151,7 +151,7 @@ export function PresetGuideDialog({ guide, initialPage, t, onClose }: {
                 <MarkdownText
                   text={t(guide.explanation)}
                   labels={{
-                    code: { copyLabel: t('guideCopy'), copiedLabel: t('guideCopied'), toolbarLabels: { codeLabel: t('codeBlock.title'), wrapLabel: t('codeBlock.wrap'), unwrapLabel: t('codeBlock.unwrap') } },
+                    code: { copyLabel: t('guideCopy'), copiedLabel: t('guideCopied'), toolbarLabels: { codeLabel: t('codeBlock.title'), wrapLabel: t('codeBlock.wrap'), unwrapLabel: t('codeBlock.unwrap'), openInNewTabLabel: t('codeBlock.openInNewTab') } },
                     footnotes: t('guideFootnotes'),
                   }}
                 />

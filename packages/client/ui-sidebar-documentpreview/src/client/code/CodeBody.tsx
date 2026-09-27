@@ -28,7 +28,7 @@ export function CodeBody({ resourceAddress, content, wrap, scrollportRef, t }: C
         lineNumbers
         copyLabel={t('copy')}
         copiedLabel={t('copied')}
-        toolbarLabels={{ codeLabel: t('codeBlock.title'), wrapLabel: t('codeBlock.wrap'), unwrapLabel: t('codeBlock.unwrap') }}
+        toolbarLabels={{ codeLabel: t('codeBlock.title'), wrapLabel: t('codeBlock.wrap'), unwrapLabel: t('codeBlock.unwrap'), openInNewTabLabel: t('codeBlock.openInNewTab') }}
       />
     </div>
   )
