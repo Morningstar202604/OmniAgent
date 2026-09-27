@@ -35,7 +35,7 @@
 | F14 | 流式输出与打字机效果 | ✅ 已有 | `transcript-view.ts` + SSE 流式；实测"深度求索中"逐步输出 | 所有对标对象均有；Cursor 流式 token 级渲染 | P2 |
 | F15 | 消息操作（编辑/重生成/复制/导出/分支） | ⚠️ 部分存在 | `MessageIconActions.tsx` 存在操作按钮；`conversation-nodes` 支持节点；`message-feedback` 点赞点踩；但**无单条消息编辑后重跑（rewind）、无从消息分叉分支、无导出单条消息** | Claude Code 可 `/rewind` 回到历史检查点；Cursor Checkpoints 可回滚；ChatGPT/Claude 网页端可编辑消息重生成 | P1 |
 | F16 | 深色/浅色主题与自适应 | ✅ 已有 | `ui-theme` + 设置里外观/字号；实测深色浅色可切 | 全部对标对象均有 | P2 |
-| F17 | 移动端/响应式适配 | ❌ 缺失 | `packages/client/web` 下**无任何 `@media`/响应式 CSS**；Web UI 仅桌面布局；无移动端 PWA/适配 | 豆包/Kimi/通义均有完整移动端 App；Cursor 有 iOS App；Claude Code 有移动 SSH 场景 | P2 |
+| F17 | 移动端/响应式适配 | ✅ 已完成 | 2026-09-27 补齐：断点 768px/480px 纯 CSS 媒体查询，布局由 columns.js 驱动（<1024px 侧栏折叠、右栏 overlay），各组件窄屏适配（状态栏收起非关键信息、Hero 缩标题、插件市场单列、金融面板堆叠）；CDP 375×812 实测通过 | 豆包/Kimi/通义均有完整移动端 App；Cursor 有 iOS App；Claude Code 有移动 SSH 场景 | P2 |
 | F18 | 可观测面板（trajectory/工具链/token 明细） | ✅ 已有 | `ui-trajectory`（`TrajectoryTable.tsx`）逐步展示系统提示词/上下文/每轮工具调用与结果；`token-meter`；`session-telemetry-otel` | Claude Code `-p` 打印完整 trace；OpenCode TUI 面板展示工具调用；Cursor usage visibility 改进 | P2 |
 
 ### 0.2 后端能力差距清单（18 项）
@@ -95,7 +95,16 @@
 
 **插件加载修复记录**：permission-rules 与 memory 初始报 `failed to import`，根因有二——(1) base/finance bundle 的 `dependencies` 未声明新插件，pnpm 未建立 bundle 级 node_modules 链接，运行时解析器找不到包；(2) cordis `inject` 声明错误（permission-rules 为空数组但访问 ctx.tools，memory 完全缺失 inject 但访问 ctx.tools+ctx.systemPrompt）。均已修复，web profile 启动无警告。
 
-**后续路线（未静默降级）**：PDF 真实渲染（当前为打印友好 HTML）、记忆语义/向量召回（当前为关键词 LIKE）、agent_team_run 角色间消息传递与 DAG 编排、移动端响应式适配。
+**后续路线（2026-09-27 第二轮补齐，4 项全部完成）**：
+
+| 项 | 状态 | 实现方案 | 验证结果 |
+|---|---|---|---|
+| **状态栏 token 真实统计** | ✅ 已完成 | 复用 Host 会话投影 `tokenUsage`（与聊天区 StatsPills 同一数据源），经 `sessions.binding(id).session.projections.faceOf('tokenUsage')` 订阅，主会话切换自动重绑；紧凑格式化（<1k 原样，≥1k 用 k，≥1M 用 M），无数据回退 `—`，tooltip 展示输入/输出明细 | 浏览器实测：历史会话显示 7.6k/48.4k tokens，切换会话跟随更新，深浅色自适应 |
+| **PDF 真实渲染** | ✅ 已完成 | `pdfkit`（纯 JS ~500KB，无 Chromium）+ `fontkit`，从 NotoSansCJK.ttc 取简中子字体嵌入，自动子集化；Markdown 块级解析→pdfkit 绘制（主题色横幅/粗体标题/表格边框/深色代码块/页脚页码） | `%PDF-1.3` 文件头，`pdftotext` 可完整提取中文/数字/代码，文件约 130KB 可搜索 |
+| **记忆语义检索** | ✅ 已完成 | 纯 TypeScript BM25（k1=1.5, b=0.75），中文 bigram 分词+英文单词分词+中英文停用词表；SQLite `memory_terms`/`knowledge_terms` 持久化倒排索引，启动时恢复并一致性校验；BM25 排序优先，无命中退化为 LIKE | 12/12 用例通过："用户职业"→命中前端记忆、"做饭"→不误召、更新/删除索引同步、重启持久化、知识库语义召回 |
+| **移动端响应式** | ✅ 已完成 | 断点 768px/480px 纯 CSS 媒体查询；布局本就由 columns.js 驱动（<1024px 侧栏折叠 56px、右栏变 overlay），在此基础上补各组件窄屏适配（状态栏收起 token/时钟、Hero 缩标题、插件市场单列、命令面板收紧、金融面板堆叠） | CDP 模拟 375×812：首页单栏三卡纵向、状态栏单行、插件市场单列可滚动、命令面板不超视口；桌面 1280px 不受影响 |
+
+**仍待后续**：agent_team_run 角色间消息传递与 DAG 编排、记忆向量/embedding 召回（当前 BM25 已覆盖语义召回基础）、PDF 复杂排版（图表/图片嵌入）。
 
 #### P1（近期做）
 
@@ -320,5 +329,5 @@
 - 验证方式：真实模型 CLI 一次性对话（ecommerce/finance/headless 三 profile）、会话日志工具调用核验、Web UI 浏览器实测（对话/设置/插件/轨迹/侧边栏）、生成程序本沙箱真实执行比对、全仓库 `packages/` 结构走读（对照前端 18 项 + 后端 18 项逐项判定）。
 - 已确认可运行：全部真实对话、工具调用、Web 全功能、程序生成。
 - 已确认已具备（全栈对标新增）：subagent 体系（含 Claude Code/Codex 外部子代理）、jobs 任务队列、schedule 定时、webhook/github、sandbox 沙箱、compaction 上下文压缩、MCP client、cordis 插件热加载、OTel 遥测、session JSONL 持久化多版本迁移、token-meter、三网络搜索源、git working-tree 快照、webhook/gateway REST API。
-- 已确认缺失（全栈对标新增）：移动端响应式、长期记忆/RAG、PDF/HTML 报告导出、细粒度 allow/deny 权限规则、agent 主动 git 提交工具、向量语义搜索、OS 级通知、插件在线市场、会话分支时间线、模型参数滑杆。
+- 已确认缺失（全栈对标新增，剩余未补齐）：agent 主动 git 提交工具、向量/embedding 语义搜索（BM25 已覆盖基础语义召回）、OS 级通知、会话分支时间线、模型参数滑杆。（移动端响应式、长期记忆/BM25、PDF 真实导出、细粒度权限规则、插件在线市场均已在 2026-09-27 补齐）
 - 缺口：① 金融数据当前为 mock 示例，接真实源需配置；② agent 内部 bash 执行沙箱在此测试环境缺 bubblewrap/Landlock，用户本机不受影响；③ Web 插件开关交互有一处状态不一致（已修复并记录）。
