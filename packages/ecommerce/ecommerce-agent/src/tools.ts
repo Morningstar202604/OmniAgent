@@ -53,6 +53,7 @@ export function buildEcommerceTools(source: EcommerceDataSource): ToolDefinition
         ].join('\n'),
       }],
     },
+    // oxlint-disable-next-line typescript/require-await -- 工具 execute 接口要求返回 Promise
     async execute(args: { seed: string; count?: number }) {
       try {
         const keywords = source.keywords(args.seed, args.count ?? 10)
@@ -95,6 +96,7 @@ export function buildEcommerceTools(source: EcommerceDataSource): ToolDefinition
         ].join('\n'),
       }],
     },
+    // oxlint-disable-next-line typescript/require-await -- 工具 execute 接口要求返回 Promise
     async execute(args: { title: string; keywords?: string[] }) {
       const result = optimizeTitle(args.title, args.keywords ?? [])
       return { ...result, mock: false }
@@ -130,6 +132,7 @@ export function buildEcommerceTools(source: EcommerceDataSource): ToolDefinition
         ].join('\n'),
       }],
     },
+    // oxlint-disable-next-line typescript/require-await -- 工具 execute 接口要求返回 Promise
     async execute(args: { category: string }) {
       try {
         const category = parseCategory(args.category)
@@ -179,6 +182,7 @@ export function buildEcommerceTools(source: EcommerceDataSource): ToolDefinition
         ].join('\n'),
       }],
     },
+    // oxlint-disable-next-line typescript/require-await -- 工具 execute 接口要求返回 Promise
     async execute(args: { name: string; category: string; price: number; cost: number; month?: number }) {
       try {
         const category = parseCategory(args.category)
@@ -219,6 +223,7 @@ export function buildEcommerceTools(source: EcommerceDataSource): ToolDefinition
         ].join('\n'),
       }],
     },
+    // oxlint-disable-next-line typescript/require-await -- 工具 execute 接口要求返回 Promise
     async execute(args: { text: string }) {
       return { ...analyzeReview(args.text), mock: false }
     },
@@ -261,6 +266,7 @@ export function buildEcommerceTools(source: EcommerceDataSource): ToolDefinition
         ].join('\n'),
       }],
     },
+    // oxlint-disable-next-line typescript/require-await -- 工具 execute 接口要求返回 Promise
     async execute(args: { category: string }) {
       try {
         const category = parseCategory(args.category)
@@ -305,6 +311,7 @@ export function buildEcommerceTools(source: EcommerceDataSource): ToolDefinition
         ].join('\n'),
       }],
     },
+    // oxlint-disable-next-line typescript/require-await -- 工具 execute 接口要求返回 Promise
     async execute(args: { product: string; platform?: string }) {
       const platform = parsePlatform(args.platform)
       return {
@@ -351,6 +358,7 @@ export function buildEcommerceTools(source: EcommerceDataSource): ToolDefinition
         ].join('\n'),
       }],
     },
+    // oxlint-disable-next-line typescript/require-await -- 工具 execute 接口要求返回 Promise
     async execute(args: { category: string; node?: string; margin?: number }) {
       try {
         const category = parseCategory(args.category)

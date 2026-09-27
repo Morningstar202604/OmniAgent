@@ -315,6 +315,7 @@ export function buildFinanceTools(source: FinanceDataSource): ToolDefinition[] {
         text: `【${value.mode}】${value.detail}\n公式：${value.formula}\n结果：${value.result}`,
       }],
     },
+    // oxlint-disable-next-line typescript/require-await -- 工具 execute 接口要求返回 Promise
     async execute(args: {
       mode: string
       principal?: number
@@ -395,6 +396,7 @@ export function buildFinanceTools(source: FinanceDataSource): ToolDefinition[] {
         text: `【${value.indicator.toUpperCase()}】周期 ${value.period}\n最新值：${JSON.stringify(value.latest)}\n近期序列（末 5 个）：${JSON.stringify(value.series.slice(-5))}`,
       }],
     },
+    // oxlint-disable-next-line typescript/require-await -- 工具 execute 接口要求返回 Promise
     async execute(args: { prices: number[]; indicator: string; period?: number }) {
       const prices = args.prices
       if (!Array.isArray(prices) || prices.length < 5) throw new Error('finance_technical: 价格序列至少需要 5 个数据')
@@ -1256,6 +1258,7 @@ export function buildFinanceTools(source: FinanceDataSource): ToolDefinition[] {
         ].join('\n'),
       }],
     },
+    // oxlint-disable-next-line typescript/require-await -- 工具 execute 接口要求返回 Promise
     async execute(args: { template: string; symbol?: string; shortWindow?: number; longWindow?: number; rsiOverbought?: number; rsiOversold?: number; positionPct?: number }) {
       const allowed = ['ma_cross', 'rsi', 'boll', 'momentum', 'dca']
       if (!allowed.includes(args.template)) {

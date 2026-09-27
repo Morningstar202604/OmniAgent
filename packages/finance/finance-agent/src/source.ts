@@ -844,6 +844,7 @@ const MOCK_RESEARCH: Record<string, FinanceResearchItem[]> = {
 
 /** 内置示例数据源：开箱即用，所有数据带 mock 标记。 */
 export class MockFinanceSource implements FinanceDataSource {
+  // oxlint-disable-next-line typescript/require-await -- FinanceDataSource 接口要求返回 Promise
   async quote(symbol: string, market: FinanceMarket): Promise<FinanceQuote> {
     const row = MOCK_QUOTES[symbol]
     if (row === undefined || row.market !== market) {
@@ -852,6 +853,7 @@ export class MockFinanceSource implements FinanceDataSource {
     return { ...row, mock: true }
   }
 
+  // oxlint-disable-next-line typescript/require-await -- FinanceDataSource 接口要求返回 Promise
   async financials(symbol: string, market: FinanceMarket, year = 2025): Promise<FinanceFinancials> {
     const row = MOCK_FINANCIALS[symbol]
     if (row === undefined || row.market !== market) {
@@ -863,6 +865,7 @@ export class MockFinanceSource implements FinanceDataSource {
     return { ...row, mock: true }
   }
 
+  // oxlint-disable-next-line typescript/require-await -- FinanceDataSource 接口要求返回 Promise
   async metrics(symbol: string, market: FinanceMarket): Promise<FinanceMetrics> {
     const row = MOCK_METRICS[symbol]
     if (row === undefined || row.market !== market) {
@@ -871,6 +874,7 @@ export class MockFinanceSource implements FinanceDataSource {
     return { ...row, mock: true }
   }
 
+  // oxlint-disable-next-line typescript/require-await -- FinanceDataSource 接口要求返回 Promise
   async fx(pair: string): Promise<FinanceFxRate> {
     const row = MOCK_FX[pair.toUpperCase()]
     if (row === undefined) {
@@ -879,11 +883,13 @@ export class MockFinanceSource implements FinanceDataSource {
     return { ...row, mock: true }
   }
 
+  // oxlint-disable-next-line typescript/require-await -- FinanceDataSource 接口要求返回 Promise
   async rates(category: FinanceRateCategory): Promise<FinanceRateQuote[]> {
     const rows = MOCK_RATES[category]
     return rows.map((row) => ({ ...row, mock: true }))
   }
 
+  // oxlint-disable-next-line typescript/require-await -- FinanceDataSource 接口要求返回 Promise
   async screener(filter: ScreenerFilter): Promise<ScreenerResult> {
     const poolSize = MOCK_SCREENER_UNIVERSE.length
     const parts: string[] = []
@@ -924,6 +930,7 @@ export class MockFinanceSource implements FinanceDataSource {
     return { poolSize, total: items.length, criteria: { ...filter }, formula, items, mock: true }
   }
 
+  // oxlint-disable-next-line typescript/require-await -- FinanceDataSource 接口要求返回 Promise
   async kline(symbol: string, market: FinanceMarket, period: FinanceKlinePeriod, limit: number): Promise<FinanceKlineResult> {
     const quote = MOCK_QUOTES[symbol]
     if (quote === undefined || quote.market !== market) {
@@ -957,6 +964,7 @@ export class MockFinanceSource implements FinanceDataSource {
     return { symbol, name: quote.name, market, period, bars, updatedAt: quote.updatedAt, mock: true }
   }
 
+  // oxlint-disable-next-line typescript/require-await -- FinanceDataSource 接口要求返回 Promise
   async moneyflow(symbol: string, market: FinanceMarket): Promise<FinanceMoneyflow> {
     const row = MOCK_MONEYFLOW[symbol]
     if (row === undefined || row.market !== market) {
@@ -965,6 +973,7 @@ export class MockFinanceSource implements FinanceDataSource {
     return { ...row, mock: true }
   }
 
+  // oxlint-disable-next-line typescript/require-await -- FinanceDataSource 接口要求返回 Promise
   async announcements(symbol: string, market: FinanceMarket, category: FinanceAnnouncementCategory | undefined, limit: number): Promise<FinanceAnnouncementResult> {
     const group = MOCK_ANNOUNCEMENTS[symbol]
     if (group === undefined || group.market !== market) {
@@ -975,6 +984,7 @@ export class MockFinanceSource implements FinanceDataSource {
     return { symbol, name: group.name, market, total: filtered.length, items, updatedAt: '2026-09-24T16:00:00+08:00', mock: true }
   }
 
+  // oxlint-disable-next-line typescript/require-await -- FinanceDataSource 接口要求返回 Promise
   async news(category: FinanceNewsCategory | undefined, limit: number, symbol?: string): Promise<FinanceNewsResult> {
     let items = category === undefined ? MOCK_NEWS.slice() : MOCK_NEWS.filter((item) => newsCategoryOf(item) === category)
     if (symbol !== undefined && symbol.length > 0) {
@@ -985,11 +995,13 @@ export class MockFinanceSource implements FinanceDataSource {
     return { category: category ?? 'market', total, items: items.slice(0, Math.max(1, limit)), updatedAt: '2026-09-24T16:30:00+08:00', mock: true }
   }
 
+  // oxlint-disable-next-line typescript/require-await -- FinanceDataSource 接口要求返回 Promise
   async macro(indicator: FinanceMacroIndicator, period?: string): Promise<FinanceMacro> {
     const row = MOCK_MACRO[indicator]
     return period === undefined ? { ...row, mock: true } : { ...row, period, mock: true }
   }
 
+  // oxlint-disable-next-line typescript/require-await -- FinanceDataSource 接口要求返回 Promise
   async sector(market: FinanceMarket, category: FinanceSectorCategory, limit: number): Promise<FinanceSectorResult> {
     void market
     void category
@@ -997,6 +1009,7 @@ export class MockFinanceSource implements FinanceDataSource {
     return { market: 'cn', category, total: MOCK_SECTORS.length, items, updatedAt: '2026-09-24T15:00:00+08:00', mock: true }
   }
 
+  // oxlint-disable-next-line typescript/require-await -- FinanceDataSource 接口要求返回 Promise
   async risk(symbol: string, market: FinanceMarket, benchmark: string, riskFreeRate: number, period: number): Promise<FinanceRiskResult> {
     const quote = MOCK_QUOTES[symbol]
     if (quote === undefined || quote.market !== market) {
@@ -1063,6 +1076,7 @@ export class MockFinanceSource implements FinanceDataSource {
     }
   }
 
+  // oxlint-disable-next-line typescript/require-await -- FinanceDataSource 接口要求返回 Promise
   async fund(category: FinanceFundCategory, symbol?: string, limit?: number): Promise<FinanceFundResult> {
     const table: Record<FinanceFundCategory, Array<Omit<FinanceFundItem, 'category' | 'updatedAt'>>> = {
       fund: MOCK_FUNDS,
@@ -1079,6 +1093,7 @@ export class MockFinanceSource implements FinanceDataSource {
     return { category, total, items: items.slice(0, cap), updatedAt: FUND_UPDATED_AT, mock: true }
   }
 
+  // oxlint-disable-next-line typescript/require-await -- FinanceDataSource 接口要求返回 Promise
   async research(symbol: string, market: FinanceMarket, limit: number): Promise<FinanceResearchResult> {
     const rows = MOCK_RESEARCH[symbol] ?? []
     const name = MOCK_QUOTES[symbol]?.name ?? symbol
