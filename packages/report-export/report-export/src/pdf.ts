@@ -173,7 +173,7 @@ function parseBlocks(md: string): Block[] {
     const rows = tableBuf
       .map((l) => l.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim()))
     if (rows.length >= 2) {
-      const head = (rows[0] ?? []) as string[]
+      const head = rows[0] ?? []
       const body = rows.slice(2)
       // 若表格前紧跟图表标记，则输出 chart 块而非 table 块
       if (pendingChart !== null) {
@@ -242,7 +242,7 @@ function parseBlocks(md: string): Block[] {
 async function loadRemoteImage(url: string): Promise<Buffer | null> {
   try {
     const ctrl = new AbortController()
-    const timer = setTimeout(() => ctrl.abort(), IMAGE_FETCH_TIMEOUT)
+    const timer = setTimeout(() => { ctrl.abort() }, IMAGE_FETCH_TIMEOUT)
     const res = await fetch(url, { signal: ctrl.signal, redirect: 'follow' })
     clearTimeout(timer)
     if (!res.ok) return null
@@ -281,7 +281,7 @@ async function loadImageBuffer(src: string): Promise<Buffer | null> {
 
 /** 从表格单元格文本解析数值，非数字返回 0。 */
 function toNum(s: string): number {
-  const n = parseFloat(String(s).replace(/,/g, ''))
+  const n = parseFloat(s.replace(/,/g, ''))
   return Number.isFinite(n) ? n : 0
 }
 
@@ -513,7 +513,7 @@ export async function markdownToPdf(md: string, opts: PdfRenderOptions): Promise
   const chunks: Buffer[] = []
   const done = new Promise<Buffer>((resolve) => {
     doc.on('data', (c: Buffer) => chunks.push(c))
-    doc.on('end', () => resolve(Buffer.concat(chunks)))
+    doc.on('end', () => { resolve(Buffer.concat(chunks)) })
   })
 
   // 注册字体：中文用嵌入字体（常规 + 粗体）；没有则降级标准 Helvetica
@@ -545,7 +545,7 @@ export async function markdownToPdf(md: string, opts: PdfRenderOptions): Promise
     resetBodyStyle()
   }
   drawFooter() // 首页页脚
-  doc.on('pageAdded', () => drawFooter())
+  doc.on('pageAdded', () => { drawFooter() })
 
   // ── 顶部横幅（与 HTML 模板 .banner 对齐） ──
   let y = MARGIN_TOP
