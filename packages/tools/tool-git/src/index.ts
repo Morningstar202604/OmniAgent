@@ -168,7 +168,7 @@ function parseNumstat(text: string): NumstatEntry[] {
     if (line.length === 0) continue
     const [addedRaw, deletedRaw, ...rest] = line.split('\t')
     const path = rest.join('\t')
-    if (path === undefined || path.length === 0) continue
+    if (path.length === 0) continue
     // 二进制文件的 added/deleted 字段为 '-'，对外记为 null。
     const added: number | null = addedRaw === '-' ? null : Number(addedRaw)
     const deleted: number | null = deletedRaw === '-' ? null : Number(deletedRaw)

@@ -100,12 +100,12 @@ export function apply(ctx: Context, config: Config): void {
         label,
         ...(owner !== undefined ? { owner } : {}),
         run(job: JobHandle): JobHooks {
-          let cancelled = false
+          const state = { cancelled: false }
           const done = (async (): Promise<JobOutcome> => {
             try {
               if (taskType === 'delay') {
                 for (let s = 1; s <= seconds; s++) {
-                  if (cancelled) return { status: 'killed', detail: '任务被取消' }
+                  if (state.cancelled) return { status: 'killed', detail: '任务被取消' }
                   job.updateProgress(`${s}/${seconds} 秒`)
                   job.append(`等待中 ${s}/${seconds}s\n`, { channel: 'stdout' })
                   await sleep(1000)
@@ -115,7 +115,7 @@ export function apply(ctx: Context, config: Config): void {
               // compute：确定性求和循环（纯计算，可复核），逐步上报进度。
               let acc = 0
               for (let i = 1; i <= steps; i++) {
-                if (cancelled) return { status: 'killed', detail: '任务被取消' }
+                if (state.cancelled) return { status: 'killed', detail: '任务被取消' }
                 for (let k = 0; k < 200_000; k++) acc += (k * k) % 1000
                 job.updateProgress(`${i}/${steps}（${Math.round(i / steps * 100)}%）`)
                 job.append(`第 ${i}/${steps} 步完成，累计校验和=${acc}\n`, { channel: 'stdout' })
@@ -127,7 +127,7 @@ export function apply(ctx: Context, config: Config): void {
             }
           })()
           return {
-            cancel(reason?: string) { cancelled = true; job.append(`收到取消请求：${reason ?? ''}\n`, { channel: 'stderr' }) },
+            cancel(reason?: string) { state.cancelled = true; job.append(`收到取消请求：${reason ?? ''}\n`, { channel: 'stderr' }) },
             done,
           }
         },

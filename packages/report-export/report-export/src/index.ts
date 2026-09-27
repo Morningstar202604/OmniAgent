@@ -201,7 +201,7 @@ export function apply(ctx: Context, config: Config): void {
       render: (_args, value) => [{
         type: 'text',
         text: [
-          `已导出报告（${TEMPLATE_META[value.template as ReportTemplate]?.label ?? value.template}，${value.format}）`,
+          `已导出报告（${TEMPLATE_META[value.template as ReportTemplate].label}，${value.format}）`,
           `文件：${value.filePath}（${value.bytes} 字节）`,
           ...(value.pdfNote !== undefined ? [`说明：${value.pdfNote}`] : []),
         ].join('\n'),
