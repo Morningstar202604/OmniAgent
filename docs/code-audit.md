@@ -129,10 +129,10 @@
 
 ## 5. 后续路线图（按优先级）
 
-1. **[M] 合并 `storage-json` 原子写到 `util/atomic-write`**：增加 fsync 选项，删 `storage-json/src/atomic.ts`，补崩溃一致性测试。
-2. **[M] 收敛本地 `assertNever`**：约 10 个包改从 `dsh-util-values` 导入，逐包补依赖、保留原消息为 context。
-3. **[M] 依赖版本收敛**：定期 `pnpm dedupe`，对齐 `@types/node`、`undici-types`、`commander`、`semver` 等传递依赖版本。
-4. **[M] markdown 渲染 XSS 评审**：对 `CodeBlock.tsx` 等 `dangerouslySetInnerHTML` 路径做净化层评审（需安全评审，不擅自改）。
+1. ~~**[M] 合并 `storage-json` 原子写到 `util/atomic-write`**~~ ✅ **已实施**（commit `ce48807`+`21c38af`+`c7c102a`）：`writeFileAtomic` 新增可选 `fsync` 选项（默认 false 向后兼容），storage-json 3 处调用改为 `writeFileAtomic(path, data, { mode: 0o600, fsync: true })`，删除 `src/atomic.ts`。行为验证 11 项全过（基本写入/fsync/权限/错误清理/并发锁/storage-json 读写持久化）。
+2. ~~**[M] 收敛本地 `assertNever`**~~ ✅ **已实施**（commit `88946e4`+`8fb30c8`+`0129703`）：21+ 个包的本地 `assertNever` 收敛到 `@deepseek-ai/dsh-util-values`（其签名本就支持可选 `context` 参数，且在 client bundle `INLINE_SAFE` 白名单中，无需新建 client 半）。有意保留 2 处：`typert/generator/renderer.ts`（域错误 `TypeGraphRenderError`）、`workflow-ptc/guest-source.ts`（VM guest 受限副本）。全量构建链通过。
+3. ~~**[M] 依赖版本收敛**~~ ✅ **已实施**（commit `965cb5b`）：`pnpm dedupe` 减少 23 个包实例（semver 5→4 版本、@types/node 6→5 版本，移除 anynum/path-expression-matcher/strnum 等冗余包）。基线对比验证零新增构建错误。
+4. ~~**[M] markdown 渲染 XSS 评审**~~ ✅ **已实施**（commit `ee52e5a`+`da6921d`）：审计结论——markdown 渲染路径**本就安全**（mdast→React 元素直渲染，原始 HTML 当文本转义，URL 白名单，不可信 HTML 走 sandbox iframe），无需引入净化层。补 9/9 vitest 回归测试锁定安全契约（`<script>`/`<img onerror>`/`<iframe>`/`javascript:` 全部被拦截，正常表格/代码块/链接不受影响）。附带补全 6 个消费方的 `dsh-util-values` tsconfig 项目引用。
 5. **[S] 给 `scripts/rebrand.mjs` 在 package.json 加 `"rebrand"` 别名**，便于发现。
 6. **[L] 客户端性能专项**：大列表虚拟滚动、未 memo 计算（需基准测试后再动）。
 
@@ -140,9 +140,9 @@
 
 ## 6. 风险与取舍说明
 
-- **未实施跨包重构**：原子写合并、assertNever 收敛均涉及跨包 API 变更与语义（fsync 持久化、错误文案），按要求列入路线图，不在本次直接改。
+- **跨包重构已实施**：原子写合并、assertNever 收敛、pnpm dedupe、markdown XSS 评审四项路线图优化已在 2026-09-27 全部实施并验证（见第 5 节）。
 - **未碰工具-git 包**：`packages/tools/tool-git` 为近期新增包（commit `46e2f5c`），疑似其他子代理在推进；审计期发现的 TS2345 未擅自修改，记录在案。
-- **依赖移除前已逐包全目录 grep 验证**：被移除 `zod` 的 20 个包在整个包目录（含 src、测试）均零 `zod` 引用；`js-yaml` 在 `apps/cli` 全目录零 yaml 导入。`typert/generator` 虽声明 zod 但在 `emitter.ts` 中把 `import { z } from 'zod'` 作为**生成代码的字符串模板**输出，故保留其 zod 依赖。
+- **依赖移除前已逐包全目录 grep 验证**：被移除 `zod` 的 20 个包在整个包目录（含 src、测试）均零 `zod` 引用；`js-yaml` 在 `apps/cli` 全目录零 yaml 导入。`typert/generator` 虽声明 zod 但在 `emitter.ts` 中把 `import { z } from 'zod'` 作为**生成代码的字符串模板**输出，故保留其 zod 依赖。**注：zod 移除后发现 typert 生成器运行时依赖 zod，已回滚（commit `88baead`）。**
 - **锁文件已离线同步**：所有依赖移除后执行 `pnpm install --offline --lockfile-only`，lockfile 与 package.json 一致，未引入新依赖。
-- **未 push**：3 个 commit 均留在本地工作分支。
-- **轻量优先**：未引入任何新依赖，未做任何性能重构。
+- **未 push**：所有 commit 均留在本地工作分支。
+- **轻量优先**：未引入任何新依赖，未做任何性能重构。markdown XSS 评审结论为"已安全"，未强行引入 DOMPurify 等净化库。
