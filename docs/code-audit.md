@@ -146,3 +146,42 @@
 - **锁文件已离线同步**：所有依赖移除后执行 `pnpm install --offline --lockfile-only`，lockfile 与 package.json 一致，未引入新依赖。
 - **未 push**：所有 commit 均留在本地工作分支。
 - **轻量优先**：未引入任何新依赖，未做任何性能重构。markdown XSS 评审结论为"已安全"，未强行引入 DOMPurify 等净化库。
+
+---
+
+## 7. lint 修复记录（2026-09-27）
+
+### 背景
+oxlint 的 jsPlugins（sonarjs/@stylistic）在 4GB/2 核沙箱触发 oxc allocator panic，已从 `.oxlintrc.json` 移除这两个插件块（commit `e04624b`），保留 typeAware + typescript/* 严格规则 + 全部 overrides。配置后 `oxlint --threads 1 .` 可跑完（42s、2496 文件、72 规则），但报 **129 errors + 3 warnings**——lint 从未跑通积累的真实问题。
+
+### 修复统计
+按包分 3 组并行修复，共涉及 **34 个文件、129 errors + 3 warnings**，全部清零：
+
+| 规则 | 处数 | 修复方式 |
+|---|---|---|
+| `no-confusing-void-expression` | 48 | 箭头函数简写 `() => f()` 加花括号 `() => { f() }` |
+| `require-await` | 31 | 工具 execute 接口要求 async 返回 Promise 的，加 `oxlint-disable-next-line typescript/require-await` 局部豁免；非接口要求的去掉 async 改 `Promise.resolve()` |
+| `no-unnecessary-condition` | 19 | 按类型事实收紧：删除恒真/恒假条件、非空值上的可选链 `?.`、Record 索引上的死分支 |
+| `no-unnecessary-type-assertion` | 11 | 删除多余 `as Xxx` 断言及随之无用的 type import |
+| `no-unnecessary-type-conversion` | 6 | 删除多余 `String()`/`Number()` 转换 |
+| `restrict-plus-operands` | 4 | number+string 改模板字符串；`string\|undefined` 加 `?? ''` 默认值 |
+| `no-non-null-assertion` | 3 | `!` 改类型守卫 + throw，确保返回类型安全 |
+| 未使用的 eslint-disable | 3 | 直接删除无效注释行 |
+| `prefer-const` | 2 | `let` 改 `const` |
+| `no-dynamic-delete` | 1 | `delete obj[key]` 改用 `Object.fromEntries(...filter(...))` |
+| `no-this-alias` | 1 | 删除 `const self = this`，execute 改箭头函数 |
+| 其他（no-duplicate-type-constituents 等） | 5 | 按语义收紧 |
+
+### 关键决策
+- **require-await 豁免而非去 async**：工具 `execute` 方法和 `FinanceDataSource` 接口要求返回 `Promise`，去掉 async 会破坏接口签名，故用最小局部豁免注释（格式 `oxlint-disable-next-line typescript/require-await -- 接口要求 async 签名`）
+- **tool-task 的 cancelled 变量**：被 oxlint 窄化为 `false` 字面量，改用对象属性 `state.cancelled` 包装保留取消检查逻辑
+- **no-dynamic-delete**：`uninstallPlugin` 返回类型是 `Record<string, InstallState>`，不能赋 `undefined`，故用 `Object.fromEntries` 过滤而非动态 delete
+- **未削弱任何规则**：所有修复均改源码，未改 `.oxlintrc.json` 规则级别或 ignorePatterns
+
+### 验证结果
+- `oxlint --threads 1 .` → **0 warnings 0 errors**（2496 文件、72 规则、43.6s）
+- `npx tsc -b` → exit 0
+- `pnpm run build:lib:host` → exit 0
+- `pnpm run build:lib:client` → exit 0
+- `pnpm run build:web` → exit 0
+- 按规则名分 15+ 个中文 commit，未 push
