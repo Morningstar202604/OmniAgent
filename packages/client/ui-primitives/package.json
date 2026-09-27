@@ -40,6 +40,7 @@
     "micromark-util-types": "^2.0.2",
     "shiki": "^4.3.1",
     "@deepseek-ai/dsh-util-workspace-path": "workspace:*",
+    "@deepseek-ai/dsh-util-values": "workspace:*",
     "@shikijs/langs": "^4.3.1",
     "@types/mdast": "^4.0.4",
     "micromark-factory-space": "^2.0.1",

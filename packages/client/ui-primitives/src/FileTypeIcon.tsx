@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import clsx from 'clsx'
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { CodeFileIcon } from './CodeFileIcon.tsx'
 import {
   classifyCodeFileType, isCodeFileType, type CodeFileType, type FileTypeProjectContext,
@@ -257,12 +258,6 @@ function glyph(type: TraditionalFileType, size: number, className: string | unde
     /* v8 ignore next -- closed-union backstop; only reached if a type is forged */
     default: return assertNever(type)
   }
-}
-
-/** Closed-union exhaustiveness guard for traditional file artwork. */
-/* v8 ignore next 3 -- only reachable when an untyped caller forges a traditional file type */
-function assertNever(value: never): never {
-  throw new Error(`unreachable traditional file type: ${String(value)}`)
 }
 
 /**

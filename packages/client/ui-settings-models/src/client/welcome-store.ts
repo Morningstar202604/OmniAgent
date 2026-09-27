@@ -7,6 +7,7 @@
 
 import { createSnapshotStore, type SnapshotStore } from '@deepseek-ai/dsh-client-store'
 import type { ConfigForm } from '@deepseek-ai/dsh-client-ui-settings/client'
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import {
   WELCOME_NOTICE_ACK_FIELD, WELCOME_NOTICE_VERSION,
 } from '../onboarding-copy.ts'
@@ -32,11 +33,6 @@ export function decodeWelcomeSection(section: unknown): WelcomeSection {
   return typeof section === 'object' && section !== null && !Array.isArray(section)
     ? section as WelcomeSection
     : {}
-}
-
-/* v8 ignore next 3 -- closed-union default only defends future source widening */
-function assertNever(_value: never): never {
-  throw new Error('unexpected welcome settings status')
 }
 
 /** Coordinates durable Host acknowledgement or a process-local remote fallback. */

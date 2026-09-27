@@ -6,6 +6,7 @@ import {
   RemoteStreamCarrierError,
   type ClientRemote,
 } from '@deepseek-ai/dsh-api-gateway/client'
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import type { WorkspaceFollowFrame, WorkspaceFollowIncrement } from '../types.ts'
 import type { WorkspaceFollowSink } from './model.ts'
 import { ClientWorkspaceModel } from './model.ts'
@@ -117,9 +118,4 @@ function acceptIncrement(accept: WorkspaceFollowSink, frame: WorkspaceFollowIncr
     default:
       return assertNever(frame)
   }
-}
-
-/* v8 ignore next 3 -- closed-union backstop after generated Remote validation */
-function assertNever(value: never): never {
-  throw new Error(`unreachable Workspace increment: ${JSON.stringify(value)}`)
 }

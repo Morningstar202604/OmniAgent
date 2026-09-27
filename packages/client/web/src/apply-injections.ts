@@ -5,10 +5,7 @@
  * table order, so a global row lands before the scripts that read it.
  */
 import type { IndexInjection } from '@deepseek-ai/dsh-host-webserver'
-
-function assertNever(row: never): never {
-  throw new Error(`web boot: unknown index injection row ${JSON.stringify(row)}`)
-}
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 
 /**
  * Execute every row in table order.

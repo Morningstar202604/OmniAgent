@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import clsx from 'clsx'
 import { structuredPatch } from 'diff'
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { FoldToggle } from './FoldToggle.tsx'
 import { writeClipboard } from './clipboard.ts'
 import { CodeToolbar, type CodeToolbarLabels } from './CodeToolbar.tsx'
@@ -49,12 +50,6 @@ export interface DiffBlockLabels extends CodeToolbarLabels {
 interface DiffRow {
   kind: 'path' | 'del' | 'add' | 'context' | 'gap'
   text: string
-}
-
-/** Local exhaustiveness helper — this package does not depend on `dsh-llm`. */
-/* v8 ignore next 3 -- closed-union backstop; only reached if a row kind is forged */
-function assertNever(value: never): never {
-  throw new Error(`unreachable diff row kind: ${String(value)}`)
 }
 
 /** The dim class per row kind (path/gap chrome vs the diff's own +/- colors). */

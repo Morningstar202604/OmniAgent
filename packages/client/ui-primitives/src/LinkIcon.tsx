@@ -3,6 +3,7 @@
  * public component keeps individual artwork private to the link vocabulary.
  */
 import type { ReactNode } from 'react'
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { classifyFileType, fileExtension } from './FileTypeIcon.tsx'
 import { isCodeFileType, isLinkCodeExtension } from './code-file-types.ts'
 import { siteGlyph } from './SiteGlyph.tsx'
@@ -74,12 +75,6 @@ const PaperGlyph = ({ size, className, strokeWidth }: IconProps & { strokeWidth:
     <path d="M8.84888 1.83838V4.94133C8.84888 5.46896 9.2766 5.89671 9.80426 5.89671H13.157" stroke="currentColor" />
   </svg>
 )
-
-/** Local exhaustiveness helper — this package does not depend on `dsh-llm`. */
-/* v8 ignore next 3 -- closed-union backstop; only reached if a kind is forged */
-function assertNever(value: never): never {
-  throw new Error(`unreachable link icon kind: ${String(value)}`)
-}
 
 /**
  * Render the leading glyph for one clickable artifact link at one stroke weight.

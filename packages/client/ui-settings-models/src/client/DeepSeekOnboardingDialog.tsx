@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { SnapshotStore } from '@deepseek-ai/dsh-client-store'
 import type { InjectFace, PropsRuntime, PropsRenderSlots } from '@deepseek-ai/dsh-client-ui-slots'
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import type { ModelsSettingsState, ModelsSettingsStore } from './store.ts'
 import { onboardingReadiness } from './store.ts'
 import type { ModelsOperations } from './operations.ts'
@@ -41,11 +42,6 @@ export interface DeepSeekOnboardingInjected {
 /** Slot owner props plus the feature's injected dependencies. */
 export type DeepSeekOnboardingDialogProps =
   PropsRuntime<'settings.onboarding'> & PropsRenderSlots<'settings.models.sign-in'> & InjectFace<DeepSeekOnboardingInjected>
-
-/* v8 ignore next 3 -- closed-union defaults only defend future source widening */
-function assertNever(_value: never): never {
-  throw new Error('unexpected DeepSeek onboarding state')
-}
 
 /**
  * Prompt a first-run user for the official DeepSeek credential while no

@@ -10,6 +10,7 @@ import {
   IconChecklistOutlineRegular, IconChevronDownOutlineRegular, IconChevronUpOutlineRegular, StateDot,
   type StateDotState,
 } from '@deepseek-ai/dsh-client-ui-primitives'
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { NS } from '../locales.ts'
 import css from './TodoPanel.module.css'
 
@@ -18,12 +19,6 @@ export interface TodoPanelProps {
   todos: readonly TodoItem[]
   /** The dock entry's locale seat, passed down as a plain prop. */
   t: TodoDockProps['t']
-}
-
-/** Local exhaustiveness helper — client packages do not depend on `dsh-llm`. */
-/* v8 ignore next 3 -- closed-union backstop; only reached if status is forged */
-function assertNever(value: never): never {
-  throw new Error(`unreachable todo status: ${String(value)}`)
 }
 
 /** Map Todo lifecycle state onto the shared compact status language. */

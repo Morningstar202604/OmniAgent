@@ -6,6 +6,7 @@ import {
   type StateDotState, type TerminalBlockLabels,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { InjectFace, PropsLocale, PropsRuntime, TranslateNS } from '@deepseek-ai/dsh-client-ui-slots'
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { NS } from './locales.ts'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import css from './JobListAction.module.css'
@@ -71,12 +72,6 @@ function isObservable(job: JobView): boolean {
 /** The one-line qualifier beside the status: live progress while running, the terminal reason once settled. */
 function jobDetail(job: JobView): string | undefined {
   return job.progress ?? job.detail
-}
-
-/** Closed-union exhaustiveness fence for the wire status set. */
-/* v8 ignore next 3 -- closed-union backstop; only reached if a status is forged */
-function assertNever(value: never): never {
-  throw new Error(`unhandled job status: ${JSON.stringify(value)}`)
 }
 
 /**

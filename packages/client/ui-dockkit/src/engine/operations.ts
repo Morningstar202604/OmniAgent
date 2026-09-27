@@ -10,8 +10,9 @@
 import type {
   ApplyResult, FloatRect, LayoutOp, LayoutState, NodeId, PaneId, PaneNode, TabId,
 } from '../contract/types.ts'
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import {
-  assertNever, entriesOf, findParent, findTabPane, firstDockPaneId, floatIndex, floatRect, getPane, getSplit, getTab,
+  entriesOf, findParent, findTabPane, firstDockPaneId, floatIndex, floatRect, getPane, getSplit, getTab,
   insertAt, keysOf, neighbourTabId, normalizeSizes, onlyTabId, paneWithTabs, removeAt, replaceInParent, withNodes, withTabs,
 } from './tree.ts'
 

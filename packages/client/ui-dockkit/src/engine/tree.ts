@@ -8,16 +8,6 @@ import type {
 } from '../contract/types.ts'
 
 /**
- * Reject an unhandled discriminant at the end of a closed switch.
- * @param value - the discriminant the switch did not handle.
- * @param what - the union being switched on, for the message.
- * @returns never; it throws.
- */
-export function assertNever(value: never, what: string): never {
-  throw new Error(`${what}: unhandled ${JSON.stringify(value)}`)
-}
-
-/**
  * Read any node.
  * @param state - current layout.
  * @param id - the node.

@@ -10,6 +10,7 @@
  * frames by that path, with `\\` normalized to `/`.
  */
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import type { WorkspaceFileChange, WorkspaceFileWatchFrame } from '../types.ts'
 import type { SupervisedStream, WorkspaceFilesRemote } from './remote.ts'
 import type { WorkspaceFileEdit, WorkspaceFileNotice } from './types.ts'
@@ -210,10 +211,6 @@ async function* openAfter<T>(after: Promise<void> | undefined, open: () => Async
  */
 function editOf(frame: WorkspaceFileChange): WorkspaceFileEdit {
   return 'absent' in frame ? { kind: 'absent' } : { kind: 'changed', version: frame.version }
-}
-
-function assertNever(frame: never): never {
-  throw new Error(`Unexpected workspace file watch frame: ${JSON.stringify(frame)}`)
 }
 
 /**

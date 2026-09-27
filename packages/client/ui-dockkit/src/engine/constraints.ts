@@ -4,7 +4,8 @@
  * pure so they can be asserted without a browser.
  */
 import type { DockZone, LayoutState, SplitAxis, SplitDirection } from '../contract/types.ts'
-import { assertNever, dockPaneIds } from './tree.ts'
+import { assertNever } from '@deepseek-ai/dsh-util-values'
+import { dockPaneIds } from './tree.ts'
 
 /** V1 caps the docked grid at four panes; floating panes do not count. */
 export const MAX_DOCK_PANES = 4
