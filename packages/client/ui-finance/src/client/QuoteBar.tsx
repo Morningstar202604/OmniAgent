@@ -21,7 +21,7 @@ export const QuoteBar = memo(function QuoteBar({ quotes, selected, onSelect }: Q
             key={q.symbol}
             type="button"
             className={`${css.cell}${q.symbol === selected ? ` ${css.cellActive}` : ''}`}
-            onClick={() => onSelect(q.symbol)}
+            onClick={() => { onSelect(q.symbol) }}
           >
             <span className={css.cellName}>{q.name}</span>
             <span className={`${css.cellPrice} ${css[trend]}`}>{q.price.toFixed(2)}</span>

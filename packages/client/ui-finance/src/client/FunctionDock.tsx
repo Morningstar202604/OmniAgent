@@ -18,7 +18,7 @@ export const FunctionDock = memo(function FunctionDock({ t, onPick }: FunctionDo
       <div className={css.title}>{t('functionsTitle')}</div>
       <div className={css.grid}>
         {FUNCTIONS.map(f => (
-          <button key={f.id} type="button" className={css.card} onClick={() => onPick(f.id)}>
+          <button key={f.id} type="button" className={css.card} onClick={() => { onPick(f.id) }}>
             <span className={css.cardTitle}>{t(f.titleKey)}</span>
             <span className={css.cardDesc}>{t(f.descKey)}</span>
           </button>

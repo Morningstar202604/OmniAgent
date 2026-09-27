@@ -48,7 +48,7 @@ export function IndustryChain({ onBack }: IndustryChainProps) {
             <div className={`${css.stageLabel} ${col.cls}`}>{col.stage}</div>
             <div className={css.nodeList}>
               {col.nodes.map((node) => (
-                <NodeCard key={node.id} node={node} active={node.id === selected?.id} onClick={() => setSelectedId(node.id)} />
+                <NodeCard key={node.id} node={node} active={node.id === selected?.id} onClick={() => { setSelectedId(node.id) }} />
               ))}
             </div>
             {ci < columns.length - 1 ? <span className={css.arrow}>→</span> : null}

@@ -41,7 +41,7 @@ export const ResearchTabs = memo(function ResearchTabs({ research, announcements
             role="tab"
             aria-selected={tab === item.id}
             className={`${css.tab}${tab === item.id ? ` ${css.tabActive}` : ''}`}
-            onClick={() => setTab(item.id)}
+            onClick={() => { setTab(item.id) }}
           >
             {item.label}
           </button>

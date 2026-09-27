@@ -53,8 +53,8 @@ export function FinancePanel({ t, backToChat }: FinancePanelProps) {
 
   // 行情条定时轮询刷新：在示例数据基础上模拟小幅波动（红涨绿跌）。
   useEffect(() => {
-    const timer = setInterval(() => setLiveQuotes((prev) => tickQuotes(prev)), TICK_INTERVAL_MS)
-    return () => clearInterval(timer)
+    const timer = setInterval(() => { setLiveQuotes((prev) => tickQuotes(prev)) }, TICK_INTERVAL_MS)
+    return () => { clearInterval(timer) }
   }, [])
 
   const quote = useMemo(() => liveQuotes.find(q => q.symbol === selected), [liveQuotes, selected])
@@ -72,7 +72,7 @@ export function FinancePanel({ t, backToChat }: FinancePanelProps) {
   if (view === 'screener') {
     return (
       <div className={css.root} data-testid="finance-panel">
-        <ScreenerPanel onBack={() => setView('main')} />
+        <ScreenerPanel onBack={() => { setView('main') }} />
       </div>
     )
   }
@@ -80,7 +80,7 @@ export function FinancePanel({ t, backToChat }: FinancePanelProps) {
   if (view === 'chain') {
     return (
       <div className={css.root} data-testid="finance-panel">
-        <IndustryChain onBack={() => setView('main')} />
+        <IndustryChain onBack={() => { setView('main') }} />
       </div>
     )
   }

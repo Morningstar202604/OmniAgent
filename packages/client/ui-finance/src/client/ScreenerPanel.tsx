@@ -25,7 +25,7 @@ function NumField(props: { label: string; value: string; unit?: string; placehol
           step="0.1"
           value={props.value}
           placeholder={props.placeholder ?? '不限'}
-          onChange={(e) => props.onChange(e.target.value)}
+          onChange={(e) => { props.onChange(e.target.value) }}
         />
         {props.unit ? <span className={css.unit}>{props.unit}</span> : null}
       </span>
@@ -37,8 +37,8 @@ export function ScreenerPanel({ onBack }: ScreenerPanelProps) {
   const [criteria, setCriteria] = useState<ScreenerCriteria>(EMPTY_SCREENER)
   const result = useMemo(() => runScreener(criteria), [criteria])
 
-  const set = (key: keyof ScreenerCriteria) => (v: string) => setCriteria((prev) => ({ ...prev, [key]: v }))
-  const reset = () => setCriteria(EMPTY_SCREENER)
+  const set = (key: keyof ScreenerCriteria) => (v: string) => { setCriteria((prev) => ({ ...prev, [key]: v })) }
+  const reset = () => { setCriteria(EMPTY_SCREENER) }
 
   return (
     <div className={css.root} data-testid="finance-screener">
@@ -51,7 +51,7 @@ export function ScreenerPanel({ onBack }: ScreenerPanelProps) {
       <div className={css.formRow}>
         <label className={css.field}>
           <span className={css.fieldLabel}>市场</span>
-          <select className={css.select} value={criteria.market} onChange={(e) => set('market')(e.target.value)}>
+          <select className={css.select} value={criteria.market} onChange={(e) => { set('market')(e.target.value) }}>
             <option value="">全部</option>
             <option value="cn">A股</option>
             <option value="hk">港股</option>
@@ -60,7 +60,7 @@ export function ScreenerPanel({ onBack }: ScreenerPanelProps) {
         </label>
         <label className={css.field}>
           <span className={css.fieldLabel}>行业</span>
-          <select className={css.select} value={criteria.industry} onChange={(e) => set('industry')(e.target.value)}>
+          <select className={css.select} value={criteria.industry} onChange={(e) => { set('industry')(e.target.value) }}>
             <option value="">全部</option>
             {SCREENER_INDUSTRIES.map((ind) => <option key={ind} value={ind}>{ind}</option>)}
           </select>

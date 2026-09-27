@@ -62,7 +62,7 @@ function BranchNode({
     <div className={css.branchNode}>
       <div
         className={clsx(css.nodeRow, row.id === currentId && css.nodeActive)}
-        onClick={() => openSession(row.id)}
+        onClick={() => { openSession(row.id) }}
       >
         <span className={css.nodeDot} />
         <div className={css.nodeBody}>
