@@ -243,3 +243,41 @@
 :global([data-platform='darwin']) .overlay {
   -webkit-app-region: no-drag;
 }
+
+/* ── 手机 <480px：面板改纵向堆叠，导航收为顶部水平条，给内容列留足宽度 ──
+   原 188px 固定导航在 327px 面板里会把内容列挤到 ~140px，导致标签/控件
+   逐字竖排。窄屏下导航横置、内容列占满剩余宽度。 */
+@media (max-width: 480px) {
+  .panel {
+    flex-direction: column;
+    border-radius: 20px;
+    height: min(800px, calc(100vh - 2 * max(12px, var(--dsh-frame-top-clearance, 12px))));
+    max-width: calc(100vw - 24px);
+  }
+  .nav {
+    flex: none;
+    width: 100%;
+    padding: 12px 12px 0;
+    gap: 8px;
+  }
+  .navList {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 6px;
+    padding-bottom: 4px;
+  }
+  .navCell {
+    flex: none;
+    width: auto;
+    height: 36px;
+    padding: 0 12px;
+    white-space: nowrap;
+  }
+  .options {
+    padding: 0 16px 16px;
+  }
+  .header {
+    padding: 12px 12px 8px;
+  }
+}
