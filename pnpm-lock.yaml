@@ -2487,9 +2487,6 @@ importers:
       '@deepseek-ai/dsh-agent-tool-presentation':
         specifier: workspace:*
         version: link:../../core/agent-tool-presentation
-      '@deepseek-ai/dsh-api-account-controller':
-        specifier: workspace:*
-        version: link:../../api/account-controller
       '@deepseek-ai/dsh-api-job-controller':
         specifier: workspace:*
         version: link:../../api/job-controller
@@ -2616,9 +2613,6 @@ importers:
       '@deepseek-ai/dsh-client-ui-settings':
         specifier: workspace:*
         version: link:../../client/ui-settings
-      '@deepseek-ai/dsh-client-ui-settings-account':
-        specifier: workspace:*
-        version: link:../../client/ui-settings-account
       '@deepseek-ai/dsh-client-ui-settings-agent-loop':
         specifier: workspace:*
         version: link:../../client/ui-settings-agent-loop
