@@ -9,7 +9,7 @@ import { join } from 'node:path'
 
 function requireDesktopProfile(dir: string): void {
   if (!existsSync(join(dir, 'package.json'))) {
-    throw new Error('Open DeepSeek Harness Desktop once to initialize its profile, then fully quit it before running dsh plugin --profile desktop.')
+    throw new Error('Open OmniAgent Desktop once to initialize its profile, then fully quit it before running oa plugin --profile desktop.')
   }
 }
 
@@ -29,11 +29,11 @@ async function versionCommand(profile: string, args: readonly string[]): Promise
       else if (!argument.startsWith('-') && packageVersion === undefined) packageVersion = argument
       else throw new Error(`unexpected argument ${JSON.stringify(argument)}`)
     }
-    if (command === 'version-exemptions' && rest.length > 0) throw new Error('usage: dsh plugin version-exemptions')
+    if (command === 'version-exemptions' && rest.length > 0) throw new Error('usage: oa plugin version-exemptions')
     let request: { packageVersion: string; runtimeVersion: string } | undefined
     if (command !== 'version-exemptions') {
       if (packageVersion === undefined || runtimeVersion === undefined) {
-        throw new Error(`usage: dsh plugin ${command} <package@version> --dsh-version <exact>${command === 'allow-version' ? ' --accept-risk' : ''}`)
+        throw new Error(`usage: oa plugin ${command} <package@version> --dsh-version <exact>${command === 'allow-version' ? ' --accept-risk' : ''}`)
       }
       request = { packageVersion, runtimeVersion }
     }
@@ -97,7 +97,7 @@ export async function runPlugin(profile: string, args: readonly string[], packag
     : await runPluginCommand(context, args, options)
   if (result.exitCode === 127) process.stderr.write('dsh: pnpm was not found; install pnpm and make it available on PATH.\n')
   for (const { name, version, runtimeVersion } of result.incompatible ?? []) {
-    process.stderr.write(`dsh: to accept the risk, run: dsh plugin --profile ${profile} allow-version ${name}@${version} --dsh-version ${runtimeVersion} --accept-risk\n`)
+    process.stderr.write(`dsh: to accept the risk, run: oa plugin --profile ${profile} allow-version ${name}@${version} --dsh-version ${runtimeVersion} --accept-risk\n`)
   }
   if (result.exitCode !== 0) process.stderr.write(`dsh: plugin command failed; diagnostics: ${result.logPath}\n`)
   if (result.exitCode !== 0 && args.some(argument => /^git\+|^github:|\.git(?:#|$)/.test(argument))) {

@@ -1,0 +1,45 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types"
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../vendor/cordis"
+    },
+    {
+      "path": "../../../vendor/loader"
+    },
+    {
+      "path": "../../../vendor/schemastery"
+    },
+    {
+      "path": "../../mcp/mcp-client"
+    },
+    {
+      "path": "../../schedule/schedule"
+    },
+    {
+      "path": "../../lsp/lsp-stdio"
+    },
+    {
+      "path": "../../lsp/tool-lsp"
+    },
+    {
+      "path": "../../deliverables/tool-present"
+    },
+    {
+      "path": "../../deliverables/workspace-changes"
+    },
+    {
+      "path": "../../computer-use/computer-use"
+    },
+    {
+      "path": "../../browser-use/browser-use"
+    }
+  ]
+}

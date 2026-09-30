@@ -1,0 +1,37 @@
+# OmniAgent ecommerce bundle patch: 通用全能底座 + 电商运营专业插件。
+# 用法: oa --profile ecommerce "<问题>"（headless 一次性对话），
+# 或在 Web 插件页（侧栏「插件」）启用官方组合包 @deepseek-ai/dsh-ecommerce。
+# 数据源为内置示例（mock）；接入真实电商数据服务时按 EcommerceDataSource 契约扩展。
+
+- insert:
+    - id: ecommerce-agent
+      name: '@deepseek-ai/dsh-ecommerce-agent'
+      config:
+        source: mock
+
+# 默认模型路由：OpenAI 协议（DeepSeek 兼容端点），与底座 llm-pi-ai 配合。
+- id: agent-default-model
+  config:
+    provider: deepseek-openai
+    model: deepseek-chat
+
+# pi-ai 在 base 中以零路由启动（等待用户在 Models 页配置）；本组合包提供
+# 开箱即用的默认 provider 路由，让领域 profile 不配置即可对话（配 DEEPSEEK_API_KEY）。
+- id: llm-pi-ai
+  config:
+    providers:
+      deepseek-openai:
+        displayName: DeepSeek（OpenAI 兼容）
+        api: openai-completions
+        baseURL: https://api.deepseek.com/v1
+        apiKeyEnv: DEEPSEEK_API_KEY
+        models:
+          - id: deepseek-chat
+            name: DeepSeek Chat
+            contextWindow: 65536
+          - id: deepseek-reasoner
+            name: DeepSeek Reasoner
+            contextWindow: 65536
+            reasoningEfforts:
+              off:
+              high: high

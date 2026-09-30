@@ -1,0 +1,39 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 0.5px solid var(--dsw-alias-border-l1);
+  background: var(--dsw-alias-bg-layer-1);
+}
+
+.title { font-size: 11px; color: var(--dsw-alias-label-tertiary); }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+  text-align: left;
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-2);
+  cursor: pointer;
+  font: inherit;
+}
+
+.card:hover {
+  border-color: var(--dsw-alias-brand-primary);
+  background: var(--dsw-alias-state-business-tertiary);
+}
+
+.cardTitle { font-size: 12px; font-weight: 600; color: var(--dsw-alias-label-primary); }
+.cardDesc { font-size: 10px; color: var(--dsw-alias-label-tertiary); line-height: 1.4; }
+
+.hint { font-size: 10px; color: var(--dsw-alias-label-tertiary); }

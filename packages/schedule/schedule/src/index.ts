@@ -460,3 +460,4 @@ export class ScheduleService extends TypertRemoteService {
 }
 
 export default ScheduleService
+export { runScheduleTransaction } from "./transaction.ts"

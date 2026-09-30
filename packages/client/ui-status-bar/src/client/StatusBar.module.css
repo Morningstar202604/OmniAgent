@@ -1,0 +1,142 @@
+.bar {
+  width: 100%;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  /* 半透明毛玻璃：底部细边框，深浅色自适应 */
+  background: color-mix(in srgb, var(--dsw-alias-bg-base) 78%, transparent);
+  backdrop-filter: saturate(140%) blur(12px);
+  -webkit-backdrop-filter: saturate(140%) blur(12px);
+  border-bottom: 0.5px solid var(--dsw-alias-border-l3);
+  color: var(--dsw-alias-text-secondary);
+  font-size: 12px;
+  line-height: 1;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+/* macOS 桌面：顶部左侧有红绿灯，状态栏内容让出余量。 */
+:global([data-platform='darwin']) .bar {
+  padding-left: 84px;
+}
+
+.left,
+.right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.right {
+  margin-left: auto;
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.sessionTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 260px;
+  color: var(--dsw-alias-text-primary);
+  font-weight: 500;
+}
+
+.muted {
+  color: var(--dsw-alias-text-tertiary);
+}
+
+.sep {
+  width: 1px;
+  height: 12px;
+  background: var(--dsw-alias-border-l3);
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.dotConnected {
+  background: var(--dsw-alias-success, #3fb950);
+}
+
+.dotConnecting {
+  background: var(--dsw-alias-warning, #d29922);
+}
+
+.dotDisconnected {
+  background: var(--dsw-alias-danger, #f85149);
+}
+
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--dsw-alias-text-secondary);
+  cursor: pointer;
+  padding: 0;
+}
+
+.iconBtn:hover {
+  background: var(--dsw-alias-bg-hover, rgba(127, 127, 127, 0.12));
+  color: var(--dsw-alias-text-primary);
+}
+
+.clock {
+  font-variant-numeric: tabular-nums;
+  color: var(--dsw-alias-text-tertiary);
+}
+
+/* ── 窄屏适配：平板 <768px，手机 <480px ──────────────────────
+   窄屏下只保留 模型 + 会话标题 + 新建会话/主题按钮；
+   token 占用、时钟、连接文案依次收起，避免状态栏换行溢出。 */
+@media (max-width: 768px) {
+  .bar {
+    gap: 6px;
+    padding: 0 8px;
+  }
+  .left,
+  .right {
+    gap: 6px;
+  }
+  .sessionTitle {
+    max-width: 160px;
+  }
+  .tokenItem,
+  .clock {
+    display: none;
+  }
+  [data-token-sep] {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .bar {
+    height: 32px;
+  }
+  /* 手机端进一步收起连接文案，仅保留状态圆点。 */
+  .connText {
+    display: none;
+  }
+  .sessionTitle {
+    max-width: 120px;
+  }
+}

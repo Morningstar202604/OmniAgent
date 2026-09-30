@@ -1,0 +1,87 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  min-height: 0;
+}
+
+.empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 13px;
+}
+
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.identity { display: flex; flex-direction: column; gap: 2px; }
+.symbol { font-size: 18px; font-weight: 700; color: var(--dsw-alias-label-primary); }
+.code { font-size: 11px; color: var(--dsw-alias-label-tertiary); font-variant-numeric: tabular-nums; }
+
+.priceBlock { display: flex; align-items: baseline; gap: 8px; }
+.price { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.changePct { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.changeAmt { font-size: 12px; font-variant-numeric: tabular-nums; }
+
+.up { color: #ef4444; }
+.down { color: #22c55e; }
+.flat { color: var(--dsw-alias-label-tertiary); }
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 6px 12px;
+}
+
+.stat { display: flex; flex-direction: column; gap: 1px; }
+.statLabel { font-size: 10px; color: var(--dsw-alias-label-tertiary); }
+.statValue { font-size: 12px; font-variant-numeric: tabular-nums; color: var(--dsw-alias-label-primary); }
+
+.chartBlock { display: flex; flex-direction: column; gap: 4px; margin-top: 2px; }
+.chartTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--dsw-alias-label-secondary);
+}
+.tech { display: flex; gap: 10px; font-variant-numeric: tabular-nums; }
+.techNum { font-style: normal; color: var(--dsw-alias-label-primary); }
+
+.chart {
+  width: 100%;
+  height: 160px;
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 6px;
+  background: var(--dsw-alias-bg-layer-1);
+}
+.chartAxis { font-size: 9px; fill: var(--dsw-alias-label-tertiary); }
+
+/* ── 手机 <480px ──────────────────────────────────────────
+   详情区在窄屏下上下堆叠（FinancePanel.body 的 900px 媒体查询已处理），
+   这里收紧内边距、缩小行情数字与 K 线高度，保证一屏可读。 */
+@media (max-width: 480px) {
+  .root {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .price {
+    font-size: 22px;
+  }
+  .symbol {
+    font-size: 16px;
+  }
+  .chart {
+    height: 140px;
+  }
+  .stats {
+    gap: 4px 10px;
+  }
+}

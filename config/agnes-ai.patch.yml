@@ -1,0 +1,26 @@
+# OmniAgent 接入 Agnes AI（OpenAI 兼容）示例 overlay：
+#   export AGNES_API_KEY=sk-...
+#   oa --profile <name> --patch config/agnes-ai.patch.yml "<问题>"
+# 或把下面两行放进 profile 的 cordis.patch.yml 长期生效。
+# 任意 OpenAI 兼容端点（OpenAI/DeepSeek/通义/智谱/本地 vLLM 等）同理替换 baseURL 与模型。
+
+- id: agent-default-model
+  config:
+    provider: agnes-ai
+    model: agnes-3.0-flash
+
+- id: llm-pi-ai
+  config:
+    providers:
+      agnes-ai:
+        displayName: Agnes AI（OpenAI 兼容）
+        api: openai-completions
+        baseURL: https://api.agnes-ai.cn/v1
+        apiKeyEnv: AGNES_API_KEY
+        models:
+          - id: agnes-3.0-flash
+            name: Agnes 3.0 Flash
+            contextWindow: 131072
+          - id: agnes-2.5-pro
+            name: Agnes 2.5 Pro
+            contextWindow: 131072

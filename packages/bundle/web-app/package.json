@@ -174,9 +174,11 @@
     "@deepseek-ai/dsh-client-ui-settings-account": "workspace:*",
     "@deepseek-ai/dsh-client-shortcuts": "workspace:*",
     "@deepseek-ai/dsh-client-ui-shortcuts": "workspace:*",
-    "@deepseek-ai/dsh-client-product-analytics": "workspace:*",
-    "@deepseek-ai/dsh-host-product-telemetry-otel": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-settings-session-log": "workspace:*"
+    "@deepseek-ai/dsh-client-ui-plugin-market": "workspace:*",
+    "@deepseek-ai/dsh-client-ui-schedule": "workspace:*",
+    "@deepseek-ai/dsh-client-ui-session-history": "workspace:*",
+    "@deepseek-ai/dsh-client-ui-status-bar": "workspace:*",
+    "@deepseek-ai/dsh-client-ui-command-palette": "workspace:*"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:~",

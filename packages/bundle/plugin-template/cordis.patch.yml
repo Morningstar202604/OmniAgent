@@ -1,0 +1,31 @@
+# ─────────────────────────────────────────────────────────────────────────
+#  最小垂直插件模板 · cordis 启动树补丁
+# ─────────────────────────────────────────────────────────────────────────
+#
+# bundle 包靠这个文件把插件「insert」进 cordis 启动树。本模板是自包含的：
+# 它 insert 的是「自己」——name 指向本包 package.json 的 name，
+# loader 据此 import 本包的 Node 半边（lib/index.js = src/index.ts）并加载它。
+#
+# patch 语法：顶层是一个 YAML 列表；
+#   - insert:  下逐行 `id + name + config` 注册插件；
+#   - 不带 insert 的裸 `- id:` 行是按 id 覆盖某已有插件的配置。
+#
+# 复制本包后：
+#   1) 把下面两处 `@deepseek-ai/dsh-plugin-template` 改成你的新包名；
+#   2) 把 id `plugin-template` 改成你的领域 id；
+#   3) config 按你的 Config schema 调整。
+
+- insert:
+    # host 半边：注册 template_hello 工具 + 注入领域 persona。
+    - id: plugin-template
+      name: '@deepseek-ai/dsh-plugin-template'
+      config:
+        greetingPrefix: 你好
+
+# 如果你新增了「写操作」工具，想统一管控权限，可在下面追加 permission-rules 覆盖：
+# - id: permission-rules
+#   name: '@deepseek-ai/dsh-permission-rules'
+#   config:
+#     preset: normal
+#     rules:
+#       - { pattern: 'template_write_.*', level: ask }

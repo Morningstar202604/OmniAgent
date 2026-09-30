@@ -1,0 +1,101 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-primary);
+  font-size: 13px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l1);
+  background: var(--dsw-alias-bg-layer-1);
+}
+
+.titleBlock { display: flex; align-items: baseline; gap: 10px; min-width: 0; flex-wrap: wrap; }
+.title { font-size: 15px; font-weight: 700; white-space: nowrap; }
+.subtitle { font-size: 11px; color: var(--dsw-alias-label-tertiary); }
+.badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--dsw-alias-state-business-tertiary);
+  color: var(--dsw-alias-brand-primary);
+  white-space: nowrap;
+}
+
+.liveBadge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(34, 197, 94, 0.12);
+  color: #22c55e;
+  animation: livePulse 2s ease-in-out infinite;
+  white-space: nowrap;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+.back {
+  flex: none;
+  padding: 4px 10px;
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  border-radius: 6px;
+  background: var(--dsw-alias-button-floating-fill);
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  font: inherit;
+}
+.back:hover { color: var(--dsw-alias-label-primary); border-color: var(--dsw-alias-label-primary); }
+
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+}
+
+.detailPane {
+  border-right: 0.5px solid var(--dsw-alias-border-l1);
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.researchPane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .body { grid-template-columns: minmax(0, 1fr); }
+  .detailPane { border-right: 0; border-bottom: 0.5px solid var(--dsw-alias-border-l1); }
+}
+
+/* ── 手机 <480px：header 允许换行，副标题收起，避免标题/徽章被挤成竖排 ── */
+@media (max-width: 480px) {
+  .header {
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    padding: 8px 10px;
+  }
+  .titleBlock {
+    flex: 1 1 100%;
+    order: -1;
+    gap: 6px;
+  }
+  .subtitle { display: none; }
+  .back { flex: none; }
+}
