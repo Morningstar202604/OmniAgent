@@ -17,10 +17,6 @@
     - id: report-export
       name: '@deepseek-ai/dsh-report-export'
 
-    # 后台任务（任务队列增强）：task_run / task_status / task_list / task_cancel。
-    - id: tool-task
-      name: '@deepseek-ai/dsh-tool-task'
-
     # 多智能体协作：agent_team_run 按角色并行编排（复用 spawn 子代理 provider）。
     - id: agent-team
       name: '@deepseek-ai/dsh-agent-team'

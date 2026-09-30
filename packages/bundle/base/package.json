@@ -124,7 +124,6 @@
     "@deepseek-ai/dsh-config-editor": "workspace:*",
     "@deepseek-ai/dsh-settings": "workspace:*",
     "@deepseek-ai/dsh-llm-deepseek": "workspace:*",
-    "@deepseek-ai/dsh-permission-rules": "workspace:*",
     "@deepseek-ai/dsh-memory": "workspace:*",
     "@deepseek-ai/dsh-tool-git": "workspace:*",
     "@deepseek-ai/dsh-tool-notify": "workspace:*"

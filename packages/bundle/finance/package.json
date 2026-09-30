@@ -35,7 +35,6 @@
   "dependencies": {
     "@deepseek-ai/dsh-finance-agent": "workspace:*",
     "@deepseek-ai/dsh-report-export": "workspace:*",
-    "@deepseek-ai/dsh-tool-task": "workspace:*",
     "@deepseek-ai/dsh-agent-team": "workspace:*",
     "@deepseek-ai/dsh-client-ui-finance": "workspace:*"
   },

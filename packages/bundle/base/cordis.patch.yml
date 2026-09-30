@@ -34,9 +34,6 @@
     - id: memory
       name: '@deepseek-ai/dsh-memory'
 
-    - id: permission-rules
-      name: '@deepseek-ai/dsh-permission-rules'
-
     - id: tool-git
       name: '@deepseek-ai/dsh-tool-git'
 

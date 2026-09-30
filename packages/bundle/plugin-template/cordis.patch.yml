@@ -22,10 +22,10 @@
       config:
         greetingPrefix: 你好
 
-# 如果你新增了「写操作」工具，想统一管控权限，可在下面追加 permission-rules 覆盖：
-# - id: permission-rules
-#   name: '@deepseek-ai/dsh-permission-rules'
-#   config:
-#     preset: normal
-#     rules:
+# 写操作工具的权限管控：用官方权限预设（permission-presets），
+# 在 profile 里配置 presets 组合 sandbox 模式 × 审批策略，用户在 UI 选择：
+# config:
+#   permission:
+#     presets:
+#       strict: { sandbox: { mode: none }, approval: { policy: ask } }
 #       - { pattern: 'template_write_.*', level: ask }

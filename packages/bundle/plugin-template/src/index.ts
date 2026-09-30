@@ -128,17 +128,8 @@ export function apply(ctx: Context, config: Config): void {
   }))
 
   // ── 第 3 步（演示）：权限集成说明 ──────────────────────────────────────
-  // 本插件不做任何权限绕过。只读工具（如 template_hello）默认由 permission-rules
-  // 兜底放行；如果你新增了「写操作」工具（例如 template_delete / template_publish），
-  // 建议在 cordis.patch.yml 或用户 profile 里把它配成 ask（弹审批）/ deny（拦截），
-  // 例如：
-  //
-  //   - id: permission-rules
-  //     name: '@deepseek-ai/dsh-permission-rules'
-  //     config:
-  //       preset: normal
-  //       rules:
-  //         - { pattern: 'template_write_.*', level: ask }
-  //
-  // level 四档：allow / auto / ask / deny。详见 packages/guard/permission-rules。
+  // 本插件不做任何权限绕过。只读工具由官方权限体系兜底；如果你新增了
+  // 「写操作」工具（例如 template_delete / template_publish），用官方权限预设
+  // （permission-presets）在 profile 里配置 presets（sandbox 模式 × 审批策略
+  // 组合），用户通过 /permission 命令在 UI 选择。详见 packages/interaction/permission-presets。
 }
