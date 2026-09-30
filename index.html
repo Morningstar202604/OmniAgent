@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OmniAgent —— 万物皆可插件的通用智能体</title>
+<meta name="description" content="OmniAgent：一个底座通吃所有领域。日常是开箱即用的通用全能 Agent；加载插件即变垂直领域专业应用（金融/电商/更多）；卸载插件回归通用，能力不被削弱。开源 MIT，基于 DSH 插件体系。">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d1117'/%3E%3Cpath d='M8 10h16M8 16h16M8 22h16' stroke='%2322d3ee' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='24' cy='16' r='2.4' fill='%23fbbf24'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#0d1117; --bg-soft:#11161d; --bg-line:#1c232e;
+    --fg:#e6edf3; --fg-dim:#8b949e; --fg-faint:#586069;
+    --cyan:#22d3ee; --cyan-dim:#0891b2; --amber:#fbbf24;
+    --ok:#3fb950; --border:#2a323e;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--fg);font-family:var(--sans);line-height:1.65;-webkit-font-smoothing:antialiased}
+  a{color:var(--cyan);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  /* ===== 导航 ===== */
+  header{position:sticky;top:0;z-index:50;background:rgba(13,17,23,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:58px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;color:var(--fg)}
+  .brand svg{display:block}
+  .brand small{color:var(--fg-faint);font-weight:400;font-size:12px;margin-left:2px}
+  .nav-links{display:flex;gap:22px;font-size:14px}
+  .nav-links a{color:var(--fg-dim)}
+  .nav-links a:hover{color:var(--fg)}
+  .nav-cta{font-size:13px;color:var(--bg)!important;background:var(--cyan);padding:6px 14px;border-radius:6px;font-weight:600}
+  .nav-cta:hover{text-decoration:none;background:var(--cyan-dim);color:var(--bg)!important}
+  /* ===== Hero ===== */
+  .hero{padding:72px 0 40px;position:relative}
+  .hero-kicker{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--fg-dim);border:1px solid var(--border);border-radius:999px;padding:5px 14px;margin-bottom:22px;font-family:var(--mono)}
+  .hero-kicker .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);display:inline-block}
+  h1{font-size:clamp(34px,5.6vw,58px);line-height:1.12;letter-spacing:-.5px;font-weight:800}
+  h1 .grad{background:linear-gradient(92deg,var(--cyan) 10%,#7dd3fc 55%,var(--amber) 105%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero-sub{margin-top:18px;max-width:640px;color:var(--fg-dim);font-size:17px}
+  .hero-sub b{color:var(--fg);font-weight:600}
+  .hero-ctas{display:flex;gap:14px;margin-top:30px;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:8px;font-size:15px;font-weight:600;padding:11px 22px;border-radius:8px;border:1px solid var(--border);background:var(--bg-soft);color:var(--fg)}
+  .btn:hover{text-decoration:none;border-color:var(--cyan);color:var(--cyan)}
+  .btn.primary{background:var(--cyan);border-color:var(--cyan);color:var(--bg)}
+  .btn.primary:hover{background:var(--cyan-dim);color:var(--bg)}
+  .btn code{font-family:var(--mono);font-size:13px}
+  /* ===== Hero 演示：插件加载 ===== */
+  .demo{margin-top:52px;border:1px solid var(--border);border-radius:12px;background:var(--bg-soft);overflow:hidden}
+  .demo-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:12px;color:var(--fg-faint)}
+  .demo-bar .traffic{display:flex;gap:6px}
+  .demo-bar .traffic i{width:11px;height:11px;border-radius:50%;display:block}
+  .demo-bar .traffic i:nth-child(1){background:#ff5f57}.demo-bar .traffic i:nth-child(2){background:#febc2e}.demo-bar .traffic i:nth-child(3){background:#28c840}
+  .demo-bar .path{margin-left:10px}
+  .demo-body{padding:20px 24px 26px;font-family:var(--mono);font-size:13.5px}
+  .line{display:flex;gap:10px;align-items:baseline}
+  .prompt{color:var(--cyan);user-select:none}
+  .out{color:var(--fg-dim)}
+  .out .ok{color:var(--ok)}
+  .out .dim{color:var(--fg-faint)}
+  .type-zone{min-height:24px}
+  .caret{display:inline-block;width:8px;height:16px;background:var(--cyan);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  /* ===== 能力三栏 ===== */
+  .section{padding:64px 0}
+  .sec-head{max-width:720px;margin-bottom:36px}
+  .sec-head h2{font-size:clamp(24px,3.4vw,34px);letter-spacing:-.3px;font-weight:800}
+  .sec-head p{color:var(--fg-dim);margin-top:10px;font-size:15.5px}
+  .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .col{border:1px solid var(--border);border-radius:12px;padding:22px 20px;background:var(--bg-soft);display:flex;flex-direction:column;gap:8px}
+  .col .num{font-family:var(--mono);font-size:12px;color:var(--fg-faint)}
+  .col h3{font-size:17px;font-weight:700}
+  .col p{color:var(--fg-dim);font-size:14px}
+  .col .tag{display:inline-block;font-size:12px;font-family:var(--mono);color:var(--cyan);border:1px solid var(--border);border-radius:5px;padding:2px 8px;margin-top:auto;align-self:flex-start}
+  /* ===== 截图墙 ===== */
+  .shots{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+  .shot{border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--bg-soft)}
+  .shot img{width:100%;display:block;border-bottom:1px solid var(--border)}
+  .shot figcaption{padding:10px 14px;font-size:13px;color:var(--fg-dim)}
+  .shot.wide{grid-column:1/-1}
+  /* ===== 特性 ===== */
+  .feats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 22px}
+  .feat{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)}
+  .feat svg{flex:none;width:18px;height:18px;margin-top:3px;color:var(--cyan)}
+  .feat h4{font-size:15px;font-weight:650}
+  .feat p{color:var(--fg-dim);font-size:13.5px;margin-top:2px}
+  /* ===== 插件生态 ===== */
+  .plugs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .plug{border:1px solid var(--border);border-radius:12px;padding:20px;background:var(--bg-soft)}
+  .plug .pk{font-family:var(--mono);font-size:13px;color:var(--amber)}
+  .plug h3{font-size:16px;margin-top:8px}
+  .plug p{color:var(--fg-dim);font-size:13.5px;margin-top:6px}
+  .plug .st{display:inline-block;margin-top:12px;font-size:12px;font-family:var(--mono);color:var(--fg-dim);border:1px solid var(--border);border-radius:5px;padding:2px 8px}
+  .plug .st.on{color:var(--ok);border-color:var(--ok)}
+  .plug .st.soon{color:var(--fg-faint)}
+  /* ===== 快速开始 ===== */
+  pre{border:1px solid var(--border);border-radius:10px;background:#0a0e14;padding:20px 22px;overflow-x:auto;font-family:var(--mono);font-size:13.5px;line-height:1.7}
+  pre .c{color:var(--fg-faint)}
+  pre .g{color:var(--ok)}
+  pre .b{color:var(--cyan)}
+  /* ===== 仓库 ===== */
+  .repos{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .repo{border:1px solid var(--border);border-radius:10px;padding:16px 18px;background:var(--bg-soft);display:flex;align-items:center;gap:12px}
+  .repo svg{flex:none;width:20px;height:20px}
+  .repo .rn{font-size:14px;font-weight:600}
+  .repo .rd{font-size:12px;color:var(--fg-faint);font-family:var(--mono)}
+  .repo:hover{border-color:var(--cyan)}
+  .repo:hover .rn{color:var(--cyan)}
+  /* ===== footer ===== */
+  footer{border-top:1px solid var(--border);padding:26px 0 34px;color:var(--fg-faint);font-size:13px}
+  footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  /* ===== 响应式 ===== */
+  @media(max-width:860px){
+    .cols,.feats,.plugs{grid-template-columns:1fr}
+    .shots{grid-template-columns:1fr}
+    .repos{grid-template-columns:1fr 1fr}
+    .nav-links{display:none}
+    .hero{padding:52px 0 32px}
+  }
+  @media(max-width:520px){ .repos{grid-template-columns:1fr} }
+  @media(prefers-reduced-motion:reduce){ html{scroll-behavior:auto} .caret{animation:none} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#top">
+      <svg width="22" height="22" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#0d1117"/><path d="M8 10h16M8 16h16M8 22h16" stroke="#22d3ee" stroke-width="3" stroke-linecap="round"/><circle cx="24" cy="16" r="2.4" fill="#fbbf24"/></svg>
+      OmniAgent<small>万物皆可插件</small>
+    </a>
+    <nav class="nav-links">
+      <a href="#how">核心机制</a>
+      <a href="#shots">产品实拍</a>
+      <a href="#feats">特性</a>
+      <a href="#plugs">插件生态</a>
+      <a href="#start">快速开始</a>
+      <a href="#repos">仓库</a>
+    </nav>
+    <a class="nav-cta" href="https://gitcode.com/badhope/OmniAgent">GitCode</a>
+  </div>
+</header>
+
+<main id="top">
+  <!-- ===== Hero ===== -->
+  <section class="hero">
+    <div class="wrap">
+      <span class="hero-kicker"><span class="dot"></span>Open Source · MIT · 基于 DSH 插件体系</span>
+      <h1>万物皆可插件的<br><span class="grad">通用智能体</span></h1>
+      <p class="hero-sub">
+        一个底座，<b>N 种职业</b>。不装插件，它是开箱即用的通用全能 Agent；
+        装上某个插件，同一个 Agent 立刻变成那个垂直领域的<b>专业应用</b>；
+        卸下插件，立刻回归通用——<b>通用能力永远不被削弱</b>。
+      </p>
+      <div class="hero-ctas">
+        <a class="btn primary" href="#start">快速开始</a>
+        <a class="btn" href="https://gitcode.com/badhope/OmniAgent">浏览源码 <code>git clone</code></a>
+      </div>
+
+      <!-- 插件加载演示（唯一的大胆元素） -->
+      <div class="demo" aria-label="插件加载演示">
+        <div class="demo-bar">
+          <span class="traffic"><i></i><i></i><i></i></span>
+          <span class="path">oa — omniagent cli</span>
+        </div>
+        <div class="demo-body">
+          <div class="line"><span class="prompt">$</span><span>oa --profile web "帮我看看这个行业报告"</span></div>
+          <div class="line"><span class="out dim">→ 通用底座运行中：搜索 · 推理 · 写报告 · 导出 PDF</span></div>
+          <div class="line"><span class="prompt">$</span><span>oa plugin install dsh-finance</span></div>
+          <div class="line"><span class="out ok">✔ 插件已加载，界面切换为金融终端</span></div>
+          <div class="line"><span class="prompt">$</span><span>oa --profile finance "回测贵州茅台双均线策略"</span></div>
+          <div class="line"><span class="out">→ 行情 · 研报 · 回测 · 量化代码 · PDF 报告</span></div>
+          <div class="line"><span class="prompt">$</span><span>oa plugin uninstall dsh-finance</span></div>
+          <div class="line"><span class="out dim">→ 回归通用底座，能力不被削弱</span></div>
+          <div class="type-zone"><span class="caret"></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 核心机制 ===== -->
+  <section class="section" id="how">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>为什么是「万物皆可插件」</h2>
+        <p>垂直领域工具层出不穷，却始终没有统一的解法。OmniAgent 把「通用底座」与「专业知识与工具」分离——底座负责思考与执行，插件负责专业与界面。</p>
+      </div>
+      <div class="cols">
+        <div class="col">
+          <span class="num">01 · 底座</span>
+          <h3>通用全能 Agent</h3>
+          <p>对话、搜索、写代码、操作文件、管理任务、长期记忆——日常能力全部内置并默认配好，开箱即用。</p>
+          <span class="tag">base · 永远在线</span>
+        </div>
+        <div class="col">
+          <span class="num">02 · 插件</span>
+          <h3>加载即变专业应用</h3>
+          <p>专业知识、专业工具、专业界面打包成插件。装上 dsh-finance，界面瞬间变成金融终端：行情、K 线、研报、回测一应俱全。</p>
+          <span class="tag">install · 界面瞬变</span>
+        </div>
+        <div class="col">
+          <span class="num">03 · 卸载</span>
+          <h3>回归通用，能力不损</h3>
+          <p>卸下插件，回到通用底座。专业能力随插件来去，通用能力永远完整——一个底座通吃所有领域。</p>
+          <span class="tag">uninstall · 来去自如</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 产品截图 ===== -->
+  <section class="section" id="shots">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>产品实拍</h2>
+        <p>同一个 Agent，两种形态。左：通用底座（Web 界面）。右：加载金融插件后的专业终端。</p>
+      </div>
+      <div class="shots">
+        <figure class="shot">
+          <img src="frontend-screens/11-web-profile-generic-hero.png" alt="通用底座：万物皆可插件的 Hero 首页与能力卡片">
+          <figcaption>通用底座 Web 界面——日常形态</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="frontend-screens/02-finance-terminal-full.png" alt="金融终端：行情条、指数 K 线、券商研报与公告">
+          <figcaption>金融终端——加载 dsh-finance 后界面瞬变</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="frontend-screens/15-dock-fix-navigates-to-chat.png" alt="Agent 编写回测策略并一键导出 PDF 报告">
+          <figcaption>Agent 写策略代码 + 一键导出 PDF 报告</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="frontend-screens/mobile-03-plugin-market.png" alt="插件市场：一键启用官方领域包">
+          <figcaption>插件市场——金融 / 电商 / 通用增强</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="frontend-screens/mobile-04-command-palette.png" alt="全局命令面板：新建会话、插件专区、主题切换">
+          <figcaption>全局命令面板 Ctrl/⌘K</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="frontend-screens/mobile-01b-home-hero.png" alt="手机视口下的响应式移动端首页">
+          <figcaption>移动端响应式</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 特性 ===== -->
+  <section class="section" id="feats">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>能力清单</h2>
+        <p>2026 年主流 Agent 该有的，这里全有——并且全部默认配置好，随时可自定义、可停用。</p>
+      </div>
+      <div class="feats">
+        <div class="feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.4 3 5.7V18a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-3.3c1.8-1.3 3-3.3 3-5.7a7 7 0 0 0-7-7Z"/><path d="M9 22h6"/></svg><div><h4>模型中立</h4><p>Agnes / DeepSeek / OpenAI 兼容端点，随时切换，不绑定任何厂商。</p></div></div>
+        <div class="feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-6 4 4 5-8"/></svg><div><h4>确定性可复核回测</h4><p>双均线/定投策略引擎，每个数字可独立复算，报告附公式口径。</p></div></div>
+        <div class="feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><div><h4>长期记忆与知识库</h4><p>SQLite 持久化 + BM25 全文 + 向量混合召回，落盘重开可读。</p></div></div>
+        <div class="feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><div><h4>细粒度权限规则</h4><p>allow / auto / ask / deny 四档 + 通配符，工具级精细管控。</p></div></div>
+        <div class="feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M10.5 6.8 6.3 17.3M13.5 6.8l4.2 10.5"/></svg><div><h4>多智能体 DAG 编排</h4><p>研究员 → 分析师按依赖并行/串行编排，上游输出注入下游，消息可追溯。</p></div></div>
+        <div class="feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg><div><h4>报告导出</h4><p>Markdown / HTML / 真 PDF（含图表与图片），可搜索中文、可交付。</p></div></div>
+        <div class="feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><div><h4>后台任务队列</h4><p>长任务异步执行，进度上报、可取消、可查询。</p></div></div>
+        <div class="feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg><div><h4>插件市场与模板</h4><p>官方领域包 + 社区插件目录，最小插件模板快速起步。</p></div></div>
+        <div class="feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V10M10 21V5M15 21v-8M20 21V3"/></svg><div><h4>全流程可观测</h4><p>工具调用、token 统计、会话时间线、状态栏实时可见。</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 插件生态 ===== -->
+  <section class="section" id="plugs">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>插件生态</h2>
+        <p>领域包把专业知识、专业工具、专业界面一次打包。垂直领域层出不穷，但底座只有一个。</p>
+      </div>
+      <div class="plugs">
+        <div class="plug">
+          <span class="pk">dsh-finance</span>
+          <h3>金融智能体</h3>
+          <p>行情、K 线技术指标、券商研报、选股、回测引擎、量化代码生成、PDF 报告。</p>
+          <span class="st on">官方 · 已可用</span>
+        </div>
+        <div class="plug">
+          <span class="pk">dsh-ecommerce</span>
+          <h3>电商智能体</h3>
+          <p>商品运营、营销内容、客户服务等电商垂直能力打包。</p>
+          <span class="st on">官方 · 已可用</span>
+        </div>
+        <div class="plug">
+          <span class="pk">dsh-general-full</span>
+          <h3>通用增强包</h3>
+          <p>语言服务、git 工具、系统通知、定时任务、工作区追踪、浏览器与桌面自动化。</p>
+          <span class="st on">官方 · 已可用</span>
+        </div>
+        <div class="plug">
+          <span class="pk">plugin-template</span>
+          <h3>最小插件模板</h3>
+          <p>四文件起步：注册、服务、客户端、声明。十分钟做出第一个垂直插件。</p>
+          <span class="st on">开发者 · 模板</span>
+        </div>
+        <div class="plug">
+          <span class="pk">your-domain</span>
+          <h3>你的领域</h3>
+          <p>法律、医疗、教育、科研……任何专业知识与工具都能打包成插件，跟随插件市场分发。</p>
+          <span class="st soon">社区 · 即将上线</span>
+        </div>
+        <div class="plug">
+          <span class="pk">more</span>
+          <h3>持续扩充</h3>
+          <p>垂直领域层出不穷，OmniAgent 的答案始终只有一个：变成插件。</p>
+          <span class="st soon">路线图</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 快速开始 ===== -->
+  <section class="section" id="start">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>快速开始</h2>
+        <p>克隆仓库，配置一个模型端点，即可使用。默认配置开箱即用，可高度自定义。</p>
+      </div>
+<pre><span class="c"># 1. 克隆并安装（需要 Node ≥ 22.19 与 pnpm ≥ 11）</span>
+git clone https://gitcode.com/badhope/OmniAgent.git
+cd OmniAgent && pnpm install
+
+<span class="c"># 2. 配置模型端点（Agnes / DeepSeek / 任何 OpenAI 兼容端点）</span>
+export AGNES_API_KEY=your_key
+export AGNES_BASE_URL=https://api.agnes-ai.cn/v1
+
+<span class="c"># 3. 以通用底座启动</span>
+node apps/cli/lib/bin.js --profile web --no-open     <span class="c"># Web 界面 → http://127.0.0.1:3080</span>
+
+<span class="c"># 4. 加载金融插件，界面瞬变专业终端</span>
+node apps/cli/lib/bin.js --profile finance --no-open <span class="c"># 金融终端 → http://127.0.0.1:8631</span>
+
+<span class="c"># 5. 或直接用 CLI</span>
+node apps/cli/lib/bin.js --profile finance "回测贵州茅台的双均线策略并导出 PDF 报告"</pre>
+    </div>
+  </section>
+
+  <!-- ===== 仓库 ===== -->
+  <section class="section" id="repos">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>开源仓库</h2>
+        <p>四平台同步镜像，任选其一。</p>
+      </div>
+      <div class="repos">
+        <a class="repo" href="https://gitcode.com/badhope/OmniAgent">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.8c-2.7.6-3.3-1.3-3.3-1.3-.4-1.1-1-1.4-1-1.4-1-.6.1-.6.1-.6 1 .1 1.6 1 1.6 1 1 1.7 2.7 1.2 3.4.9.1-.7.4-1.2.7-1.5-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.4-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.2c0 .3.2.6.7.5A10 10 0 0 0 12 2Z"/></svg>
+          <div><div class="rn">GitCode</div><div class="rd">badhope/OmniAgent</div></div>
+        </a>
+        <a class="repo" href="https://gitee.com/badhope/omniagent">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm4.8 8.4-5.3 5.3a1.2 1.2 0 0 1-1.7 0l-3.6-3.6a1.2 1.2 0 1 1 1.7-1.7l2.8 2.8 4.4-4.4a1.2 1.2 0 0 1 1.7 1.7Z"/></svg>
+          <div><div class="rn">Gitee</div><div class="rd">badhope/omniagent</div></div>
+        </a>
+        <a class="repo" href="https://github.com/X33834/OmniAgent">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.8c-2.7.6-3.3-1.3-3.3-1.3-.4-1.1-1-1.4-1-1.4-1-.6.1-.6.1-.6 1 .1 1.6 1 1.6 1 1 1.7 2.7 1.2 3.4.9.1-.7.4-1.2.7-1.5-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.4-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.2c0 .3.2.6.7.5A10 10 0 0 0 12 2Z"/></svg>
+          <div><div class="rn">GitHub</div><div class="rd">X33834/OmniAgent</div></div>
+        </a>
+        <a class="repo" href="https://github.com/Morningstar202604/OmniAgent">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.8c-2.7.6-3.3-1.3-3.3-1.3-.4-1.1-1-1.4-1-1.4-1-.6.1-.6.1-.6 1 .1 1.6 1 1.6 1 1 1.7 2.7 1.2 3.4.9.1-.7.4-1.2.7-1.5-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.4-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.2c0 .3.2.6.7.5A10 10 0 0 0 12 2Z"/></svg>
+          <div><div class="rn">GitHub</div><div class="rd">Morningstar202604/OmniAgent</div></div>
+        </a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>OmniAgent v0.1.7 · MIT License · 基于 DSH 生态</span>
+    <span><a href="https://gitcode.com/badhope/OmniAgent/blob/main/docs/usage-guide.md">使用指南</a> · <a href="https://gitcode.com/badhope/OmniAgent/blob/main/docs/plugin-dev.md">插件开发</a> · <a href="https://gitcode.com/badhope/OmniAgent/blob/main/CHANGELOG.md">更新日志</a></span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  // 终端演示：逐行输入 + 结果，循环播放
+  var demo = document.querySelector('.demo-body');
+  if (!demo) return;
+  var lines = demo.querySelectorAll('.line');
+  var typeZone = demo.querySelector('.type-zone');
+  var seq = [
+    {t:'oa --profile web "帮我看看这个行业报告"', out:'→ 通用底座运行中：搜索 · 推理 · 写报告 · 导出 PDF', d:900},
+    {t:'oa plugin install dsh-finance', out:'✔ 插件已加载，界面切换为金融终端', d:700},
+    {t:'oa --profile finance "回测贵州茅台双均线策略"', out:'→ 行情 · 研报 · 回测 · 量化代码 · PDF 报告', d:1100},
+    {t:'oa plugin uninstall dsh-finance', out:'→ 回归通用底座，能力不被削弱', d:800}
+  ];
+  var all = demo.querySelectorAll('.line');
+  for (var i = 0; i < all.length; i++) all[i].style.display = 'none';
+  typeZone.style.display = 'block';
+  var step = 0, ch = 0, typing = false;
+  function renderLine(i, text, done){
+    var el = all[i]; if(!el) return;
+    el.style.display = 'flex';
+    el.querySelector('span:last-child').textContent = text;
+    if (done && step === 0) el.style.opacity = '1';
+  }
+  function tick(){
+    if (step >= seq.length){ step = 0; ch = 0; setTimeout(tick, 2200); return; }
+    var cur = seq[step];
+    if (!typing){
+      typing = true;
+      var t = all[step]; if (t) t.style.display = 'flex';
+    }
+    if (ch <= cur.t.length){
+      all[step].querySelector('span:last-child').textContent = cur.t.slice(0, ch++);
+      setTimeout(tick, cur.d / cur.t.length);
+      return;
+    }
+    typing = false;
+    all[step].querySelector('span:last-child').textContent = cur.t;
+    var o = all[step + 1]; if (o){ o.style.display = 'flex'; o.querySelector('span:last-child').textContent = cur.out; }
+    step++;
+    if (step >= seq.length){ ch = 0; setTimeout(tick, 2600); }
+    else { ch = 0; setTimeout(tick, 350); }
+  }
+  setTimeout(tick, 800);
+})();
+</script>
+</body>
+</html>
