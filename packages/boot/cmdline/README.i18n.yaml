@@ -3,7 +3,7 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/boot/cmdline/README.md
 /:
-  en: 29e1bbea853a5634
+  en: 2fa7e2ac5d47ed12
   zh: ef6bc8af7a8ae1dc
 /deepseek-ai-dsh-cmdline:
   en: ecfe026417c688da
@@ -18,11 +18,11 @@
   en: ad6f55231a2cb77d
   zh: 9039fa43deeaa458
 /deepseek-ai-dsh-cmdline/use-this-package/the-launcher-values:
-  en: 67d2ceaa6b4dd429
-  zh: 632d9396ba760eee
+  en: 542ef0127a163d41
+  zh: 378923bb8a7fc50f
 /deepseek-ai-dsh-cmdline/use-this-package/parsing-your-flags:
-  en: e88383d7638cb933
-  zh: 0d0608be857be763
+  en: 933918b2238df500
+  zh: 63a19b2eef553eb9
 /deepseek-ai-dsh-cmdline/use-this-package/how-flags-beat-config-values:
   en: 301e1dc64b9ffdce
   zh: d2fbd70267fe7bda

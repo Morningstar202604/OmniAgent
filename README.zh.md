@@ -10,7 +10,11 @@ OmniAgent（`oa`）是 Fork 自 [DeepSeek Harness](https://github.com/deepseek-a
 
 文档：[https://deepseek-harness.github.io/deepseek-harness/](https://deepseek-harness.github.io/deepseek-harness/)
 
-品牌仓库：[https://gitcode.com/badhope/OmniAgent](https://gitcode.com/badhope/OmniAgent) · 上游：[https://github.com/deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)
+品牌仓库（多平台镜像）：
+- gitcode：[https://gitcode.com/badhope/OmniAgent](https://gitcode.com/badhope/OmniAgent)
+- gitee：[https://gitee.com/badhope/omniagent](https://gitee.com/badhope/omniagent)
+- GitHub：[https://github.com/Morningstar202604/OmniAgent](https://github.com/Morningstar202604/OmniAgent) · [https://github.com/X33834/OmniAgent](https://github.com/X33834/OmniAgent)
+- 上游：[https://github.com/deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)
 
 ## 开发者预览
 
@@ -63,11 +67,15 @@ git merge origin/master
 pnpm install && pnpm run build
 ```
 
-品牌发布线推送到 `brand` 远程（`gitcode.com/badhope/OmniAgent`，分支 `main`）：
+品牌发布线推送到多平台镜像远程（分支 `main`）：
 
 ```sh
-git remote add brand https://gitcode.com/badhope/OmniAgent.git              # 已配置
-git push --no-verify --force brand master:main
+git remote add brand  https://gitcode.com/badhope/OmniAgent.git                       # 已配置
+git remote add gitee  https://gitee.com/badhope/omniagent.git                         # 已配置
+git remote add github https://github.com/Morningstar202604/OmniAgent.git              # 已配置
+git remote add githubx https://github.com/X33834/OmniAgent.git                        # 已配置
+git push --no-verify --force brand gitee github githubx master:main
+git push --no-verify brand gitee github githubx v0.2.0-omniagent.1                    # 每次发版更新 tag 版本号
 ```
 
 品牌调整（命名、UI 文案、官网、扩展）都叠加在上游提交之上，可经受每次合并；上游变更可能重塑部分 UI，为保持跟进最新而接受。

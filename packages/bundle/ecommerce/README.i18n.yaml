@@ -1,0 +1,10 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/bundle/ecommerce/README.md
+/deepseek-ai-dsh-ecommerce-omniagent-ecommerce-operations-profile:
+  en: 858553bf8123a6c6
+  zh: 9d1cd01c1b58e3f7
+/deepseek-ai-dsh-ecommerce-omniagent-ecommerce-operations-profile/license:
+  en: aad9b93c8b488fac
+  zh: 0a553bf347728a12

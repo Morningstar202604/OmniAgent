@@ -1,0 +1,64 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/finance/finance-agent/README.md
+/deepseek-ai-dsh-finance-agent-omniagent-finance-plugin:
+  en: 01f8b835df2c94b4
+  zh: 4a2b542bb3033e8c
+/deepseek-ai-dsh-finance-agent-omniagent-finance-plugin/design-principles:
+  en: 3eb2458ef4c751e2
+  zh: 293365d6444d876a
+/deepseek-ai-dsh-finance-agent-omniagent-finance-plugin/usage:
+  en: c635a9c523ef713f
+  zh: 00515835ef47d470
+/deepseek-ai-dsh-finance-agent-omniagent-finance-plugin/tool-catalog-17:
+  en: 294d443e0da31e14
+  zh: 221296397fac8dc6
+/deepseek-ai-dsh-finance-agent-omniagent-finance-plugin/tool-catalog-17/data-queries-4:
+  en: 3d318cba00dc8cc5
+  zh: 1118a7a20740ff2f
+/deepseek-ai-dsh-finance-agent-omniagent-finance-plugin/tool-catalog-17/quotes-money-flow-2:
+  en: 45ca69b06915a69d
+  zh: 6062a66cb7510dc9
+/deepseek-ai-dsh-finance-agent-omniagent-finance-plugin/tool-catalog-17/announcements-news-2:
+  en: 7013784e6057f1ba
+  zh: d19ff333f363d633
+/deepseek-ai-dsh-finance-agent-omniagent-finance-plugin/tool-catalog-17/macro-sectors-2:
+  en: da8894374d8a4939
+  zh: 32c033756f4eaed8
+/deepseek-ai-dsh-finance-agent-omniagent-finance-plugin/tool-catalog-17/risk-metrics-1-pure-computation-verifiable:
+  en: 73c03305e85249b3
+  zh: 06e8cb6d7f26da8d
+/deepseek-ai-dsh-finance-agent-omniagent-finance-plugin/tool-catalog-17/fixed-income-convertibles-1:
+  en: ec0fa295892a04ca
+  zh: 85bb52b915b15b62
+/deepseek-ai-dsh-finance-agent-omniagent-finance-plugin/tool-catalog-17/broker-research-1-summary-level-lightweight:
+  en: f3f66ad5855be3d7
+  zh: 95f6b15ab134ab12
+/deepseek-ai-dsh-finance-agent-omniagent-finance-plugin/tool-catalog-17/financial-math-1-pure-functions-verifiable:
+  en: de10367da13e411d
+  zh: 14d9d0106dbf051a
+/deepseek-ai-dsh-finance-agent-omniagent-finance-plugin/tool-catalog-17/technical-analysis-1-pure-functions-verifiable:
+  en: ce1b05ab5655b374
+  zh: d59404b2f3b141e4
+/deepseek-ai-dsh-finance-agent-omniagent-finance-plugin/tool-catalog-17/fx-rates-2:
+  en: 6cc20668abc1a0df
+  zh: 4c6d19d7189fc4b0
+/deepseek-ai-dsh-finance-agent-omniagent-finance-plugin/data-sources:
+  en: a8a9968f947abe31
+  zh: 3fb017f346acfc07
+/deepseek-ai-dsh-finance-agent-omniagent-finance-plugin/data-sources/mock-default:
+  en: 46dd055bed8ccd3b
+  zh: 660e758b5d4de2c1
+/deepseek-ai-dsh-finance-agent-omniagent-finance-plugin/data-sources/http-real-data:
+  en: 46067935b37e6302
+  zh: 676eb935ced0e778
+/deepseek-ai-dsh-finance-agent-omniagent-finance-plugin/data-sources/contract-fields:
+  en: dea1f58bcd968231
+  zh: c2de22296fc557ff
+/deepseek-ai-dsh-finance-agent-omniagent-finance-plugin/boundaries-compliance:
+  en: 9610108bc7885dc5
+  zh: c2c2688ff8ca9ddc
+/deepseek-ai-dsh-finance-agent-omniagent-finance-plugin/development-verification:
+  en: f582acdd4d951d20
+  zh: 159d1549ff35104b

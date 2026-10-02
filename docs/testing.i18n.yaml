@@ -6,14 +6,14 @@
   en: 0d7399a58529b9eb
   zh: 7f445b06430f21a4
 /testing-policy/tiers:
-  en: 180c81863aa3f4dd
-  zh: ff3e96d3175c5cea
+  en: cca8bfb3bed3aede
+  zh: 67c98cef7065c1e4
 /testing-policy/how-specs-execute:
   en: 298c13b105e86eae
   zh: 4f1b0b7742fb7b49
 /testing-policy/the-with-key-policy-inference-is-cheap-here:
-  en: d555af53068bf523
-  zh: ddc4265e5de5b3be
+  en: f4b444d4dc722be9
+  zh: 22a73fef3db663e5
 /testing-policy/prefer-the-real-implementation-over-a-mock:
   en: 96a5bdcea4960b25
   zh: 98ad9d468e55a5ed

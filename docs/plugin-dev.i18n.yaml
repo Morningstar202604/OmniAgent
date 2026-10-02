@@ -1,0 +1,13 @@
+# Bilingual-pair consistency record for plugin-dev.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/plugin-dev.md
+/plugin-development:
+  en: 3c67f9956d24b0b9
+  zh: 5b955ce0aa965bc5
+/plugin-development/add-a-package-plugin:
+  en: 0f315b7ac7d63862
+  zh: efd8bce6ff512999
+/plugin-development/first-party-examples:
+  en: c9d917faed9273d9
+  zh: 69f712423afa26c3

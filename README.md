@@ -10,7 +10,11 @@ It is built on an **everything-is-a-plugin** architecture and powered by [Cordis
 
 Documentation: [https://deepseek-harness.github.io/deepseek-harness/](https://deepseek-harness.github.io/deepseek-harness/)
 
-Brand repository: [https://gitcode.com/badhope/OmniAgent](https://gitcode.com/badhope/OmniAgent) · Upstream: [https://github.com/deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)
+Brand repositories (mirrored):
+- gitcode: [https://gitcode.com/badhope/OmniAgent](https://gitcode.com/badhope/OmniAgent)
+- gitee: [https://gitee.com/badhope/omniagent](https://gitee.com/badhope/omniagent)
+- GitHub: [https://github.com/Morningstar202604/OmniAgent](https://github.com/Morningstar202604/OmniAgent) · [https://github.com/X33834/OmniAgent](https://github.com/X33834/OmniAgent)
+- Upstream: [https://github.com/deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)
 
 ## Developer preview
 
@@ -57,11 +61,15 @@ git merge origin/master
 pnpm install && pnpm run build
 ```
 
-The brand release line is published to the `brand` remote (`gitcode.com/badhope/OmniAgent`, branch `main`):
+The brand release line is published to the mirrored remotes (branch `main`):
 
 ```sh
-git remote add brand https://gitcode.com/badhope/OmniAgent.git              # already configured
-git push --no-verify --force brand master:main
+git remote add brand  https://gitcode.com/badhope/OmniAgent.git                       # already configured
+git remote add gitee  https://gitee.com/badhope/omniagent.git                         # already configured
+git remote add github https://github.com/Morningstar202604/OmniAgent.git              # already configured
+git remote add githubx https://github.com/X33834/OmniAgent.git                        # already configured
+git push --no-verify --force brand gitee github githubx master:main
+git push --no-verify brand gitee github githubx v0.2.0-omniagent.1                    # bump the tag per release
 ```
 
 Brand adjustments (naming, UI copy, homepage, extensions) live on top of upstream commits and survive every merge; upstream changes may reshape parts of the UI, which is accepted in favor of staying current.

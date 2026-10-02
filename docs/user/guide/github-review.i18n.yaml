@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/user/guide/github-review.md
 /create-review-sessions-from-github-webhooks:
-  en: d7326712d79158d8
-  zh: 02102a8b9e749928
+  en: 0a8c90ffb58284b0
+  zh: 6005b632b2ac6661
 /create-review-sessions-from-github-webhooks/prerequisites:
   en: 6784d85f90231608
   zh: 3e62e9cadfdc2c18
 /create-review-sessions-from-github-webhooks/start-dsh:
-  en: 5751931f5c89b1c0
-  zh: 867950515a152d47
+  en: 3f52574db966024e
+  zh: 7c7750331f3f73db
 /create-review-sessions-from-github-webhooks/expose-the-dedicated-endpoint:
   en: f18a2969b3082da9
   zh: 87d3d0e58d25a62f

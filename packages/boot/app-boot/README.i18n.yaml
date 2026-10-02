@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/boot/app-boot/README.md
 /:
-  en: 822ef8977098c703
+  en: 61f7081e201ade18
   zh: c0673e854310840f
 /deepseek-ai-dsh-app-boot:
   en: fdb73259898590a5
   zh: aee057cd436da2e2
 /deepseek-ai-dsh-app-boot/summary:
-  en: e5db70f7cdcdbe9c
-  zh: 6852efb61109a349
+  en: 4e6ad175654bc870
+  zh: 0491be7bed46f520
 /deepseek-ai-dsh-app-boot/table-of-contents:
   en: d152484eb41ac6b4
   zh: 09388d293f9be9cb
@@ -18,14 +18,14 @@
   en: f6fa378225009c8f
   zh: 324c0e4640bb1358
 /deepseek-ai-dsh-app-boot/use-this-package/when-to-use-it:
-  en: 2fdfe02f2ed4a258
-  zh: d748228ece579c4a
+  en: f5149f47d4bfd756
+  zh: bfede53b4a30c4f0
 /deepseek-ai-dsh-app-boot/use-this-package/starting-the-app:
   en: 1099528bde0e2aee
   zh: b68772bdb9bb7856
 /deepseek-ai-dsh-app-boot/use-this-package/profiles:
-  en: d50b0fdaf62353dd
-  zh: 0fccb6968602e5de
+  en: 7b3e5daa6ab90a89
+  zh: 86330259d9fa118a
 /deepseek-ai-dsh-app-boot/use-this-package/previewing-the-effective-configuration:
   en: 646a0ccdd7881ad1
   zh: e3696acb1573dd7b
@@ -54,8 +54,8 @@
   en: 25602fd8eb9b2907
   zh: 870a33dd34a52c32
 /deepseek-ai-dsh-app-boot/further-exploration:
-  en: ffd10e94443a10ca
-  zh: cd11495bae751bdd
+  en: 10a7c2b7aafe641f
+  zh: d5c91008553f43e6
 /deepseek-ai-dsh-app-boot/model-experience:
   en: 769777f1cb1a9408
   zh: f02b2834179df50d

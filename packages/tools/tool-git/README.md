@@ -1,31 +1,31 @@
 # @deepseek-ai/dsh-tool-git
 
-OmniAgent git 工具包：让 agent 在任务收尾时能主动、受控地完成本地 git 操作。
+OmniAgent git tool kit: lets the agent perform local git operations proactively and in a controlled way when wrapping up tasks.
 
-## 提供的工具
+## Tools
 
-| 工具 | 说明 | 性质 |
+| Tool | Description | Nature |
 | --- | --- | --- |
-| `git_status` | 查看当前分支、已暂存 / 未暂存 / 未跟踪文件 | 只读 |
-| `git_diff` | 查看未暂存差异；`staged=true` 查看已暂存差异（numstat + 截断 diff 正文） | 只读 |
-| `git_add` | 暂存指定文件；`paths` 留空时等价 `git add -A` | 写 |
-| `git_commit` | 提交已暂存内容（`message` 必填；`addAll=true` 先全量暂存） | 写 |
+| `git_status` | Current branch, staged / unstaged / untracked files | read-only |
+| `git_diff` | Unstaged diff; `staged=true` shows the staged diff (numstat + truncated diff body) | read-only |
+| `git_add` | Stage given paths; empty `paths` behaves like `git add -A` | write |
+| `git_commit` | Commit staged content (`message` required; `addAll=true` stages everything first) | write |
 
-## 实现约束
+## Implementation constraints
 
-- 直接用 `node:child_process.execFileSync` 调用系统 git，**不引入** simple-git / isomorphic-git 等第三方依赖。
-- 工作目录固定为 `process.cwd()`（agent 工作区），不操作其他目录。
-- **绝不自动 push**；commit 只写本地历史。
-- `git_commit` 拒绝空 message；暂存区为空时明确报错。
+- Uses `node:child_process.execFileSync` to call system git directly — **no** third-party deps (simple-git / isomorphic-git).
+- Working directory is fixed at `process.cwd()` (the agent workspace); other directories are not touched.
+- **Never auto-pushes**; commit only writes local history.
+- `git_commit` rejects empty messages and errors clearly on an empty index.
 
-## 权限分级（permission-rules 集成）
+## Permission tiers (permission-rules integration)
 
-本包注册后自然进入 `tools/pre-execute` 决策链，**不做任何绕过**。工具名统一前缀 `git_`，可用通配符规则整组管控：
+Once registered, this package naturally joins the `tools/pre-execute` decision chain — **no bypassing**. Tool names share the `git_` prefix, so wildcard rules can govern the whole group:
 
-- `git_status` / `git_diff`：只读，默认 allow。
-- `git_add` / `git_commit`：写操作，建议配置为 ask 或 deny。
+- `git_status` / `git_diff`: read-only, allowed by default.
+- `git_add` / `git_commit`: write operations; configuring `ask` or `deny` is recommended.
 
-示例（cordis.patch.yml 的 permission-rules 行）：
+Example (permission-rules lines in `cordis.patch.yml`):
 
 ```yaml
 - id: permission-rules
@@ -33,9 +33,9 @@ OmniAgent git 工具包：让 agent 在任务收尾时能主动、受控地完�
   config:
     preset: custom
     rules:
-      - { pattern: 'git_*', level: 'allow' }   # 默认放行
-      - { pattern: 'git_commit', level: 'ask' } # 提交需用户审批
+      - { pattern: 'git_*', level: 'allow' }   # allow by default
+      - { pattern: 'git_commit', level: 'ask' } # commits need user approval
       - { pattern: 'git_add', level: 'ask' }
 ```
 
-运行时也可用 `permission_set` 动态调整。
+At runtime, `permission_set` can adjust dynamically.

@@ -1,0 +1,31 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/bundle/plugin-template/README.md
+/dsh-plugin-template-minimal-vertical-plugin-template:
+  en: 3dfcfff1a6e5b306
+  zh: ba772655a332095d
+/dsh-plugin-template-minimal-vertical-plugin-template/layout:
+  en: ff66e364cb60a431
+  zh: f5eef5a450888b55
+/dsh-plugin-template-minimal-vertical-plugin-template/five-steps-to-your-plugin:
+  en: d79d4724b5b072cd
+  zh: 0ee746eface2e919
+/dsh-plugin-template-minimal-vertical-plugin-template/five-steps-to-your-plugin/1-copy-and-rename:
+  en: b5e6d68cfc937cf5
+  zh: 5dca22de7e894b05
+/dsh-plugin-template-minimal-vertical-plugin-template/five-steps-to-your-plugin/2-write-your-own-tools:
+  en: cc9cfe40e86f9462
+  zh: 39b935ed165b1451
+/dsh-plugin-template-minimal-vertical-plugin-template/five-steps-to-your-plugin/3-optional-change-the-ui-slot:
+  en: 05a98fc6cd85c753
+  zh: a7af0d6d4d1da6e6
+/dsh-plugin-template-minimal-vertical-plugin-template/five-steps-to-your-plugin/4-hook-into-profile-templates:
+  en: d1fcbc9b511e08c9
+  zh: 1a4d27b71ab386f7
+/dsh-plugin-template-minimal-vertical-plugin-template/five-steps-to-your-plugin/5-build-and-verify:
+  en: e5b6da865a6c9540
+  zh: 69702dfd3b54e285
+/dsh-plugin-template-minimal-vertical-plugin-template/notes:
+  en: a417eb59e26c9805
+  zh: 97f114d83c87a2a8

@@ -1,0 +1,25 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/ecommerce/ecommerce-agent/README.md
+/deepseek-ai-dsh-ecommerce-agent-omniagent-ecommerce-operations-plugin:
+  en: be9c5dfb3d253fba
+  zh: 6d723fe470b8f630
+/deepseek-ai-dsh-ecommerce-agent-omniagent-ecommerce-operations-plugin/design-principles:
+  en: 3dc544f606f81a1e
+  zh: 5168faab8d40cc10
+/deepseek-ai-dsh-ecommerce-agent-omniagent-ecommerce-operations-plugin/tools-8:
+  en: f1cb0b9606c27dc8
+  zh: 000671e82976ecd3
+/deepseek-ai-dsh-ecommerce-agent-omniagent-ecommerce-operations-plugin/usage:
+  en: 9432d19fff21bcc7
+  zh: 9dde2e6f4045080a
+/deepseek-ai-dsh-ecommerce-agent-omniagent-ecommerce-operations-plugin/smoke-test:
+  en: 69028eade9179760
+  zh: 1acb8edf0c2fb03f
+/deepseek-ai-dsh-ecommerce-agent-omniagent-ecommerce-operations-plugin/implementation:
+  en: 967524ce7f7e5a76
+  zh: 7e982dbe341d0a56
+/deepseek-ai-dsh-ecommerce-agent-omniagent-ecommerce-operations-plugin/license:
+  en: aad9b93c8b488fac
+  zh: 0a553bf347728a12

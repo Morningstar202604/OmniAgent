@@ -1,0 +1,16 @@
+# Bilingual-pair consistency record for usage-guide.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/usage-guide.md
+/usage-guide:
+  en: 71697d3001b89ee6
+  zh: a9da74903964fc13
+/usage-guide/start-the-web-ui:
+  en: b3590c5bb3c536c5
+  zh: 61531da20aae209c
+/usage-guide/connect-a-custom-model:
+  en: be52b49b43d38c60
+  zh: 8accb691ae158f24
+/usage-guide/brand-repositories:
+  en: 9e35bc19fff16756
+  zh: 7c12967c887785c7
